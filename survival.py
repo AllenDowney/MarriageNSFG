@@ -10,9 +10,11 @@ from __future__ import print_function, division
 import numpy as np
 import pandas
 
-import nsfg
+# import nsfg
 import thinkstats2
 import thinkplot
+import gzip
+import matplotlib.pyplot as plt
 
 """
 
@@ -321,6 +323,41 @@ def EstimateSurvivalByDecade(groups, **options):
         _, sf = EstimateSurvival(group)
         thinkplot.Plot(sf, **options)
 
+def PlotResampledByAge(resps, **options):
+    samples = [thinkstats2.ResampleRowsWeighted(resp) for resp in resps]
+    sample = pandas.concat(samples, ignore_index=True)
+    groups = sample.groupby('decade')
+    
+    #number of group divisions
+    n = 6
+    #number of years per group if there are n groups
+    group_size = 30/n 
+    
+    #labels age brackets depending on # divs
+    labels = ['{} to {}'.format(int(15 + group_size * i), int(15+(i+1)*group_size)) for i in range(n)] 
+    # 0 representing 15-24, 1 being 25-34, and 2 being 35-44
+    
+    #initilize dictionary of size n, with empty lists
+    prob_dict = {i: [] for i in range(n)} 
+    #TODO: Look into not hardcoding this
+    decades = [30,40, 50, 60, 70, 80, 90]
+    
+    for _, group in groups:
+        #calcualates the survival function for each decade
+        _, sf = survival.EstimateSurvival(group)
+        if len(sf.ts) > 1:
+            #iterates through all n age groups to find the probability of marriage for that group
+            for group_num in range(0,n):
+                temp_prob_list = sf.Probs([t for t in sf.ts 
+                                           if (15 + group_size*group_num) <= t <= (15 + (group_num+1)*group_size)])
+                if len(temp_prob_list) != 0:
+                    prob_dict[group_num].append(sum(temp_prob_list)/len(temp_prob_list))
+                else:
+                    pass
+    for key in prob_dict:
+        xs = decades[0:len(prob_dict[key])]
+        thinkplot.plot(xs, prob_dict[key], label=labels[key], **options)
+
 
 def PlotPredictionsByDecade(groups, **options):
     """Groups respondents by decade and plots survival curves.
@@ -561,27 +598,32 @@ def ReadFemResp1982():
 
 def ReadFemResp1988():
     """Reads respondent data from NSFG Cycle 4.
-
+    Read as if were a standard ascii file 
     returns: DataFrame 
     """
-    dat_file = '1988FemRespData.dat.gz'
-    names = ['F_13'] #['CMOIMO', 'F_13', 'F19M1MO', 'A_3']
-    # colspecs = [(799, 803)], 
-    colspecs = [(20, 22)]#, 
-                # (1538, 1542),
-                # (26, 30),
-                # (2568, 2574)]
-    df = pandas.read_fwf(dat_file, compression='gzip', colspecs=colspecs, names=names)
-    # df['cmmarrhx'] = df.F19M1MO
-    # df['cmbirth'] = df.A_3
-    # df['cmintvw'] = df.CMOIMO
-    # df['finalwgt'] = df.W5
+    # dat_file = '1988FemRespData.dat.gz'
+    # names = ['F_13'] #['CMOIMO', 'F_13', 'F19M1MO', 'A_3']
+    # # colspecs = [(799, 803)], 
+    # colspecs = [(20, 21)]#, 
+    #             # (1538, 1542),
+    #             # (26, 30),
+    #             # (2568, 2574)]
+    # df = pandas.read_fwf(dat_file, compression='gzip', colspecs=colspecs, names=names)
+    # # df['cmmarrhx'] = df.F19M1MO
+    # # df['cmbirth'] = df.A_3
+    # # df['cmintvw'] = df.CMOIMO
+    # # df['finalwgt'] = df.W5
 
-    df.F_13.replace([98, 99], np.nan, inplace=True)
-    df['evrmarry'] = (df.F_13 > 0).astype(int)
-    # CleanData(df)
+    # df.F_13.replace([98, 99], np.nan, inplace=True)
+    # df['evrmarry'] = (df.F_13 > 0).astype(int)
+    # # CleanData(df)
+    debug = 0
+    for line in gzip.open('1982NSFGData.dat.gz', 'r'):
+        debug +=1
 
-    return df
+    # d_file = np.loadtxt('1988FemRespData.dat', unpack=True)
+    # debug = d_file.shape[0]
+    return debug
 
 
 def PlotResampledByDecade(resps, iters=11, predict_flag=False, omit=None):
@@ -652,4 +694,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    d1 = ReadFemResp1982()
+    d2 = ReadFemResp1995()
+    # d3 = ReadFemResp2002()
+    # d4 = ReadFemResp2010()
+    PlotResampledByAge([d1,d2])
