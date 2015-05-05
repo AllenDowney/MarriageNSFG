@@ -300,6 +300,7 @@ def CleanData(resp):
     dates = [month0 + pandas.DateOffset(months=cm) 
              for cm in resp.cmbirth]
     resp['decade'] = (pandas.DatetimeIndex(dates).year - 1900) // 10
+    resp['fives'] = (pandas.DatetimeIndex(dates).year - 1900) // 5
 
 
 def AddLabelsByDecade(groups, **options):
@@ -601,32 +602,50 @@ def ReadFemResp1988():
     Read as if were a standard ascii file 
     returns: DataFrame 
     """
-    # dat_file = '1988FemRespData.dat.gz'
-    # names = ['F_13'] #['CMOIMO', 'F_13', 'F19M1MO', 'A_3']
-    # # colspecs = [(799, 803)], 
-    # colspecs = [(20, 21)]#, 
-    #             # (1538, 1542),
-    #             # (26, 30),
-    #             # (2568, 2574)]
-    # df = pandas.read_fwf(dat_file, compression='gzip', colspecs=colspecs, names=names)
-    # # df['cmmarrhx'] = df.F19M1MO
-    # # df['cmbirth'] = df.A_3
-    # # df['cmintvw'] = df.CMOIMO
-    # # df['finalwgt'] = df.W5
+    filename = '1988FemRespDataLines.dat.gz'
+    names = ['finalwgt', 'ageint', 'cmmarrhx', 'cmintvw', 'cmbirth', 'evrmarry']
+    colspecs = [(2568-1, 2574),
+                (36-1, 37),
+                (1538-1, 1542),
+                (12-1, 16),
+                (26-1, 30),
+                (257, 257 )]
+    df = pandas.read_fwf(filename,
+                         colspecs=colspecs, 
+                         names=names,
+                         header=None,
+                         compression='gzip')
+    filename = '1988FemRespDataLines.dat.gz'
+    df.cmmarrhx.replace([0, 99999], np.nan, inplace=True)
+    df.loc[df.cmmarrhx>90000, 'cmmarrhx'] -= 90000
+    # df['evrmarry'] = ~df.cmmarrhx.isnull()
+    CleanData(df)
+    return df
 
-    # df.F_13.replace([98, 99], np.nan, inplace=True)
-    # df['evrmarry'] = (df.F_13 > 0).astype(int)
-    # # CleanData(df)
-    debug = 0
-    for line in gzip.open('1982NSFGData.dat.gz', 'r'):
-        debug +=1
+def ReadCanadaCycle5():
+    """
 
-    # d_file = np.loadtxt('1988FemRespData.dat', unpack=True)
-    # debug = d_file.shape[0]
-    return debug
+    """
+    #age at first marriage: CC232
+    #age of respondent at interview: C3
+    #final weight: C1
+    #marital status: C5
+    #Respondent every married: CC227
+    pass
+
+def ReadCanadaCycle6():
+    """
+
+    """
+    #age at first marriage: CC232
+    #age of respondent at interview: C3
+    #final weight: C1
+    #marital status: C5
+    #Respondent every married: CC227
+    pass
 
 
-def PlotResampledByDecade(resps, iters=11, predict_flag=False, omit=None):
+def PlotResampledByDecade(resps, iters=11, predict_flag=False, omit=None, weighted=True):
     """Plots survival curves for resampled data.
 
     resps: list of DataFrames
@@ -634,8 +653,11 @@ def PlotResampledByDecade(resps, iters=11, predict_flag=False, omit=None):
     predict_flag: whether to also plot predictions
     """
     for i in range(iters):
-        samples = [thinkstats2.ResampleRowsWeighted(resp) 
-                   for resp in resps]
+        if weighted:
+            samples = [thinkstats2.ResampleRowsWeighted(resp) 
+                       for resp in resps]
+        else:
+            samples = [thinkstats2.ResampleRows(resp) for resp in resps]
         sample = pandas.concat(samples, ignore_index=True)
         groups = sample.groupby('decade')
 
@@ -695,8 +717,10 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    d1 = ReadFemResp1982()
-    d2 = ReadFemResp1995()
+    d1 = ReadFemResp1988()
+    # d2 = ReadFemResp1995()
     # d3 = ReadFemResp2002()
     # d4 = ReadFemResp2010()
-    PlotResampledByAge([d1,d2])
+    # PlotResampledByAge([d1,d2])
+    print(len(d1))
+
