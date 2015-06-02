@@ -16,6 +16,7 @@ import thinkplot
 import gzip
 import matplotlib.pyplot as plt
 
+from collections import defaultdict
 
 FORMATS = ['pdf', 'eps', 'png']
 
@@ -257,74 +258,6 @@ def CleanData(resp):
     resp['fives'] = (pandas.DatetimeIndex(dates).year - 1900) // 5
 
 
-def AddLabelsByDecade(groups, **options):
-    """Draws fake points in order to add labels to the legend.
-
-    groups: GroupBy object
-    """
-    thinkplot.PrePlot(len(groups))
-    for name, _ in groups:
-        label = '%d0s' % name
-        thinkplot.Plot([15], [1], label=label, **options)
-
-
-def EstimateSurvivalByDecade(groups, **options):
-    """Groups respondents by decade and plots survival curves.
-
-    groups: GroupBy object
-    """
-    thinkplot.PrePlot(len(groups))
-    for _, group in groups:
-        _, sf = EstimateSurvival(group)
-        thinkplot.Plot(sf, **options)
-
-
-def PlotPredictionsByDecade(groups, **options):
-    """Groups respondents by decade and plots survival curves.
-
-    groups: GroupBy object
-    """
-    hfs = []
-    for _, group in groups:
-        hf, sf = EstimateSurvival(group)
-        hfs.append(hf)
-
-    thinkplot.PrePlot(len(hfs))
-    for i, hf in enumerate(hfs):
-        if i > 0:
-            hf.Extend(hfs[i-1])
-        sf = hf.MakeSurvival()
-        thinkplot.Plot(sf, **options)
-
-
-def ResampleSurvival(resp, iters=101):
-    """Resamples respondents and estimates the survival function.
-
-    resp: DataFrame of respondents
-    iters: number of resamples
-    """ 
-    _, sf = EstimateSurvival(resp)
-    thinkplot.Plot(sf)
-
-    low, high = resp.agemarry.min(), resp.agemarry.max()
-    ts = np.arange(low, high, 1/12.0)
-
-    ss_seq = []
-    for _ in range(iters):
-        sample = thinkstats2.ResampleRowsWeighted(resp)
-        _, sf = EstimateSurvival(sample)
-        ss_seq.append(sf.Probs(ts))
-
-    low, high = thinkstats2.PercentileRows(ss_seq, [5, 95])
-    thinkplot.FillBetween(ts, low, high, color='gray', label='90% CI')
-    thinkplot.Save(root='survival3',
-                   xlabel='age (years)',
-                   ylabel='prob unmarried',
-                   xlim=[12, 46],
-                   ylim=[0, 1],
-                   formats=FORMATS)
-
-
 def EstimateSurvival(resp):
     """Estimates the survival curve.
 
@@ -339,6 +272,111 @@ def EstimateSurvival(resp):
     sf = hf.MakeSurvival()
 
     return hf, sf
+
+
+def EstimateSurvival2(resp):
+    """Estimates the survival curve.
+
+    resp: DataFrame of respondents
+
+    returns: pair of HazardFunction, SurvivalFunction
+    """
+    # TODO: get this working
+    resp['event_times'] = resp.age
+    resp['event_times'][resp.evrmarry == 1] = resp.agemarry
+
+    cleaned = resp.dropna(subset=['event_times'])
+    kmf = KaplanMeierFitter()
+    kmf.fit(cleaned.event_times, cleaned.evrmarry)
+    kmf.survival_function_
+
+    complete = resp[resp.evrmarry == 1].agemarry
+    ongoing = resp[resp.evrmarry == 0].age
+
+    hf = EstimateHazardFunction(complete, ongoing)
+    sf = hf.MakeSurvival()
+
+    return hf, sf
+
+
+def ResampleSurvivalByDecade(resps, iters=101, predict_flag=False, omit=[]):
+    """Makes survival curves for resampled data.
+
+    resps: list of DataFrames
+    iters: number of resamples to plot
+    predict_flag: whether to also plot predictions
+    
+    returns: map from group name to list of survival functions
+    """
+    sf_map = defaultdict(list)
+
+    # iters is the number of resampling runs to make
+    for i in range(iters):
+        
+        # we have to resample the data from each cycles separately
+        samples = [thinkstats2.ResampleRowsWeighted(resp) 
+                   for resp in resps]
+        
+        # then join the cycles into one big sample
+        sample = pandas.concat(samples, ignore_index=True)
+        for decade in omit:
+            sample = sample[sample.decade != decade]
+        
+        # group by decade
+        grouped = sample.groupby('decade')
+
+        # and estimate (hf, sf) for each group
+        hf_map = grouped.apply(lambda group: EstimateSurvival(group))
+
+        if predict_flag:
+            MakePredictionsByDecade(hf_map)       
+
+        # extract the sf from each pair and acculumulate the results
+        for name, (hf, sf) in hf_map.iteritems():
+            sf_map[name].append(sf)
+             
+            
+    return sf_map
+
+
+def MakePredictionsByDecade(hf_map, **options):
+    """Extends a set of hazard functions and recomputes survival functions.
+
+    For each group in hf_map, we extend hf and recompute sf.
+
+    hf_map: map from group name to (HazardFunction, SurvivalFunction)
+    """
+    # TODO: this only works if the names and values are in increasing order,
+    # which is true when hf_map is a GroupBy object, but not generally
+    # true for maps.
+    names = hf_map.index.values
+    hfs = [hf for (hf, sf) in hf_map.values]
+    
+    # extend each hazard function using data from the previous cohort,
+    # and update the survival function
+    for i, hf in enumerate(hfs):
+        if i > 0:
+            hf.Extend(hfs[i-1])
+        sf = hf.MakeSurvival()
+        hf_map[names[i]] = hf, sf
+
+
+def MakeSurvivalCI(sf_seq, percents):
+    
+    # find the union of all ts where the sfs are evaluated
+    ts = set()
+    for sf in sf_seq:
+        ts |= set(sf.ts)
+    
+    ts = list(ts)
+    ts.sort()
+    
+    # evaluate each sf at all times
+    ss_seq = [sf.Probs(ts) for sf in sf_seq]
+    
+    # return the requested percentiles from each column
+    rows = thinkstats2.PercentileRows(ss_seq, percents)
+    return ts, rows
 
 
 def PlotMarriageData(resp):
@@ -542,36 +580,21 @@ def ReadCanadaCycle6():
     pass
 
 
-def PlotResampledByDecade(resps, iters=11, predict_flag=False, omit=None, weighted=True):
-    """Plots survival curves for resampled data.
+def PlotSurvivalFunctionByDecade(sf_map, predict_flag=False):
+    thinkplot.PrePlot(len(sf_map))
 
-    resps: list of DataFrames
-    iters: number of resamples to plot
-    predict_flag: whether to also plot predictions
-    """
-    for i in range(iters):
-        if weighted:
-            samples = [thinkstats2.ResampleRowsWeighted(resp) 
-                       for resp in resps]
-        else:
-            samples = [thinkstats2.ResampleRows(resp) for resp in resps]
-        sample = pandas.concat(samples, ignore_index=True)
-        groups = sample.groupby('decade')
-
-        if omit:
-            groups = [(name, group) for name, group in groups 
-                      if name not in omit]
-
-        # TODO: refactor this to collect resampled estimates and
-        # plot shaded areas
-        if i == 0:
-            AddLabelsByDecade(groups, alpha=0.7)
-
+    for name, sf_seq in sorted(sf_map.iteritems(), reverse=True):
+        ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
+        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray')
         if predict_flag:
-            PlotPredictionsByDecade(groups, alpha=0.1)
-            EstimateSurvivalByDecade(groups, alpha=0.1)
+            thinkplot.Plot(ts, rows[1], color='gray')
         else:
-            EstimateSurvivalByDecade(groups, alpha=0.2)
+            thinkplot.Plot(ts, rows[1], label='%d0s'%name)
+
+    thinkplot.Config(xlabel='age(years)', ylabel='prob unmarried',
+                     xlim=[15, 45], ylim=[0, 1],
+                     legend=True, loc='upper right')
+
 
 
 def Validate1982(df):
@@ -617,6 +640,17 @@ def Validate2013(df):
 def main():
     thinkstats2.RandomSeed(17)
 
+    # make the plots based on Cycle 6
+
+    resp6 = ReadFemResp2002()
+    resps = [resp6]
+
+    sf_map = ResampleSurvivalByDecade(resps)
+    sf_map_pred = ResampleSurvivalByDecade(resps, predict_flag=True)
+    PlotSurvivalFunctionByDecade(sf_map)
+    thinkplot.Save(root='marriage1', formats=['pdf'])
+    return
+
     resp8 = ReadFemResp2013()
     Validate2013(resp8)
     return
@@ -640,15 +674,6 @@ def main():
     resp3 = ReadFemResp1982()
     Validate1982(resp3)
     return
-
-    
-    # make the plots based on Cycle 6
-
-    sf2 = PlotMarriageData(resp6)
-    ResampleSurvival(resp6)
-
-    # read Cycles 5 and 7
-    resp7 = ReadFemResp2010()
 
 
 if __name__ == '__main__':
