@@ -132,6 +132,9 @@ class HazardFunction(object):
     def __getitem__(self, t):
         return self.series[t]
 
+    def Get(self, t, default=float('nan')):
+        return self.series.get(t, default)
+
     def Render(self):
         """Generates a sequence of points suitable for plotting.
 
@@ -220,19 +223,26 @@ def EstimateHazardFunction(complete, ongoing, label='', shift=1e-7):
     # pmf and sf of complete lifetimes
     n = len(complete)
     hist_complete = thinkstats2.Hist(complete)
-    sf_complete = SurvivalFunction(thinkstats2.Cdf(complete))
+    sf_complete = SurvivalFunction(thinkstats2.Cdf(hist_complete))
 
     # sf for ongoing lifetimes
     # The shift is a regrettable hack needed to deal with simultaneity.
     # If a case is complete at some t and another case is ongoing
-    # at t, we presume that the ongoing case exceeds t+shift.
+    # at t, we presume that the ongoing case exceeds t by a small shift.
     m = len(ongoing)
     cdf = thinkstats2.Cdf(ongoing).Shift(shift)
     sf_ongoing = SurvivalFunction(cdf)
 
     lams = {}
-    for t, ended in sorted(hist_complete.Items()):
-        at_risk = ended + n * sf_complete[t] + m * sf_ongoing[t]
+    times = np.concatenate((sf_complete.ts, sf_ongoing.ts))
+
+    for t in sorted(times):
+        ended = hist_complete[t]
+        if n == 0:
+            at_risk = ended + m * sf_ongoing[t]
+        else:
+            at_risk = ended + n * sf_complete[t] + m * sf_ongoing[t]
+
         lams[t] = ended / at_risk
         #print(t, ended, n * sf_complete[t], m * sf_ongoing[t], at_risk)
 
@@ -254,8 +264,9 @@ def CleanData(resp):
     month0 = pandas.to_datetime('1899-12-15')
     dates = [month0 + pandas.DateOffset(months=cm) 
              for cm in resp.cmbirth]
-    resp['decade'] = (pandas.DatetimeIndex(dates).year - 1900) // 10
-    resp['fives'] = (pandas.DatetimeIndex(dates).year - 1900) // 5
+    resp['year'] = (pandas.DatetimeIndex(dates).year - 1900)
+    resp['decade'] = resp.year // 10
+    resp['fives'] = resp.year // 5
 
 
 def EstimateSurvival(resp):
@@ -267,6 +278,22 @@ def EstimateSurvival(resp):
     """
     complete = resp[resp.evrmarry == 1].agemarry
     ongoing = resp[resp.evrmarry == 0].age
+
+    hf = EstimateHazardFunction(complete, ongoing)
+    sf = hf.MakeSurvival()
+
+    return hf, sf
+
+
+def EstimateSurvivalIndex(resp):
+    """Estimates the survival curve.
+
+    resp: DataFrame of respondents
+
+    returns: pair of HazardFunction, SurvivalFunction
+    """
+    complete = resp[resp.evrmarry == 1].agemarry_index
+    ongoing = resp[resp.evrmarry == 0].age_index
 
     hf = EstimateHazardFunction(complete, ongoing)
     sf = hf.MakeSurvival()
@@ -336,6 +363,45 @@ def ResampleSurvivalByDecade(resps, iters=101, predict_flag=False, omit=[]):
             sf_map[name].append(sf)
              
             
+    return sf_map
+
+
+def ResampleSurvivalByBirth(resps, iters=101, predict_flag=False, omit=[]):
+    """Makes survival curves for resampled data.
+
+    resps: list of DataFrames
+    iters: number of resamples to plot
+    predict_flag: whether to also plot predictions
+    
+    returns: map from group name to list of survival functions
+    """
+    sf_map = defaultdict(list)
+
+    # iters is the number of resampling runs to make
+    for i in range(iters):
+        
+        # we have to resample the data from each cycles separately
+        samples = [thinkstats2.ResampleRowsWeighted(resp) 
+                   for resp in resps]
+        
+        # then join the cycles into one big sample
+        sample = pandas.concat(samples, ignore_index=True)
+        for index in omit:
+            sample = sample[sample.birth_index != index]
+        
+        # group by decade
+        grouped = sample.groupby('birth_index')
+
+        # and estimate (hf, sf) for each group
+        hf_map = grouped.apply(lambda group: EstimateSurvivalIndex(group))
+
+        if predict_flag:
+            MakePredictionsByDecade(hf_map)       
+
+        # extract the sf from each pair and acculumulate the results
+        for name, (hf, sf) in hf_map.iteritems():
+            sf_map[name].append(sf)
+             
     return sf_map
 
 
