@@ -36,6 +36,9 @@ class SurvivalFunction(object):
     def ss(self):
         return 1 - self.cdf.ps
 
+    def __len__(self):
+        return len(self.cdf)
+
     def __getitem__(self, t):
         return self.Prob(t)
 
@@ -129,6 +132,9 @@ class HazardFunction(object):
         self.series = pandas.Series(d)
         self.label = label
 
+    def __len__(self):
+        return len(self.series)
+
     def __getitem__(self, t):
         return self.series[t]
 
@@ -158,8 +164,9 @@ class HazardFunction(object):
 
         other: HazardFunction
         """
-        last = self.series.index[-1]
-        more = other.series[other.series.index > last]
+        last_index = self.series.index[-1] if len(self) else 0
+
+        more = other.series[other.series.index > last_index]
         self.series = pandas.concat([self.series, more])
 
 
@@ -234,7 +241,8 @@ def EstimateHazardFunction(complete, ongoing, label='', shift=1e-7):
     sf_ongoing = SurvivalFunction(cdf)
 
     lams = {}
-    times = np.concatenate((sf_complete.ts, sf_ongoing.ts))
+    #times = np.concatenate((sf_complete.ts, sf_ongoing.ts))
+    times = sf_complete.ts
 
     for t in sorted(times):
         ended = hist_complete[t]
@@ -438,7 +446,7 @@ def MakeSurvivalCI(sf_seq, percents):
     ts.sort()
     
     # evaluate each sf at all times
-    ss_seq = [sf.Probs(ts) for sf in sf_seq]
+    ss_seq = [sf.Probs(ts) for sf in sf_seq if len(sf) > 0]
     
     # return the requested percentiles from each column
     rows = thinkstats2.PercentileRows(ss_seq, percents)
@@ -650,12 +658,21 @@ def PlotSurvivalFunctionByDecade(sf_map, predict_flag=False):
     thinkplot.PrePlot(len(sf_map))
 
     for name, sf_seq in sorted(sf_map.iteritems(), reverse=True):
+        print(name, len(sf_seq))
+
+        if len(sf_seq) == 0:
+            continue
+
+        sf = sf_seq[0]
+        if len(sf) == 0:
+            continue
+
         ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
         thinkplot.FillBetween(ts, rows[0], rows[2], color='gray')
         if predict_flag:
             thinkplot.Plot(ts, rows[1], color='gray')
         else:
-            thinkplot.Plot(ts, rows[1], label='%d0s'%name)
+            thinkplot.Plot(ts, rows[1], label='19%d'%name)
 
     thinkplot.Config(xlabel='age(years)', ylabel='prob unmarried',
                      xlim=[15, 45], ylim=[0, 1],
