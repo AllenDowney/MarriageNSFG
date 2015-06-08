@@ -17,6 +17,7 @@ import gzip
 import matplotlib.pyplot as plt
 
 from collections import defaultdict
+from collections import OrderedDict
 
 FORMATS = ['pdf', 'eps', 'png']
 
@@ -169,55 +170,11 @@ class HazardFunction(object):
         more = other.series[other.series.index > last_index]
         self.series = pandas.concat([self.series, more])
 
-
-def PlotSurvival(complete):
-    """Plots survival and hazard curves.
-
-    complete: list of complete lifetimes
-    """
-    thinkplot.PrePlot(3, rows=2)
-
-    cdf = thinkstats2.Cdf(complete, label='cdf')
-    sf = SurvivalFunction(cdf, label='survival')
-    print(cdf[13])
-    print(sf[13])
-
-    thinkplot.Plot(sf)
-    thinkplot.Cdf(cdf, alpha=0.2)
-    thinkplot.Config()
-
-    thinkplot.SubPlot(2)
-    hf = sf.MakeHazard(label='hazard')
-    print(hf[39])
-    thinkplot.Plot(hf)
-    thinkplot.Config(ylim=[0, 0.75])
+    def Truncate(self, t):
+        self.series = self.series[self.series.index < t]
 
 
-def PlotHazard(complete, ongoing):
-    """Plots the hazard function and survival function.
-
-    complete: list of complete lifetimes
-    ongoing: list of ongoing lifetimes
-    """
-    # plot S(t) based on only complete pregnancies
-    cdf = thinkstats2.Cdf(complete)
-    sf = SurvivalFunction(cdf)
-    thinkplot.Plot(sf, label='old S(t)', alpha=0.1)
-
-    thinkplot.PrePlot(2)
-
-    # plot the hazard function
-    hf = EstimateHazardFunction(complete, ongoing)
-    thinkplot.Plot(hf, label='lams(t)', alpha=0.5)
-
-    # plot the survival function
-    sf = hf.MakeSurvival()
-
-    thinkplot.Plot(sf, label='S(t)')
-    thinkplot.Show(xlabel='t (weeks)')
-
-
-def EstimateHazardFunction(complete, ongoing, label='', shift=1e-7):
+def EstimateHazardFunction(complete, ongoing, label='', jitter=1):
     """Estimates the hazard function by Kaplan-Meier.
 
     http://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
@@ -225,34 +182,22 @@ def EstimateHazardFunction(complete, ongoing, label='', shift=1e-7):
     complete: list of complete lifetimes
     ongoing: list of ongoing lifetimes
     label: string
-    shift: presumed additional survival of ongoing
     """
-    # pmf and sf of complete lifetimes
-    n = len(complete)
     hist_complete = thinkstats2.Hist(complete)
-    sf_complete = SurvivalFunction(thinkstats2.Cdf(hist_complete))
+    hist_ongoing = thinkstats2.Hist(ongoing)
 
-    # sf for ongoing lifetimes
-    # The shift is a regrettable hack needed to deal with simultaneity.
-    # If a case is complete at some t and another case is ongoing
-    # at t, we presume that the ongoing case exceeds t by a small shift.
-    m = len(ongoing)
-    cdf = thinkstats2.Cdf(ongoing).Shift(shift)
-    sf_ongoing = SurvivalFunction(cdf)
+    times = set(hist_complete) | set(hist_ongoing)
+    at_risk = len(complete) + len(ongoing)
 
     lams = {}
-    #times = np.concatenate((sf_complete.ts, sf_ongoing.ts))
-    times = sf_complete.ts
-
     for t in sorted(times):
         ended = hist_complete[t]
-        if n == 0:
-            at_risk = ended + m * sf_ongoing[t]
-        else:
-            at_risk = ended + n * sf_complete[t] + m * sf_ongoing[t]
+        if jitter:
+            ended += np.random.normal(0, jitter)
+        censored = hist_ongoing[t]
 
         lams[t] = ended / at_risk
-        #print(t, ended, n * sf_complete[t], m * sf_ongoing[t], at_risk)
+        at_risk -= ended + censored
 
     return HazardFunction(lams, label=label)
 
@@ -277,26 +222,11 @@ def CleanData(resp):
     resp['fives'] = resp.year // 5
 
 
-def EstimateSurvival(resp):
+def EstimateSurvival(resp, cutoff=None):
     """Estimates the survival curve.
 
     resp: DataFrame of respondents
-
-    returns: pair of HazardFunction, SurvivalFunction
-    """
-    complete = resp[resp.evrmarry == 1].agemarry
-    ongoing = resp[resp.evrmarry == 0].age
-
-    hf = EstimateHazardFunction(complete, ongoing)
-    sf = hf.MakeSurvival()
-
-    return hf, sf
-
-
-def EstimateSurvivalIndex(resp):
-    """Estimates the survival curve.
-
-    resp: DataFrame of respondents
+    cutoff: where to truncate the estimated functions
 
     returns: pair of HazardFunction, SurvivalFunction
     """
@@ -304,37 +234,51 @@ def EstimateSurvivalIndex(resp):
     ongoing = resp[resp.evrmarry == 0].age_index
 
     hf = EstimateHazardFunction(complete, ongoing)
+    if cutoff:
+        hf.Truncate(cutoff)
     sf = hf.MakeSurvival()
 
     return hf, sf
 
 
-def EstimateSurvival2(resp):
-    """Estimates the survival curve.
+def JitterResp(df, column, width=1):
+    """Adds random noise to a column.
 
-    resp: DataFrame of respondents
-
-    returns: pair of HazardFunction, SurvivalFunction
+    df: DataFrame
+    column: string column name
+    width: standard deviation of noise
     """
-    # TODO: get this working
-    resp['event_times'] = resp.age
-    resp['event_times'][resp.evrmarry == 1] = resp.agemarry
+    df[column] += np.random.normal(0, width, size=len(df))
+        
 
-    cleaned = resp.dropna(subset=['event_times'])
-    kmf = KaplanMeierFitter()
-    kmf.fit(cleaned.event_times, cleaned.evrmarry)
-    kmf.survival_function_
+def DigitizeResp(df):
+    """Digitizes age, agemarry, and birth year.
 
-    complete = resp[resp.evrmarry == 1].agemarry
-    ongoing = resp[resp.evrmarry == 0].age
+    df: DataFrame
+    """
+    age_min = 15
+    age_max = 45
+    age_step = 1
+    age_bins = np.arange(age_min, age_max, age_step)
 
-    hf = EstimateHazardFunction(complete, ongoing)
-    sf = hf.MakeSurvival()
+    year_min = 40
+    year_max = 99
+    year_step = 10
+    year_bins = np.arange(year_min, year_max, year_step)
 
-    return hf, sf
+    df['age_index'] = np.digitize(df.age, age_bins) * age_step
+    df.age_index += age_min - age_step
+    df.loc[df.age.isnull(), 'age_index'] = float('nan')
+    
+    df['agemarry_index'] = np.digitize(df.agemarry, age_bins) * age_step
+    df.agemarry_index += age_min - age_step
+    df.loc[df.agemarry.isnull(), 'agemarry_index'] = float('nan')
 
+    df['birth_index'] = np.digitize(df.year, year_bins) * year_step
+    df.birth_index += year_min - year_step
+    
 
-def ResampleSurvivalByDecade(resps, iters=101, predict_flag=False, omit=[]):
+def EstimateSurvivalByCohort(resps, iters=101, predict_flag=False):
     """Makes survival curves for resampled data.
 
     resps: list of DataFrames
@@ -343,6 +287,7 @@ def ResampleSurvivalByDecade(resps, iters=101, predict_flag=False, omit=[]):
     
     returns: map from group name to list of survival functions
     """
+    cutoffs = {80:33, 90:23}
     sf_map = defaultdict(list)
 
     # iters is the number of resampling runs to make
@@ -354,89 +299,90 @@ def ResampleSurvivalByDecade(resps, iters=101, predict_flag=False, omit=[]):
         
         # then join the cycles into one big sample
         sample = pandas.concat(samples, ignore_index=True)
-        for decade in omit:
-            sample = sample[sample.decade != decade]
         
-        # group by decade
-        grouped = sample.groupby('decade')
+        JitterResp(sample, 'age')
+        JitterResp(sample, 'agemarry')
+        DigitizeResp(sample)
 
-        # and estimate (hf, sf) for each group
-        hf_map = grouped.apply(lambda group: EstimateSurvival(group))
-
-        if predict_flag:
-            MakePredictionsByDecade(hf_map)       
-
-        # extract the sf from each pair and acculumulate the results
-        for name, (hf, sf) in hf_map.iteritems():
-            sf_map[name].append(sf)
-             
-            
-    return sf_map
-
-
-def ResampleSurvivalByBirth(resps, iters=101, predict_flag=False, omit=[]):
-    """Makes survival curves for resampled data.
-
-    resps: list of DataFrames
-    iters: number of resamples to plot
-    predict_flag: whether to also plot predictions
-    
-    returns: map from group name to list of survival functions
-    """
-    sf_map = defaultdict(list)
-
-    # iters is the number of resampling runs to make
-    for i in range(iters):
-        
-        # we have to resample the data from each cycles separately
-        samples = [thinkstats2.ResampleRowsWeighted(resp) 
-                   for resp in resps]
-        
-        # then join the cycles into one big sample
-        sample = pandas.concat(samples, ignore_index=True)
-        for index in omit:
-            sample = sample[sample.birth_index != index]
-        
         # group by decade
         grouped = sample.groupby('birth_index')
 
         # and estimate (hf, sf) for each group
-        hf_map = grouped.apply(lambda group: EstimateSurvivalIndex(group))
+        hf_map = OrderedDict()
+        for name, group in iter(grouped):
+            cutoff = cutoffs.get(name, 45)
+            hf_map[name] = EstimateSurvival(group, cutoff)
 
+        # make predictions if desired
         if predict_flag:
-            MakePredictionsByDecade(hf_map)       
+            MakePredictions(hf_map)       
 
-        # extract the sf from each pair and acculumulate the results
+        # extract the sf from each pair and accumulate the results
         for name, (hf, sf) in hf_map.iteritems():
             sf_map[name].append(sf)
              
     return sf_map
 
 
-def MakePredictionsByDecade(hf_map, **options):
+def PlotSurvivalFunctions(sf_map, predict_flag=False):
+    """Plot estimated survival functions.
+
+    sf_map: map from group name to sequence of survival functions
+    predict_flag: whether the lines are predicted or actual
+    """
+    thinkplot.PrePlot(len(sf_map))
+
+    for name, sf_seq in sorted(sf_map.iteritems(), reverse=True):
+        if len(sf_seq) == 0:
+            continue
+
+        sf = sf_seq[0]
+        if len(sf) == 0:
+            continue
+
+        ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
+        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray')
+        if predict_flag:
+            pass
+            #thinkplot.Plot(ts, rows[1], color='gray')
+        else:
+            thinkplot.Plot(ts, rows[1], label='19%d'%name)
+
+    thinkplot.Config(xlabel='age(years)', ylabel='prob unmarried',
+                     xlim=[15, 45], ylim=[0, 1],
+                     legend=True, loc='upper right')
+
+
+def MakePredictions(hf_map):
     """Extends a set of hazard functions and recomputes survival functions.
 
     For each group in hf_map, we extend hf and recompute sf.
 
     hf_map: map from group name to (HazardFunction, SurvivalFunction)
     """
-    # TODO: this only works if the names and values are in increasing order,
-    # which is true when hf_map is a GroupBy object, but not generally
-    # true for maps.
-    names = hf_map.index.values
-    hfs = [hf for (hf, sf) in hf_map.values]
-    
+    names = hf_map.keys()
+    names.sort()
+    hfs = [hf_map[name][0] for name in names]
+
     # extend each hazard function using data from the previous cohort,
     # and update the survival function
-    for i, hf in enumerate(hfs):
+    for i, name in enumerate(names):
+        hf, sf = hf_map[name]
         if i > 0:
             hf.Extend(hfs[i-1])
         sf = hf.MakeSurvival()
-        hf_map[names[i]] = hf, sf
+        hf_map[name] = hf, sf
 
 
 def MakeSurvivalCI(sf_seq, percents):
-    
+    """Makes confidence intervals from a list of survival functions.
+
+    sf_seq: list of SurvivalFunction
+    percents: list of percentiles to select, like [5, 95]
+
+    returns: (ts, rows) where ts is a sequence of times and
+             rows contains one row of values for each percent
+    """
     # find the union of all ts where the sfs are evaluated
     ts = set()
     for sf in sf_seq:
@@ -451,28 +397,6 @@ def MakeSurvivalCI(sf_seq, percents):
     # return the requested percentiles from each column
     rows = thinkstats2.PercentileRows(ss_seq, percents)
     return ts, rows
-
-
-def PlotMarriageData(resp):
-    """Plots hazard and survival functions.
-
-    resp: DataFrame of respondents
-    """
-    hf, sf = EstimateSurvival(resp)
-
-    thinkplot.PrePlot(rows=2)
-    thinkplot.Plot(hf)
-    thinkplot.Config(legend=False)
-
-    thinkplot.SubPlot(2)
-    thinkplot.Plot(sf)
-    thinkplot.Save(root='survival2',
-                   xlabel='age (years)',
-                   ylabel='prob unmarried',
-                   ylim=[0, 1],
-                   legend=False,
-                   formats=FORMATS)
-    return sf
 
 
 def ReadFemResp(dct_file='2002FemResp.dct',
@@ -558,7 +482,7 @@ def ReadFemResp1995():
 
 
 def ReadFemResp1982():
-    """Reads respondent data from NSFG Cycle 4.
+    """Reads respondent data from NSFG Cycle 3.
 
     returns: DataFrame 
     """
@@ -654,32 +578,6 @@ def ReadCanadaCycle6():
     pass
 
 
-def PlotSurvivalFunctionByDecade(sf_map, predict_flag=False):
-    thinkplot.PrePlot(len(sf_map))
-
-    for name, sf_seq in sorted(sf_map.iteritems(), reverse=True):
-        print(name, len(sf_seq))
-
-        if len(sf_seq) == 0:
-            continue
-
-        sf = sf_seq[0]
-        if len(sf) == 0:
-            continue
-
-        ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
-        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray')
-        if predict_flag:
-            thinkplot.Plot(ts, rows[1], color='gray')
-        else:
-            thinkplot.Plot(ts, rows[1], label='19%d'%name)
-
-    thinkplot.Config(xlabel='age(years)', ylabel='prob unmarried',
-                     xlim=[15, 45], ylim=[0, 1],
-                     legend=True, loc='upper right')
-
-
-
 def Validate1982(df):
     assert(len(df) == 7969)
     assert(len(df[df.evrmarry]) == 4651)
@@ -730,7 +628,7 @@ def main():
 
     sf_map = ResampleSurvivalByDecade(resps)
     sf_map_pred = ResampleSurvivalByDecade(resps, predict_flag=True)
-    PlotSurvivalFunctionByDecade(sf_map)
+    PlotSurvivalFunctions(sf_map)
     thinkplot.Save(root='marriage1', formats=['pdf'])
     return
 
