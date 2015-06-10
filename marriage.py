@@ -10,7 +10,7 @@ from __future__ import print_function, division
 import bisect
 
 import numpy as np
-import pandas
+import pandas as pd
 
 import nsfg
 import thinkstats2
@@ -63,19 +63,24 @@ class SurvivalFunction(object):
         """
         return self.ts, self.ss
 
-    def MakeHazard(self, label=''):
+    def MakeHazardFunction(self, label=''):
         """Computes the hazard function.
 
-        sf: survival function
+        This simple version does not take into account the
+        spacing between the ts.  If the ts are not equally
+        spaced, it is not valid to compare the magnitude of
+        the hazard function across different time steps.
 
-        returns: Pmf that maps times to hazard rates
+        label: string
+
+        returns: HazardFunction object
         """
-        ss = self.ss
-        lams = pandas.Series(index=self.ts)
+        lams = pd.Series(index=self.ts)
 
-        for i, t in enumerate(self.ts[:-1]):
-            hazard = (ss[i] - ss[i+1]) / ss[i]
-            lams[t] = hazard
+        prev = 1.0
+        for t, s in zip(self.ts, self.ss):
+            lams[t] = (prev - s) / prev
+            prev = s
 
         return HazardFunction(lams, label=label)
 
@@ -110,7 +115,7 @@ class SurvivalFunction(object):
             pmf.Normalize()
             d[t] = func(pmf) - t
 
-        return pandas.Series(d)
+        return pd.Series(d)
 
 
 def MakeSurvivalFunction(values, label=''):
@@ -149,7 +154,7 @@ class HazardFunction(object):
 
         returns: tuple of (sorted times, hazard function)
         """
-        return self.series.index, self.series.values
+        return self.series.index.values, self.series.values
 
     def MakeSurvival(self, label=''):
         """Makes the survival function.
@@ -168,7 +173,7 @@ class HazardFunction(object):
         """
         last_index = self.series.index[-1] if len(self) else 0
         more = other.series[other.series.index > last_index]
-        self.series = pandas.concat([self.series, more])
+        self.series = pd.concat([self.series, more])
 
     def Truncate(self, t):
         """Truncates this hazard function at the given value of t.
@@ -178,7 +183,7 @@ class HazardFunction(object):
         self.series = self.series[self.series.index < t]
 
 
-def EstimateHazardFunction(complete, ongoing, label='', jitter=0):
+def EstimateHazard(complete, ongoing, label='', jitter=0, verbose=False):
     """Estimates the hazard function by Kaplan-Meier.
 
     http://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
@@ -190,28 +195,29 @@ def EstimateHazardFunction(complete, ongoing, label='', jitter=0):
     hist_complete = Counter(complete)
     hist_ongoing = Counter(ongoing)
 
-    times = set(hist_complete) | set(hist_ongoing)
-    times = list(times)
-    times.sort()
-    if not np.all(np.diff(times) > 0):
-        print(times)
+    ts = list(hist_complete | hist_ongoing)
+    ts.sort()
+    if not np.all(np.diff(ts) > 0):
+        print(ts)
 
     at_risk = len(complete) + len(ongoing)
 
-    lams = pandas.Series(index=times)
-    for t in times:
+    lams = pd.Series(index=ts)
+    for t in ts:
         ended = hist_complete[t]
         if jitter:
             ended += np.random.normal(0, jitter)
         censored = hist_ongoing[t]
 
         lams[t] = ended / at_risk
+        if verbose:
+            print(t, at_risk, ended, censored, lams[t])
         at_risk -= ended + censored
 
     return HazardFunction(lams, label=label)
 
 
-def EstimateHazardFunctionPandas(complete, ongoing, label=''):
+def EstimateHazardPandas(complete, ongoing, label=''):
     """Estimates the hazard function by Kaplan-Meier.
 
     http://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
@@ -223,12 +229,12 @@ def EstimateHazardFunctionPandas(complete, ongoing, label=''):
     hist_complete = Counter(complete)
     hist_ongoing = Counter(ongoing)
 
-    times = set(hist_complete) | set(hist_ongoing)
+    ts = set(hist_complete) | set(hist_ongoing)
     at_risk = len(complete) + len(ongoing)
 
-    ended = [hist_complete[t] for t in times]
+    ended = [hist_complete[t] for t in ts]
     ended_c = np.cumsum(ended)
-    censored_c = np.cumsum([hist_ongoing[t] for t in times])
+    censored_c = np.cumsum([hist_ongoing[t] for t in ts])
 
     not_at_risk = np.roll(ended_c, 1) + np.roll(censored_c, 1)
     not_at_risk[0] = 0
@@ -236,7 +242,7 @@ def EstimateHazardFunctionPandas(complete, ongoing, label=''):
     at_risk_array = at_risk - not_at_risk
     hs = ended / at_risk_array
 
-    lams = dict(zip(times, hs))
+    lams = dict(zip(ts, hs))
 
     return HazardFunction(lams, label=label)
 
@@ -253,10 +259,10 @@ def CleanData(resp):
     resp['agemarry'] = (resp.cmmarrhx - resp.cmbirth) / 12.0
     resp['age'] = (resp.cmintvw - resp.cmbirth) / 12.0
 
-    month0 = pandas.to_datetime('1899-12-15')
-    dates = [month0 + pandas.DateOffset(months=cm) 
+    month0 = pd.to_datetime('1899-12-15')
+    dates = [month0 + pd.DateOffset(months=cm) 
              for cm in resp.cmbirth]
-    resp['year'] = (pandas.DatetimeIndex(dates).year - 1900)
+    resp['year'] = (pd.DatetimeIndex(dates).year - 1900)
     resp['decade'] = resp.year // 10
     resp['fives'] = resp.year // 5
 
@@ -272,7 +278,7 @@ def EstimateSurvival(resp, cutoff=None):
     complete = resp[resp.evrmarry].agemarry_index
     ongoing = resp[~resp.evrmarry].age_index
 
-    hf = EstimateHazardFunction(complete, ongoing, jitter=0)
+    hf = EstimateHazard(complete, ongoing, jitter=0)
     if cutoff:
         hf.Truncate(cutoff)
     sf = hf.MakeSurvival()
@@ -329,7 +335,7 @@ def ResampleResps(resps):
                for resp in resps]
         
     # then join the cycles into one big sample
-    sample = pandas.concat(samples, ignore_index=True)
+    sample = pd.concat(samples, ignore_index=True)
 
     # remove married people with unknown marriage dates
     sample['missing'] = (sample.evrmarry & sample.agemarry.isnull())
@@ -531,7 +537,7 @@ def ReadFemResp1995():
                 (11759-1, 11762),
                 (14-1, 16),
                 (12350-1, 12359)]
-    df = pandas.read_fwf(dat_file, 
+    df = pd.read_fwf(dat_file, 
                          compression='gzip', 
                          colspecs=colspecs, 
                          names=names)
@@ -560,7 +566,7 @@ def ReadFemResp1982():
                 (12-1, 15),
                 ]
 
-    df = pandas.read_fwf(dat_file,
+    df = pd.read_fwf(dat_file,
                          colspecs=colspecs, 
                          names=names,
                          header=None,
@@ -593,11 +599,11 @@ def ReadFemResp1988():
                 (26-1, 30),
                 ]
 
-    df = pandas.read_fwf(filename,
-                         colspecs=colspecs, 
-                         names=names,
-                         header=None,
-                         compression='gzip')
+    df = pd.read_fwf(filename,
+                     colspecs=colspecs, 
+                     names=names,
+                     header=None,
+                     compression='gzip')
 
     # clean date of current/only marriage
     df.currentcm.replace([0], np.nan, inplace=True)
