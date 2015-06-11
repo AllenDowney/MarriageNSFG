@@ -413,7 +413,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False):
         if not predict_flag:
             thinkplot.Plot(ts, rows[1], label='19%d'%name)
 
-    thinkplot.Config(xlabel='age(years)', ylabel='prob unmarried',
+    thinkplot.Config(xlabel='age (years)', ylabel='prob unmarried',
                      xlim=[14, 45], ylim=[0, 1],
                      legend=True, loc='upper right')
 
