@@ -485,8 +485,8 @@ def ReadFemResp2002():
 
     returns: DataFrame
     """
-    usecols = ['cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
-               'evrmarry', 'finalwgt']
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
+               'evrmarry', 'parity', 'finalwgt']
     df = ReadFemResp(usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
     CleanData(df)
@@ -498,8 +498,8 @@ def ReadFemResp2010():
 
     returns: DataFrame
     """
-    usecols = ['cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'wgtq1q16']
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
+               'evrmarry', 'parity', 'wgtq1q16']
     df = ReadFemResp('2006_2010_FemRespSetup.dct',
                        '2006_2010_FemResp.dat.gz',
                         usecols=usecols)
@@ -514,8 +514,8 @@ def ReadFemResp2013():
 
     returns: DataFrame
     """
-    usecols = ['cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'wgt2011_2013']
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
+               'evrmarry', 'parity', 'wgt2011_2013']
     df = ReadFemResp('2011_2013_FemRespSetup.dct',
                         '2011_2013_FemRespData.dat.gz',
                         usecols=usecols)
