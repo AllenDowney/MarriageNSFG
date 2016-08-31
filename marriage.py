@@ -12,9 +12,6 @@ import bisect
 import numpy as np
 import pandas as pd
 
-import nsfg
-import thinkstats2
-import thinkplot
 import gzip
 import matplotlib.pyplot as plt
 
@@ -22,268 +19,10 @@ from collections import defaultdict
 from collections import OrderedDict
 from collections import Counter
 
-FORMATS = ['pdf', 'eps', 'png']
+import thinkstats2
+import thinkplot
 
-
-class SurvivalFunction(object):
-    """Represents a survival function."""
-
-    def __init__(self, ts, ss, label=''):
-        self.ts = ts
-        self.ss = ss
-        self.label = label
-
-    def __len__(self):
-        return len(self.ts)
-
-    def __getitem__(self, t):
-        return self.Prob(t)
-
-    def Prob(self, t):
-        """Returns S(t), the probability that corresponds to value t.
-
-        t: time
-
-        returns: float probability
-        """
-        return np.interp(t, self.ts, self.ss, left=1.0)
-
-    def Probs(self, ts):
-        """Gets probabilities for a sequence of values."""
-        return np.interp(ts, self.ts, self.ss, left=1.0)
-
-    def Items(self):
-        """Sorted list of (t, s) pairs."""
-        return zip(self.ts, self.ss)
-
-    def Render(self):
-        """Generates a sequence of points suitable for plotting.
-
-        returns: tuple of (sorted times, survival function)
-        """
-        return self.ts, self.ss
-
-    def MakeHazardFunction(self, label=''):
-        """Computes the hazard function.
-
-        This simple version does not take into account the
-        spacing between the ts.  If the ts are not equally
-        spaced, it is not valid to compare the magnitude of
-        the hazard function across different time steps.
-
-        label: string
-
-        returns: HazardFunction object
-        """
-        lams = pd.Series(index=self.ts)
-
-        prev = 1.0
-        for t, s in zip(self.ts, self.ss):
-            lams[t] = (prev - s) / prev
-            prev = s
-
-        return HazardFunction(lams, label=label)
-
-    def MakePmf(self, filler=None):
-        """Makes a PMF of lifetimes.
-
-        filler: value to replace missing values
-
-        returns: Pmf
-        """
-        pmf = thinkstats2.Pmf()
-        for val, prob in self.cdf.Items():
-            pmf.Set(val, prob)
-
-        cutoff = self.cdf.ps[-1]
-        if filler is not None:
-            pmf[filler] = 1-cutoff
-
-        return pmf
-
-    def RemainingLifetime(self, filler=None, func=thinkstats2.Pmf.Mean):
-        """Computes remaining lifetime as a function of age.
-
-        func: function from conditional Pmf to expected liftime
-
-        returns: Series that maps from age to remaining lifetime
-        """
-        pmf = self.MakePmf(filler=filler)
-        d = {}
-        for t in sorted(pmf.Values())[:-1]:
-            pmf[t] = 0
-            pmf.Normalize()
-            d[t] = func(pmf) - t
-
-        return pd.Series(d)
-
-
-def MakeSurvivalFunction(values, label=''):
-    counter = Counter(values)
-    ts, freqs = zip(*sorted(counter.items()))
-    ts = np.asarray(ts)
-    ps = np.cumsum(freqs, dtype=np.float)
-    ps /= ps[-1]
-    ss = 1 - ps
-    return SurvivalFunction(ts, ss, label)
-
-
-class HazardFunction(object):
-    """Represents a hazard function."""
-
-    def __init__(self, series, label=''):
-        """Initialize the hazard function.
-
-        series: pandas Series
-        label: string
-        """
-        self.series = series
-        self.label = label
-
-    def __len__(self):
-        return len(self.series)
-
-    def __getitem__(self, t):
-        return self.series[t]
-
-    def Get(self, t, default=np.nan):
-        return self.series.get(t, default)
-
-    def Render(self):
-        """Generates a sequence of points suitable for plotting.
-
-        returns: tuple of (sorted times, hazard function)
-        """
-        return self.series.index.values, self.series.values
-
-    def MakeSurvival(self, label=''):
-        """Makes the survival function.
-
-        returns: SurvivalFunction
-        """
-        series = (1 - self.series).cumprod()
-        ts = series.index.values
-        ss = series.values
-        return SurvivalFunction(ts, ss, label=label)
-
-    def Extend(self, other):
-        """Extends this hazard function by copying the tail from another.
-
-        other: HazardFunction
-        """
-        last_index = self.series.index[-1] if len(self) else 0
-        more = other.series[other.series.index > last_index]
-        self.series = pd.concat([self.series, more])
-
-    def Truncate(self, t):
-        """Truncates this hazard function at the given value of t.
-
-        t: number
-        """
-        self.series = self.series[self.series.index < t]
-
-
-def EstimateHazard(complete, ongoing, label='', jitter=0, verbose=False):
-    """Estimates the hazard function by Kaplan-Meier.
-
-    http://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
-
-    complete: list of complete lifetimes
-    ongoing: list of ongoing lifetimes
-    label: string
-    """
-    hist_complete = Counter(complete)
-    hist_ongoing = Counter(ongoing)
-
-    ts = list(hist_complete | hist_ongoing)
-    ts.sort()
-    if not np.all(np.diff(ts) > 0):
-        print(ts)
-
-    at_risk = len(complete) + len(ongoing)
-
-    lams = pd.Series(index=ts)
-    for t in ts:
-        ended = hist_complete[t]
-        if jitter:
-            ended += np.random.normal(0, jitter)
-        censored = hist_ongoing[t]
-
-        lams[t] = ended / at_risk
-        if verbose:
-            print(t, at_risk, ended, censored, lams[t])
-        at_risk -= ended + censored
-
-    return HazardFunction(lams, label=label)
-
-
-def EstimateHazardPandas(complete, ongoing, label=''):
-    """Estimates the hazard function by Kaplan-Meier.
-
-    http://en.wikipedia.org/wiki/Kaplan%E2%80%93Meier_estimator
-
-    complete: list of complete lifetimes
-    ongoing: list of ongoing lifetimes
-    label: string
-    """
-    hist_complete = Counter(complete)
-    hist_ongoing = Counter(ongoing)
-
-    ts = set(hist_complete) | set(hist_ongoing)
-    at_risk = len(complete) + len(ongoing)
-
-    ended = [hist_complete[t] for t in ts]
-    ended_c = np.cumsum(ended)
-    censored_c = np.cumsum([hist_ongoing[t] for t in ts])
-
-    not_at_risk = np.roll(ended_c, 1) + np.roll(censored_c, 1)
-    not_at_risk[0] = 0
-
-    at_risk_array = at_risk - not_at_risk
-    hs = ended / at_risk_array
-
-    lams = dict(zip(ts, hs))
-
-    return HazardFunction(lams, label=label)
-
-
-def CleanData(resp):
-    """Cleans a respondent DataFrame.
-
-    resp: DataFrame of respondents
-
-    Adds columns: agemarry, age, decade, fives
-    """
-    resp.cmmarrhx.replace([9997, 9998, 9999], np.nan, inplace=True)
-
-    resp['agemarry'] = (resp.cmmarrhx - resp.cmbirth) / 12.0
-    resp['age'] = (resp.cmintvw - resp.cmbirth) / 12.0
-
-    month0 = pd.to_datetime('1899-12-15')
-    dates = [month0 + pd.DateOffset(months=cm) 
-             for cm in resp.cmbirth]
-    resp['year'] = (pd.DatetimeIndex(dates).year - 1900)
-    resp['decade'] = resp.year // 10
-    resp['fives'] = resp.year // 5
-
-
-def EstimateSurvival(resp, cutoff=None):
-    """Estimates the survival curve.
-
-    resp: DataFrame of respondents
-    cutoff: where to truncate the estimated functions
-
-    returns: pair of HazardFunction, SurvivalFunction
-    """
-    complete = resp[resp.evrmarry].agemarry_index
-    ongoing = resp[~resp.evrmarry].age_index
-
-    hf = EstimateHazard(complete, ongoing, jitter=0)
-    if cutoff:
-        hf.Truncate(cutoff)
-    sf = hf.MakeSurvival()
-
-    return hf, sf
+import survival
 
 
 def JitterResp(df, column, jitter=1):
@@ -323,7 +62,7 @@ def DigitizeResp(df):
     df.birth_index += year_min - year_step
 
 
-def ResampleResps(resps):
+def ResampleResps(resps, remove_missing=False):
     """Resamples each dataframe and then concats them.
 
     resps: list of DataFrame
@@ -338,9 +77,10 @@ def ResampleResps(resps):
     sample = pd.concat(samples, ignore_index=True)
 
     # remove married people with unknown marriage dates
-    sample['missing'] = (sample.evrmarry & sample.agemarry.isnull())
-    sample = sample[~sample.missing]
-
+    if remove_missing:
+        sample['missing'] = (sample.evrmarry & sample.agemarry.isnull())
+        sample = sample[~sample.missing]
+    
     # TODO: fill missing values
     #DigitizeResp(sample)
     #grouped = sample.groupby('birth_index')
@@ -353,6 +93,27 @@ def ResampleResps(resps):
     DigitizeResp(sample)
 
     return sample
+
+
+def EstimateSurvival(resp, cutoff=None):
+    """Estimates the survival curve.
+
+    resp: DataFrame of respondents
+    cutoff: where to truncate the estimated functions
+
+    returns: pair of HazardFunction, SurvivalFunction
+    """
+    # TODO: fill missing data
+
+    complete = resp[resp.evrmarry].agemarry_index
+    ongoing = resp[~resp.evrmarry].age_index
+
+    hf = survival.EstimateHazardFunction(complete, ongoing)
+    if cutoff:
+        hf.Truncate(cutoff)
+    sf = hf.MakeSurvival()
+
+    return hf, sf
 
 
 def EstimateSurvivalByCohort(resps, iters=101, predict_flag=False):
@@ -464,91 +225,6 @@ def MakeSurvivalCI(sf_seq, percents):
     return ts, rows
 
 
-def ReadFemResp(dct_file='2002FemResp.dct',
-                dat_file='2002FemResp.dat.gz',
-                **options):
-    """Reads the NSFG respondent data.
-
-    dct_file: string file name
-    dat_file: string file name
-
-    returns: DataFrame
-    """
-    dct = thinkstats2.ReadStataDct(dct_file, encoding='iso-8859-1')
-    df = dct.ReadFixedWidth(dat_file, compression='gzip', **options)
-    CleanData(df)
-    return df
-
-
-def ReadFemResp2002():
-    """Reads respondent data from NSFG Cycle 6.
-
-    returns: DataFrame
-    """
-    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
-               'evrmarry', 'parity', 'finalwgt']
-    df = ReadFemResp(usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
-    CleanData(df)
-    return df
-
-
-def ReadFemResp2010():
-    """Reads respondent data from NSFG Cycle 7.
-
-    returns: DataFrame
-    """
-    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'parity', 'wgtq1q16']
-    df = ReadFemResp('2006_2010_FemRespSetup.dct',
-                       '2006_2010_FemResp.dat.gz',
-                        usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
-    df['finalwgt'] = df.wgtq1q16
-    CleanData(df)
-    return df
-
-
-def ReadFemResp2013():
-    """Reads respondent data from NSFG Cycle 8.
-
-    returns: DataFrame
-    """
-    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'parity', 'wgt2011_2013']
-    df = ReadFemResp('2011_2013_FemRespSetup.dct',
-                        '2011_2013_FemRespData.dat.gz',
-                        usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
-    df['finalwgt'] = df.wgt2011_2013
-    CleanData(df)
-    return df
-
-
-def ReadFemResp1995():
-    """Reads respondent data from NSFG Cycle 5.
-
-    returns: DataFrame
-    """
-    dat_file = '1995FemRespData.dat.gz'
-    names = ['cmintvw', 'timesmar', 'cmmarrhx', 'cmbirth', 'finalwgt']
-    colspecs = [(12360-1, 12363),
-                (4637-1, 4638),
-                (11759-1, 11762),
-                (14-1, 16),
-                (12350-1, 12359)]
-    df = pd.read_fwf(dat_file, 
-                         compression='gzip', 
-                         colspecs=colspecs, 
-                         names=names)
-
-    df.timesmar.replace([98, 99], np.nan, inplace=True)
-    df['evrmarry'] = (df.timesmar > 0)
-
-    CleanData(df)
-    return df
-
-
 def ReadFemResp1982():
     """Reads respondent data from NSFG Cycle 3.
 
@@ -579,7 +255,7 @@ def ReadFemResp1982():
 
     df['evrmarry'] = (df.fmarital != 6)
 
-    CleanData(df)
+    CleanFemResp(df)
     return df
 
 
@@ -624,8 +300,112 @@ def ReadFemResp1988():
     # define evrmarry if either currentcm or firstcm is non-zero
     df['evrmarry'] = ~df.cmmarrhx.isnull()
 
-    CleanData(df)
+    CleanFemResp(df)
     return df
+
+
+def ReadFemResp1995():
+    """Reads respondent data from NSFG Cycle 5.
+
+    returns: DataFrame
+    """
+    dat_file = '1995FemRespData.dat.gz'
+    names = ['cmintvw', 'timesmar', 'cmmarrhx', 'cmbirth', 'finalwgt']
+    colspecs = [(12360-1, 12363),
+                (4637-1, 4638),
+                (11759-1, 11762),
+                (14-1, 16),
+                (12350-1, 12359)]
+    df = pd.read_fwf(dat_file, 
+                         compression='gzip', 
+                         colspecs=colspecs, 
+                         names=names)
+
+    df.timesmar.replace([98, 99], np.nan, inplace=True)
+    df['evrmarry'] = (df.timesmar > 0)
+
+    CleanFemResp(df)
+    return df
+
+
+def ReadFemResp2002():
+    """Reads respondent data from NSFG Cycle 6.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
+               'evrmarry', 'parity', 'finalwgt']
+    df = ReadFemResp(usecols=usecols)
+    df['evrmarry'] = (df.evrmarry == 1)
+    CleanFemResp(df)
+    return df
+
+
+def ReadFemResp2010():
+    """Reads respondent data from NSFG Cycle 7.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
+               'evrmarry', 'parity', 'wgtq1q16']
+    df = ReadFemResp('2006_2010_FemRespSetup.dct',
+                       '2006_2010_FemResp.dat.gz',
+                        usecols=usecols)
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['finalwgt'] = df.wgtq1q16
+    CleanFemResp(df)
+    return df
+
+
+def ReadFemResp2013():
+    """Reads respondent data from NSFG Cycle 8.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
+               'evrmarry', 'parity', 'wgt2011_2013']
+    df = ReadFemResp('2011_2013_FemRespSetup.dct',
+                        '2011_2013_FemRespData.dat.gz',
+                        usecols=usecols)
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['finalwgt'] = df.wgt2011_2013
+    CleanFemResp(df)
+    return df
+
+
+def ReadFemResp(dct_file='2002FemResp.dct',
+                dat_file='2002FemResp.dat.gz',
+                **options):
+    """Reads the NSFG respondent data.
+
+    dct_file: string file name
+    dat_file: string file name
+
+    returns: DataFrame
+    """
+    dct = thinkstats2.ReadStataDct(dct_file, encoding='iso-8859-1')
+    df = dct.ReadFixedWidth(dat_file, compression='gzip', **options)
+    return df
+
+
+def CleanFemResp(resp):
+    """Cleans a respondent DataFrame.
+
+    resp: DataFrame of respondents
+
+    Adds columns: agemarry, age, decade, fives
+    """
+    resp.cmmarrhx.replace([9997, 9998, 9999], np.nan, inplace=True)
+
+    resp['agemarry'] = (resp.cmmarrhx - resp.cmbirth) / 12.0
+    resp['age'] = (resp.cmintvw - resp.cmbirth) / 12.0
+
+    month0 = pd.to_datetime('1899-12-15')
+    dates = [month0 + pd.DateOffset(months=cm) 
+             for cm in resp.cmbirth]
+    resp['year'] = (pd.DatetimeIndex(dates).year - 1900)
+    resp['decade'] = resp.year // 10
+    resp['fives'] = resp.year // 5
 
 
 def ReadCanadaCycle5():
@@ -665,10 +445,6 @@ def Validate1988(df):
 
 
 def Validate1995(df):
-    #print(len(df))
-    #print(len(df[df.evrmarry]))
-    #print(df.agemarry.value_counts().max())
-
     assert(len(df) == 10847)
     assert(len(df[df.evrmarry]) == 6841)
     assert(df.agemarry.value_counts().max() == 79)
@@ -693,42 +469,29 @@ def Validate2013(df):
 
 
 def main():
-    thinkstats2.RandomSeed(17)
-
-    # make the plots based on Cycle 6
-
-    resp6 = ReadFemResp2002()
-    resps = [resp6]
-
-    sf_map = ResampleSurvivalByDecade(resps)
-    sf_map_pred = ResampleSurvivalByDecade(resps, predict_flag=True)
-    PlotSurvivalFunctions(sf_map)
-    thinkplot.Save(root='marriage1', formats=['pdf'])
-    return
-
+    print('Cycle 8')
     resp8 = ReadFemResp2013()
     Validate2013(resp8)
-    return
 
+    print('Cycle 7')
     resp7 = ReadFemResp2010()
     Validate2010(resp7)
-    return
 
+    print('Cycle 6')
     resp6 = ReadFemResp2002()
     Validate2002(resp6)
-    return
 
+    print('Cycle 5')
     resp5 = ReadFemResp1995()
     Validate1995(resp5)
-    return
 
+    print('Cycle 4')
     resp4 = ReadFemResp1988()
     Validate1988(resp4)
-    return
 
+    print('Cycle 3')
     resp3 = ReadFemResp1982()
     Validate1982(resp3)
-    return
 
 
 if __name__ == '__main__':
