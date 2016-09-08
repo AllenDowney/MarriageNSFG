@@ -32,43 +32,17 @@ def JitterResp(df, column, jitter=1):
     column: string column name
     jitter: standard deviation of noise
     """
-    df[column] += np.random.normal(0, jitter, size=len(df))
+    df[column] += np.random.uniform(-jitter, jitter, size=len(df))
         
 
-def DigitizeResp(df):
-    """Digitizes age, agemarry, and birth year.
-
-    df: DataFrame
-    """
-    age_min = 15
-    age_max = 45
-    age_step = 1
-    age_bins = np.arange(age_min, age_max, age_step)
-
-    year_min = 40
-    year_max = 99
-    year_step = 10
-    year_bins = np.arange(year_min, year_max, year_step)
-
-    df['age_index'] = np.digitize(df.age, age_bins) * age_step
-    df.age_index += age_min - age_step
-    df.loc[df.age.isnull(), 'age_index'] = np.nan
-    
-    df['agemarry_index'] = np.digitize(df.agemarry, age_bins) * age_step
-    df.agemarry_index += age_min - age_step
-    df.loc[df.agemarry.isnull(), 'agemarry_index'] = np.nan
-
-    df['birth_index'] = np.digitize(df.year, year_bins) * year_step
-    df.birth_index += year_min - year_step
-
-
-def ResampleResps(resps, remove_missing=False):
+def ResampleResps(resps, remove_missing=False, jitter=0):
     """Resamples each dataframe and then concats them.
 
     resps: list of DataFrame
 
     returns: DataFrame
     """
+    # TODO: use np.choice with weights
     # we have to resample the data from each cycles separately
     samples = [thinkstats2.ResampleRowsWeighted(resp, column='finalwgt') 
                for resp in resps]
@@ -78,19 +52,10 @@ def ResampleResps(resps, remove_missing=False):
 
     # remove married people with unknown marriage dates
     if remove_missing:
-        sample['missing'] = (sample.evrmarry & sample.agemarry.isnull())
         sample = sample[~sample.missing]
     
-    # TODO: fill missing values
-    #DigitizeResp(sample)
-    #grouped = sample.groupby('birth_index')
-    #for name, group in iter(grouped):
-    #    cdf = thinkstats2.Cdf(group.agemarry)
-    #    print(name, cdf.Mean())
-    
-    JitterResp(sample, 'age', jitter=1)
-    JitterResp(sample, 'agemarry', jitter=1)
-    DigitizeResp(sample)
+    JitterResp(sample, 'age', jitter=jitter)
+    JitterResp(sample, 'agemarry', jitter=jitter)
 
     return sample
 
@@ -103,8 +68,6 @@ def EstimateSurvival(resp, cutoff=None):
 
     returns: pair of HazardFunction, SurvivalFunction
     """
-    # TODO: fill missing data
-
     complete = resp[resp.evrmarry].agemarry_index
     ongoing = resp[~resp.evrmarry].age_index
 
@@ -139,6 +102,7 @@ def EstimateSurvivalByCohort(resps, iters=101, predict_flag=False):
         hf_map = OrderedDict()
         for name, group in iter(grouped):
             cutoff = cutoffs.get(name, 45)
+            FillMissingAgemarry(group)
             hf_map[name] = EstimateSurvival(group, cutoff)
 
         # make predictions if desired
@@ -150,6 +114,22 @@ def EstimateSurvivalByCohort(resps, iters=101, predict_flag=False):
             sf_map[name].append(sf)
              
     return sf_map
+
+
+def FillMissingAgemarry(resp):
+    """Fills missing values of age when married.
+
+    resp: DataFrame
+    """
+    null = resp[resp.missing]
+    if len(null) == 0:
+        return
+
+    valid = resp.agemarry_index.dropna()
+    fill = valid.sample(len(null), replace=True)
+    fill.index = null.index
+    
+    resp.agemarry_index.fillna(fill, inplace=True)
 
 
 def PlotSurvivalFunctions(sf_map, predict_flag=False):
@@ -174,7 +154,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False):
         if not predict_flag:
             thinkplot.Plot(ts, rows[1], label='19%d'%name)
 
-    thinkplot.Config(xlabel='age (years)', ylabel='prob unmarried',
+    thinkplot.Config(xlabel='Age (years)', ylabel='Fraction unmarried',
                      xlim=[14, 45], ylim=[0, 1],
                      legend=True, loc='upper right')
 
@@ -255,7 +235,7 @@ def ReadFemResp1982():
 
     df['evrmarry'] = (df.fmarital != 6)
 
-    CleanFemResp(df)
+    CleanResp(df)
     return df
 
 
@@ -300,7 +280,7 @@ def ReadFemResp1988():
     # define evrmarry if either currentcm or firstcm is non-zero
     df['evrmarry'] = ~df.cmmarrhx.isnull()
 
-    CleanFemResp(df)
+    CleanResp(df)
     return df
 
 
@@ -324,7 +304,7 @@ def ReadFemResp1995():
     df.timesmar.replace([98, 99], np.nan, inplace=True)
     df['evrmarry'] = (df.timesmar > 0)
 
-    CleanFemResp(df)
+    CleanResp(df)
     return df
 
 
@@ -335,9 +315,9 @@ def ReadFemResp2002():
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
                'evrmarry', 'parity', 'finalwgt']
-    df = ReadFemResp(usecols=usecols)
+    df = ReadResp('2002FemResp.dct', '2002FemResp.dat.gz', usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
-    CleanFemResp(df)
+    CleanResp(df)
     return df
 
 
@@ -348,12 +328,12 @@ def ReadFemResp2010():
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
                'evrmarry', 'parity', 'wgtq1q16']
-    df = ReadFemResp('2006_2010_FemRespSetup.dct',
-                       '2006_2010_FemResp.dat.gz',
-                        usecols=usecols)
+    df = ReadResp('2006_2010_FemRespSetup.dct',
+                  '2006_2010_FemResp.dat.gz',
+                  usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
     df['finalwgt'] = df.wgtq1q16
-    CleanFemResp(df)
+    CleanResp(df)
     return df
 
 
@@ -364,18 +344,16 @@ def ReadFemResp2013():
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
                'evrmarry', 'parity', 'wgt2011_2013']
-    df = ReadFemResp('2011_2013_FemRespSetup.dct',
-                        '2011_2013_FemRespData.dat.gz',
-                        usecols=usecols)
+    df = ReadResp('2011_2013_FemRespSetup.dct',
+                  '2011_2013_FemRespData.dat.gz',
+                  usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
     df['finalwgt'] = df.wgt2011_2013
-    CleanFemResp(df)
+    CleanResp(df)
     return df
 
 
-def ReadFemResp(dct_file='2002FemResp.dct',
-                dat_file='2002FemResp.dat.gz',
-                **options):
+def ReadResp(dct_file, dat_file, **options):
     """Reads the NSFG respondent data.
 
     dct_file: string file name
@@ -388,7 +366,7 @@ def ReadFemResp(dct_file='2002FemResp.dct',
     return df
 
 
-def CleanFemResp(resp):
+def CleanResp(resp):
     """Cleans a respondent DataFrame.
 
     resp: DataFrame of respondents
@@ -400,12 +378,55 @@ def CleanFemResp(resp):
     resp['agemarry'] = (resp.cmmarrhx - resp.cmbirth) / 12.0
     resp['age'] = (resp.cmintvw - resp.cmbirth) / 12.0
 
+    # if married, we need agemarry; if not married, we need age
+    resp['missing'] = np.where(resp.evrmarry,
+                               resp.agemarry.isnull(),
+                               resp.age.isnull())
+
     month0 = pd.to_datetime('1899-12-15')
     dates = [month0 + pd.DateOffset(months=cm) 
              for cm in resp.cmbirth]
     resp['year'] = (pd.DatetimeIndex(dates).year - 1900)
-    resp['decade'] = resp.year // 10
-    resp['fives'] = resp.year // 5
+    #resp['decade'] = resp.year // 10
+    #resp['fives'] = resp.year // 5
+    DigitizeResp(resp)
+
+
+def DigitizeResp(df):
+    """Computes indices for age, agemarry, and birth year.
+
+    Groups each of these variables into bins and then assigns
+    an index to each bin.
+
+    For example, anyone between 30 and 30.99 year old is
+    assigned age_index 30.  Anyone born in the 80s is given 
+    the year_index 80.
+
+    This function allows me to run the analysis with different
+    levels of granularity.
+
+    df: DataFrame
+    """
+    age_min = 10
+    age_max = 55
+    age_step = 1
+    age_bins = np.arange(age_min, age_max, age_step)
+
+    year_min = 0
+    year_max = 120
+    year_step = 10
+    year_bins = np.arange(year_min, year_max, year_step)
+
+    df['age_index'] = np.digitize(df.age, age_bins) * age_step
+    df.age_index += age_min - age_step
+    df.loc[df.age.isnull(), 'age_index'] = np.nan
+    
+    df['agemarry_index'] = np.digitize(df.agemarry, age_bins) * age_step
+    df.agemarry_index += age_min - age_step
+    df.loc[df.agemarry.isnull(), 'agemarry_index'] = np.nan
+
+    df['birth_index'] = np.digitize(df.year, year_bins) * year_step
+    df.birth_index += year_min - year_step
 
 
 def ReadCanadaCycle5():
@@ -430,6 +451,60 @@ def ReadCanadaCycle6():
     #marital status: C5
     #Respondent every married: CC227
     pass
+
+
+def ReadMaleResp2002():
+    """Reads respondent data from NSFG Cycle 6.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
+               'evrmarry', 'finalwgt']
+
+    df = ReadResp('2002Male.dct', '2002Male.dat.gz', usecols=usecols)
+
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['cmmarrhx'] = df.mardat01
+    CleanResp(df)
+    return df
+
+
+def ReadMaleResp2010():
+    """Reads respondent data from NSFG Cycle 7.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
+               'evrmarry', 'wgtq1q16']
+
+    df = ReadResp('2006_2010_MaleSetup.dct', 
+                  '2006_2010_Male.dat.gz', 
+                  usecols=usecols)
+
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['cmmarrhx'] = df.mardat01
+    df['finalwgt'] = df.wgtq1q16
+    CleanResp(df)
+    return df
+
+
+def ReadMaleResp2013():
+    """Reads respondent data from NSFG Cycle 8.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
+               'evrmarry', 'wgt2011_2013']
+
+    df = ReadResp('2011_2013_MaleSetup.dct', 
+                  '2011_2013_MaleData.dat.gz', 
+                  usecols=usecols)
+
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['cmmarrhx'] = df.mardat01
+    df['finalwgt'] = df.wgt2011_2013
+    CleanResp(df)
+    return df
 
 
 def Validate1982(df):
