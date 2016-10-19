@@ -25,7 +25,47 @@ import thinkplot
 import survival
 
 
-def JitterResp(df, column, jitter=1):
+def ResampleResps(resps, remove_missing=False, jitter=0):
+    """Resamples each dataframe and then concats them.
+
+    resps: list of DataFrame
+
+    returns: DataFrame
+    """
+    # we have to resample the data from each cycle separately
+    samples = [ResampleRowsWeighted(resp) for resp in resps]
+
+    # then join the cycles into one big sample
+    sample = pd.concat(samples, ignore_index=True)
+
+    # remove married people with unknown marriage dates
+    if remove_missing:
+        sample = sample[~sample.missing]
+    
+    # jittering the ages reflects the idea that the resampled people
+    # are not identical to the actual respondents
+    if jitter:
+        Jitter(sample, 'age', jitter=jitter)
+        Jitter(sample, 'agemarry', jitter=jitter)
+        DigitizeResp(resp)
+
+    return sample
+
+
+def ResampleRowsWeighted(df, column='finalwgt'):
+    """Resamples the rows in df in accordance with a weight column.
+
+    df: DataFrame
+
+    returns: DataFrame
+    """
+    weights = df['finalwgt']
+    weights /= sum(weights)
+    indices = np.random.choice(df.index, len(df), replace=True, p=weights)
+    return df.loc[indices]
+
+
+def Jitter(df, column, jitter=1):
     """Adds random noise to a column.
 
     df: DataFrame
@@ -34,31 +74,6 @@ def JitterResp(df, column, jitter=1):
     """
     df[column] += np.random.uniform(-jitter, jitter, size=len(df))
         
-
-def ResampleResps(resps, remove_missing=False, jitter=0):
-    """Resamples each dataframe and then concats them.
-
-    resps: list of DataFrame
-
-    returns: DataFrame
-    """
-    # TODO: use np.choice with weights
-    # we have to resample the data from each cycles separately
-    samples = [thinkstats2.ResampleRowsWeighted(resp, column='finalwgt') 
-               for resp in resps]
-        
-    # then join the cycles into one big sample
-    sample = pd.concat(samples, ignore_index=True)
-
-    # remove married people with unknown marriage dates
-    if remove_missing:
-        sample = sample[~sample.missing]
-    
-    JitterResp(sample, 'age', jitter=jitter)
-    JitterResp(sample, 'agemarry', jitter=jitter)
-
-    return sample
-
 
 def EstimateSurvival(resp, cutoff=None):
     """Estimates the survival curve.
@@ -79,16 +94,20 @@ def EstimateSurvival(resp, cutoff=None):
     return hf, sf
 
 
-def EstimateSurvivalByCohort(resps, iters=101, predict_flag=False):
+def EstimateSurvivalByCohort(resps, iters=101,
+                             cutoffs=None, predict_flag=False):
     """Makes survival curves for resampled data.
 
     resps: list of DataFrames
     iters: number of resamples to plot
     predict_flag: whether to also plot predictions
-    
+    cutoffs: map from cohort to the first unreliable age_index
+
     returns: map from group name to list of survival functions
     """
-    cutoffs = {70:43, 80:33, 90:23}
+    if cutoffs == None:
+        cutoffs = {}
+
     sf_map = defaultdict(list)
 
     # iters is the number of resampling runs to make
@@ -101,7 +120,7 @@ def EstimateSurvivalByCohort(resps, iters=101, predict_flag=False):
         # and estimate (hf, sf) for each group
         hf_map = OrderedDict()
         for name, group in iter(grouped):
-            cutoff = cutoffs.get(name, 45)
+            cutoff = cutoffs.get(name, 100)
             FillMissingAgemarry(group)
             hf_map[name] = EstimateSurvival(group, cutoff)
 
@@ -138,7 +157,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False):
     sf_map: map from group name to sequence of survival functions
     predict_flag: whether the lines are predicted or actual
     """
-    thinkplot.PrePlot(len(sf_map))
+    thinkplot.PrePlot(num=len(sf_map))
 
     for name, sf_seq in sorted(sf_map.items(), reverse=True):
         if len(sf_seq) == 0:
@@ -149,14 +168,14 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False):
             continue
 
         ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
-        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray')
+        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray', alpha=0.4)
 
         if not predict_flag:
             thinkplot.Plot(ts, rows[1], label='19%d'%name)
 
-    thinkplot.Config(xlabel='Age (years)', ylabel='Fraction unmarried',
+    thinkplot.Config(xlabel='Age (years)', ylabel='Fraction never married',
                      xlim=[14, 45], ylim=[0, 1],
-                     legend=True, loc='upper right')
+                     legend=True, loc='upper right', frameon=False)
 
 
 def MakePredictions(hf_map):
@@ -234,6 +253,7 @@ def ReadFemResp1982():
     df.loc[df.cmbirth>9000, 'cmbirth'] -= 9000
 
     df['evrmarry'] = (df.fmarital != 6)
+    df['cycle'] = 3
 
     CleanResp(df)
     return df
@@ -279,6 +299,7 @@ def ReadFemResp1988():
 
     # define evrmarry if either currentcm or firstcm is non-zero
     df['evrmarry'] = ~df.cmmarrhx.isnull()
+    df['cycle'] = 4
 
     CleanResp(df)
     return df
@@ -303,6 +324,7 @@ def ReadFemResp1995():
 
     df.timesmar.replace([98, 99], np.nan, inplace=True)
     df['evrmarry'] = (df.timesmar > 0)
+    df['cycle'] = 5
 
     CleanResp(df)
     return df
@@ -317,6 +339,7 @@ def ReadFemResp2002():
                'evrmarry', 'parity', 'finalwgt']
     df = ReadResp('2002FemResp.dct', '2002FemResp.dat.gz', usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
+    df['cycle'] = 6
     CleanResp(df)
     return df
 
@@ -333,6 +356,7 @@ def ReadFemResp2010():
                   usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
     df['finalwgt'] = df.wgtq1q16
+    df['cycle'] = 7
     CleanResp(df)
     return df
 
@@ -349,6 +373,24 @@ def ReadFemResp2013():
                   usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
     df['finalwgt'] = df.wgt2011_2013
+    df['cycle'] = 8
+    CleanResp(df)
+    return df
+
+
+def ReadFemResp2015():
+    """Reads respondent data from NSFG Cycle 9.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
+               'evrmarry', 'parity', 'wgt2013_2015']
+    df = ReadResp('2013_2015_FemRespSetup.dct',
+                  '2013_2015_FemRespData.dat.gz',
+                  usecols=usecols)
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['finalwgt'] = df.wgt2013_2015
+    df['cycle'] = 9
     CleanResp(df)
     return df
 
@@ -507,6 +549,25 @@ def ReadMaleResp2013():
     return df
 
 
+def ReadMaleResp2015():
+    """Reads respondent data from NSFG Cycle 9.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
+               'evrmarry', 'wgt2013_2015']
+
+    df = ReadResp('2013_2015_MaleSetup.dct', 
+                  '2013_2015_MaleData.dat.gz', 
+                  usecols=usecols)
+
+    df['evrmarry'] = (df.evrmarry == 1)
+    df['cmmarrhx'] = df.mardat01
+    df['finalwgt'] = df.wgt2013_2015
+    CleanResp(df)
+    return df
+
+
 def Validate1982(df):
     assert(len(df) == 7969)
     assert(len(df[df.evrmarry]) == 4651)
@@ -541,6 +602,12 @@ def Validate2013(df):
     assert(len(df) == 5601)
     assert(sum(df.evrmarry) == 2452)
     assert(df.agemarry.value_counts().max() == 33)
+
+
+def Validate2015(df):
+    assert(len(df) == 5699)
+    assert(sum(df.evrmarry) == 2401)
+    assert(df.agemarry.value_counts().max() == 25)
 
 
 def main():
