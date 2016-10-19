@@ -1,0 +1,31 @@
+
+age: in years
+age_index: age truncated to int
+ageint: age rounded to int (I think)
+agemarry: age at first marriage
+agemarry_index: age at first marriage truncated to int
+birth_index: decade of birth
+caseid: NSFG respondent ID *
+cmbirth: century-month of birth *
+cmdivorcx: century-month of divorce *
+cmintvw: century-month of interview data *
+cmmarrhx: century-month of first marriage *
+currentcm: *
+cycle: which NSFG cycle (3-9)?
+evrmarry: boolean, every married?
+finalwgt: sampling weight for the cycle
+firstcm: *
+fmarital: *
+mar2p: *
+missing: boolean, is cmmarrhx missing?
+parity: number of children *
+timesmar: number of times married *
+wgt2011_2013: sampling weight (unused) *
+wgt2013_2015: sampling weight (unused) *
+wgtq1q16: sampling weight (unused) *
+year: *
+
+
+* indicates variables documented in the NSFG codebook
+
+Other variables are my own recodes.
