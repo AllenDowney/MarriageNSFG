@@ -23,7 +23,7 @@ timesmar: number of times married *
 wgt2011_2013: sampling weight (unused) *
 wgt2013_2015: sampling weight (unused) *
 wgtq1q16: sampling weight (unused) *
-year: *
+year: year of birth minus 1900
 
 
 * indicates variables documented in the NSFG codebook
