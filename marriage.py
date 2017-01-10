@@ -11,6 +11,7 @@ import bisect
 
 import numpy as np
 import pandas as pd
+import scipy.stats
 
 import gzip
 import matplotlib.pyplot as plt
@@ -59,7 +60,7 @@ def ResampleRowsWeighted(df, column='finalwgt'):
 
     returns: DataFrame
     """
-    weights = df['finalwgt']
+    weights = df['finalwgt'].copy()
     weights /= sum(weights)
     indices = np.random.choice(df.index, len(df), replace=True, p=weights)
     return df.loc[indices]
@@ -83,8 +84,8 @@ def EstimateSurvival(resp, cutoff=None):
 
     returns: pair of HazardFunction, SurvivalFunction
     """
-    complete = resp[resp.evrmarry].agemarry_index
-    ongoing = resp[~resp.evrmarry].age_index
+    complete = resp[resp.complete].complete_var
+    ongoing = resp[~resp.complete].ongoing_var
 
     hf = survival.EstimateHazardFunction(complete, ongoing)
     if cutoff:
@@ -94,8 +95,30 @@ def EstimateSurvival(resp, cutoff=None):
     return hf, sf
 
 
+def PropensityMatch(target, group, colname='agemarry'):
+    """Choose a random subset of `group` to matches propensity with `target`.
+    
+    target: DataFrame
+    group: DataFrame
+    colname: string name of column with propensity scores
+
+    returns: DataFrame with sample of rows from `group`
+    """
+    rv = scipy.stats.norm(scale=1)
+    values = group[colname].fillna(100)
+    
+    def ChooseIndex(value):
+        weights = rv.pdf(values-value)
+        weights /= sum(weights)
+        return np.random.choice(group.index, 1, p=weights)[0]
+
+    indices = [ChooseIndex(value) for value in target[colname]]
+    return group.loc[indices]
+
+
 def EstimateSurvivalByCohort(resps, iters=101,
-                             cutoffs=None, predict_flag=False):
+                             cutoffs=None, predict_flag=False,
+                             prop_match=None, error_rate=0):
     """Makes survival curves for resampled data.
 
     resps: list of DataFrames
@@ -116,12 +139,22 @@ def EstimateSurvivalByCohort(resps, iters=101,
 
         # group by decade
         grouped = sample.groupby('birth_index')
+        if prop_match:
+            last = grouped.get_group(prop_match)
 
         # and estimate (hf, sf) for each group
         hf_map = OrderedDict()
         for name, group in iter(grouped):
+            if prop_match:
+                group = PropensityMatch(last, group)
+
+            if error_rate:
+                AddErrors(group, 'complete_missing', error_rate)
+                AddErrors(group, 'ongoing_missing', error_rate)
+
+            FillMissingColumn(group, 'complete_var', 'complete_missing')
+            FillMissingColumn(group, 'ongoing_var', 'ongoing_missing')
             cutoff = cutoffs.get(name, 100)
-            FillMissingAgemarry(group)
             hf_map[name] = EstimateSurvival(group, cutoff)
 
         # make predictions if desired
@@ -135,27 +168,39 @@ def EstimateSurvivalByCohort(resps, iters=101,
     return sf_map
 
 
-def FillMissingAgemarry(resp):
-    """Fills missing values of age when married.
-
-    resp: DataFrame
+def AddErrors(group, colname, error_rate):
     """
-    null = resp[resp.missing]
+
+    NOTE: This will not work if there are actual missing values!
+    """
+    group[colname] = np.random.random(len(group)) < error_rate
+
+
+def FillMissingColumn(group, colname, missing_colname):
+    """Fills missing values of the given column.
+
+    group: DataFrame
+    colname: string
+    """
+    null = group[group[missing_colname]]
     if len(null) == 0:
         return
 
-    valid = resp.agemarry_index.dropna()
+    # print(len(null), len(group))
+
+    valid = group[colname].dropna()
     fill = valid.sample(len(null), replace=True)
     fill.index = null.index
-    
-    resp.agemarry_index.fillna(fill, inplace=True)
+
+    group[colname].fillna(fill, inplace=True)
 
 
-def PlotSurvivalFunctions(sf_map, predict_flag=False):
+def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
     """Plot estimated survival functions.
 
     sf_map: map from group name to sequence of survival functions
     predict_flag: whether the lines are predicted or actual
+    colormap: map from group name to color
     """
     thinkplot.PrePlot(num=len(sf_map))
 
@@ -168,14 +213,14 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False):
             continue
 
         ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
-        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray', alpha=0.4)
+        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray', alpha=0.2)
 
         if not predict_flag:
-            thinkplot.Plot(ts, rows[1], label='19%d'%name)
-
-    thinkplot.Config(xlabel='Age (years)', ylabel='Fraction never married',
-                     xlim=[14, 45], ylim=[0, 1],
-                     legend=True, loc='upper right', frameon=False)
+            if colormap:
+                color = colormap[name]
+                thinkplot.Plot(ts, rows[1], label='%ds'%name, color=color)
+            else:
+                thinkplot.Plot(ts, rows[1], label='%ds'%name)
 
 
 def MakePredictions(hf_map):
@@ -231,7 +276,7 @@ def ReadFemResp1982():
     """
     dat_file = '1982NSFGData.dat.gz'
     names = ['finalwgt', 'ageint', 'mar2p', 'cmmarrhx', 'fmarital', 
-             'cmintvw', 'cmbirth']
+             'cmintvw', 'cmbirth', 'marend01', 'cmdivorcx', 'cmstphsbx']
     colspecs = [(976-1, 982),
                 (1001-1, 1002),
                 (1268-1, 1271),
@@ -239,6 +284,9 @@ def ReadFemResp1982():
                 (1041-1, 1041),
                 (841-1, 844),
                 (12-1, 15),
+                (606-1, 606),
+                (619-1, 622),
+                (625-1, 628),
                 ]
 
     df = pd.read_fwf(dat_file,
@@ -248,11 +296,22 @@ def ReadFemResp1982():
                          nrows=7969,
                          compression='gzip')
 
+    df.cmintvw.replace([9797, 9898, 9999], np.nan, inplace=True)
+    df.cmbirth.replace([9797, 9898, 9999], np.nan, inplace=True)
+    df.cmmarrhx.replace([9797, 9898, 9999], np.nan, inplace=True)
+    df.cmdivorcx.replace([9797, 9898, 9999], np.nan, inplace=True)
+    df.cmstphsbx.replace([9797, 9898, 9999], np.nan, inplace=True)
+
     # CM values above 9000 indicate month unknown
     df.loc[df.cmintvw>9000, 'cmintvw'] -= 9000
     df.loc[df.cmbirth>9000, 'cmbirth'] -= 9000
+    df.loc[df.cmmarrhx>9000, 'cmmarrhx'] -= 9000
+    df.loc[df.cmdivorcx>9000, 'cmdivorcx'] -= 9000
+    df.loc[df.cmstphsbx>9000, 'cmstphsbx'] -= 9000
 
     df['evrmarry'] = (df.fmarital != 6)
+    df['divorced'] = (df.marend01 == 4)
+    df['divsep'] = (df.marend01 == 4) | (df.marend01 == 5)
     df['cycle'] = 3
 
     CleanResp(df)
@@ -266,13 +325,18 @@ def ReadFemResp1988():
     """
     filename = '1988FemRespDataLines.dat.gz'
     names = ['finalwgt', 'ageint', 'currentcm', 
-             'firstcm', 'cmintvw', 'cmbirth']
+             'firstcm', 'cmintvw', 'cmbirth',
+             'marend01', 'cmdivorcx', 'cmstphsbx']
+
     colspecs = [(2568-1, 2574),
                 (36-1, 37),
                 (1521-1, 1525),
                 (1538-1, 1542),
                 (12-1, 16),
                 (26-1, 30),
+                (1554-1, 1554),
+                (1565-1, 1569),
+                (1570-1, 1574),
                 ]
 
     df = pd.read_fwf(filename,
@@ -281,24 +345,29 @@ def ReadFemResp1988():
                      header=None,
                      compression='gzip')
 
-    # clean date of current/only marriage
-    df.currentcm.replace([0], np.nan, inplace=True)
+    df.cmintvw.replace([0, 99999], np.nan, inplace=True)
+    df.cmbirth.replace([0, 99999], np.nan, inplace=True)
+    df.firstcm.replace([0, 99999], np.nan, inplace=True)
+    df.currentcm.replace([0, 99999], np.nan, inplace=True)
+    df.cmdivorcx.replace([0, 99999], np.nan, inplace=True)
+    df.cmstphsbx.replace([0, 99999], np.nan, inplace=True)
 
-    # clean date of first (but not current) marriage
-    df.firstcm.replace([0], np.nan, inplace=True)
+    # CM values above 9000 indicate month unknown
+    df.loc[df.cmintvw>90000, 'cmintvw'] -= 90000
+    df.loc[df.cmbirth>90000, 'cmbirth'] -= 90000
+    df.loc[df.firstcm>90000, 'firstcm'] -= 90000
+    df.loc[df.currentcm>90000, 'currentcm'] -= 90000
+    df.loc[df.cmdivorcx>90000, 'cmdivorcx'] -= 90000
+    df.loc[df.cmstphsbx>90000, 'cmstphsbx'] -= 90000
 
     # combine current and first marriage
     df['cmmarrhx'] = df.firstcm
     df.cmmarrhx.fillna(df.currentcm, inplace=True)
 
-    # replace NOT ASCERTAINED with NaN
-    df.cmmarrhx.replace([99999], np.nan, inplace=True)
-
-    # replace MONTH UNKNOWN with approximate date
-    df.loc[df.cmmarrhx>90000, 'cmmarrhx'] -= 90000
-
     # define evrmarry if either currentcm or firstcm is non-zero
     df['evrmarry'] = ~df.cmmarrhx.isnull()
+    df['divorced'] = (df.marend01 == 2)
+    df['divsep'] = (df.marend01 == 2) | (df.marend01 == 3)
     df['cycle'] = 4
 
     CleanResp(df)
@@ -311,19 +380,34 @@ def ReadFemResp1995():
     returns: DataFrame
     """
     dat_file = '1995FemRespData.dat.gz'
-    names = ['cmintvw', 'timesmar', 'cmmarrhx', 'cmbirth', 'finalwgt']
+    names = ['cmintvw', 'timesmar', 'cmmarrhx', 'cmbirth', 'finalwgt',
+             'marend01', 'cmdivorcx', 'cmstphsbx', 'marstat']
+
     colspecs = [(12360-1, 12363),
                 (4637-1, 4638),
                 (11759-1, 11762),
                 (14-1, 16),
-                (12350-1, 12359)]
+                (12350-1, 12359),
+                (4713-1, 4713),
+                (4718-1, 4721),
+                (4722-1, 4725),
+                (17-1, 17)]
+
     df = pd.read_fwf(dat_file, 
                          compression='gzip', 
                          colspecs=colspecs, 
                          names=names)
 
+    invalid = [9997, 9998, 9999]
+    df.cmintvw.replace(invalid, np.nan, inplace=True)
+    df.cmbirth.replace(invalid, np.nan, inplace=True)
+    df.cmmarrhx.replace(invalid, np.nan, inplace=True)
+    df.cmdivorcx.replace(invalid, np.nan, inplace=True)
+    df.cmstphsbx.replace(invalid, np.nan, inplace=True)
+
     df.timesmar.replace([98, 99], np.nan, inplace=True)
     df['evrmarry'] = (df.timesmar > 0)
+    df['divorced'] = (df.marend01 == 2) | (df.marend01 == 3)
     df['cycle'] = 5
 
     CleanResp(df)
@@ -336,9 +420,23 @@ def ReadFemResp2002():
     returns: DataFrame
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
-               'evrmarry', 'parity', 'finalwgt']
+               'evrmarry', 'parity', 'finalwgt',
+               'mardat01', 'marend01', 'mardis01', 'rmarital', 
+               'fmarno', 'mar1diss']
+
     df = ReadResp('2002FemResp.dct', '2002FemResp.dat.gz', usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
+
+    invalid = [9997, 9998, 9999]
+    df.cmintvw.replace(invalid, np.nan, inplace=True)
+    df.cmbirth.replace(invalid, np.nan, inplace=True)
+    df.cmmarrhx.replace(invalid, np.nan, inplace=True)
+
+    df['evrmarry'] = (df.evrmarry==1)
+    df['divorced'] = (df.marend01==1)
+    df['separated'] = (df.marend01==2)
+    df['widowed'] = (df.marend01==3)
+    df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
+
     df['cycle'] = 6
     CleanResp(df)
     return df
@@ -350,11 +448,25 @@ def ReadFemResp2010():
     returns: DataFrame
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'parity', 'wgtq1q16']
+               'evrmarry', 'parity', 'wgtq1q16',
+               'mardat01', 'marend01', 'mardis01', 'rmarital', 
+               'fmarno', 'mar1diss']
+
     df = ReadResp('2006_2010_FemRespSetup.dct',
                   '2006_2010_FemResp.dat.gz',
                   usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
+
+    invalid = [9997, 9998, 9999]
+    df.cmintvw.replace(invalid, np.nan, inplace=True)
+    df.cmbirth.replace(invalid, np.nan, inplace=True)
+    df.cmmarrhx.replace(invalid, np.nan, inplace=True)
+
+    df['evrmarry'] = (df.evrmarry==1)
+    df['divorced'] = (df.marend01==1)
+    df['separated'] = (df.marend01==2)
+    df['widowed'] = (df.marend01==3)
+    df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
+
     df['finalwgt'] = df.wgtq1q16
     df['cycle'] = 7
     CleanResp(df)
@@ -367,11 +479,25 @@ def ReadFemResp2013():
     returns: DataFrame
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'parity', 'wgt2011_2013']
+               'evrmarry', 'parity', 'wgt2011_2013',
+               'mardat01', 'marend01', 'mardis01', 'rmarital', 
+               'fmarno', 'mar1diss']
+
     df = ReadResp('2011_2013_FemRespSetup.dct',
                   '2011_2013_FemRespData.dat.gz',
                   usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
+
+    invalid = [9997, 9998, 9999]
+    df.cmintvw.replace(invalid, np.nan, inplace=True)
+    df.cmbirth.replace(invalid, np.nan, inplace=True)
+    df.cmmarrhx.replace(invalid, np.nan, inplace=True)
+
+    df['evrmarry'] = (df.evrmarry==1)
+    df['divorced'] = (df.marend01==1)
+    df['separated'] = (df.marend01==2)
+    df['widowed'] = (df.marend01==3)
+    df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
+
     df['finalwgt'] = df.wgt2011_2013
     df['cycle'] = 8
     CleanResp(df)
@@ -384,11 +510,25 @@ def ReadFemResp2015():
     returns: DataFrame
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
-               'evrmarry', 'parity', 'wgt2013_2015']
+               'evrmarry', 'parity', 'wgt2013_2015',
+               'mardat01', 'marend01', 'mardis01', 'rmarital', 
+               'fmarno', 'mar1diss']
+
     df = ReadResp('2013_2015_FemRespSetup.dct',
                   '2013_2015_FemRespData.dat.gz',
                   usecols=usecols)
-    df['evrmarry'] = (df.evrmarry == 1)
+
+    invalid = [9997, 9998, 9999]
+    df.cmintvw.replace(invalid, np.nan, inplace=True)
+    df.cmbirth.replace(invalid, np.nan, inplace=True)
+    df.cmmarrhx.replace(invalid, np.nan, inplace=True)
+
+    df['evrmarry'] = (df.evrmarry==1)
+    df['divorced'] = (df.marend01==1)
+    df['separated'] = (df.marend01==2)
+    df['widowed'] = (df.marend01==3)
+    df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
+
     df['finalwgt'] = df.wgt2013_2015
     df['cycle'] = 9
     CleanResp(df)
@@ -415,8 +555,6 @@ def CleanResp(resp):
 
     Adds columns: agemarry, age, decade, fives
     """
-    resp.cmmarrhx.replace([9997, 9998, 9999], np.nan, inplace=True)
-
     resp['agemarry'] = (resp.cmmarrhx - resp.cmbirth) / 12.0
     resp['age'] = (resp.cmintvw - resp.cmbirth) / 12.0
 
@@ -517,13 +655,16 @@ def ReadMaleResp2010():
     returns: DataFrame
     """
     usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
-               'evrmarry', 'wgtq1q16']
+               'evrmarry', 'wgtq1q16',
+               'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
     df = ReadResp('2006_2010_MaleSetup.dct', 
                   '2006_2010_Male.dat.gz', 
                   usecols=usecols)
 
     df['evrmarry'] = (df.evrmarry == 1)
+    df['divorced'] = (df.marend01 == 1)
+    df['divsep'] = (df.marend01 == 1) | (df.marend01 == 2)
     df['cmmarrhx'] = df.mardat01
     df['finalwgt'] = df.wgtq1q16
     CleanResp(df)
@@ -536,13 +677,16 @@ def ReadMaleResp2013():
     returns: DataFrame
     """
     usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
-               'evrmarry', 'wgt2011_2013']
+               'evrmarry', 'wgt2011_2013',
+               'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
     df = ReadResp('2011_2013_MaleSetup.dct', 
                   '2011_2013_MaleData.dat.gz', 
                   usecols=usecols)
 
     df['evrmarry'] = (df.evrmarry == 1)
+    df['divorced'] = (df.marend01 == 1)
+    df['divsep'] = (df.marend01 == 1) | (df.marend01 == 2)
     df['cmmarrhx'] = df.mardat01
     df['finalwgt'] = df.wgt2011_2013
     CleanResp(df)
@@ -555,13 +699,16 @@ def ReadMaleResp2015():
     returns: DataFrame
     """
     usecols = ['caseid', 'mardat01', 'cmdivw', 'cmbirth', 'cmintvw', 
-               'evrmarry', 'wgt2013_2015']
+               'evrmarry', 'wgt2013_2015',
+               'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
     df = ReadResp('2013_2015_MaleSetup.dct', 
                   '2013_2015_MaleData.dat.gz', 
                   usecols=usecols)
 
     df['evrmarry'] = (df.evrmarry == 1)
+    df['divorced'] = (df.marend01 == 1)
+    df['divsep'] = (df.marend01 == 1) | (df.marend01 == 2)
     df['cmmarrhx'] = df.mardat01
     df['finalwgt'] = df.wgt2013_2015
     CleanResp(df)
@@ -576,7 +723,7 @@ def Validate1982(df):
 
 def Validate1988(df):
     assert(len(df) == 8450)
-    assert(len(df[df.evrmarry]) == 5264)
+    assert(len(df[df.evrmarry]) == 5268)
     assert(df.agemarry.value_counts().max() == 73)
 
 
