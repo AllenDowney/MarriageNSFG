@@ -305,7 +305,7 @@ def Scatter(xs, ys=None, **options):
     options: options passed to plt.scatter
     """
     options = _Underride(options, color='blue', alpha=0.2, 
-                        s=30, edgecolors='none')
+                         s=30, edgecolors='none')
 
     if ys is None and isinstance(xs, pandas.Series):
         ys = xs.values
@@ -653,7 +653,13 @@ def Config(**options):
         global LOC
         LOC = options.get('loc', LOC)
         frameon = options.get('frameon', True)
-        plt.legend(loc=LOC, frameon=frameon)
+
+        warnings.filterwarnings('error', category=UserWarning)
+        try:
+            plt.legend(loc=LOC, frameon=frameon)
+        except UserWarning:
+            pass
+        warnings.filterwarnings('default', category=UserWarning)
 
     # x and y ticklabels can be made invisible
     val = options.get('xticklabels', None)
