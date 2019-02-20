@@ -11,7 +11,7 @@ import math
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas
+import pandas as pd
 
 import warnings
 
@@ -29,109 +29,14 @@ import warnings
 #matplotlib.rc('ytick.minor', size=3.0)
 
 
-class _Brewer(object):
-    """Encapsulates a nice sequence of colors.
-
-    Shades of blue that look good in color and can be distinguished
-    in grayscale (up to a point).
-    
-    Borrowed from http://colorbrewer2.org/
-    """
-    color_iter = None
-
-    colors = ['#f7fbff', '#deebf7', '#c6dbef',
-              '#9ecae1', '#6baed6', '#4292c6',
-              '#2171b5','#08519c','#08306b'][::-1]
-
-    # lists that indicate which colors to use depending on how many are used
-    which_colors = [[],
-                    [1],
-                    [1, 3],
-                    [0, 2, 4],
-                    [0, 2, 4, 6],
-                    [0, 2, 3, 5, 6],
-                    [0, 2, 3, 4, 5, 6],
-                    [0, 1, 2, 3, 4, 5, 6],
-                    [0, 1, 2, 3, 4, 5, 6, 7],
-                    [0, 1, 2, 3, 4, 5, 6, 7, 8],
-                    ]
-
-    current_figure = None
-
-    @classmethod
-    def Colors(cls):
-        """Returns the list of colors.
-        """
-        return cls.colors
-
-    @classmethod
-    def ColorGenerator(cls, num):
-        """Returns an iterator of color strings.
-
-        n: how many colors will be used
-        """
-        for i in cls.which_colors[num]:
-            yield cls.colors[i]
-        raise StopIteration('Ran out of colors in _Brewer.')
-
-    @classmethod
-    def InitIter(cls, num):
-        """Initializes the color iterator with the given number of colors."""
-        cls.color_iter = cls.ColorGenerator(num)
-        fig = plt.gcf()
-        cls.current_figure = fig  
-
-    @classmethod
-    def ClearIter(cls):
-        """Sets the color iterator to None."""
-        cls.color_iter = None
-        cls.current_figure = None
-
-    @classmethod
-    def GetIter(cls, num):
-        """Gets the color iterator."""
-        fig = plt.gcf()
-        if fig != cls.current_figure:
-            cls.InitIter(num)
-            cls.current_figure = fig  
-
-        if cls.color_iter is None:
-            cls.InitIter(num)
-
-        return cls.color_iter
 
 
-def _UnderrideColor(options):
-    """If color is not in the options, chooses a color.
-    """
-    if 'color' in options:
-        return options
-
-    # get the current color iterator; if there is none, init one
-    color_iter = _Brewer.GetIter(5)
-
-    try:
-        options['color'] = next(color_iter)
-    except StopIteration:
-        # if you run out of colors, initialize the color iterator
-        # and try again
-        warnings.warn('Ran out of colors.  Starting over.')
-        _Brewer.ClearIter()
-        _UnderrideColor(options)
-
-    return options
-
-
-def PrePlot(num=None, rows=None, cols=None):
+def PrePlot(rows=None, cols=None):
     """Takes hints about what's coming.
 
-    num: number of lines that will be plotted
     rows: number of rows of subplots
     cols: number of columns of subplots
     """
-    if num:
-        _Brewer.InitIter(num)
-
     if rows is None and cols is None:
         return
 
@@ -168,6 +73,7 @@ def PrePlot(num=None, rows=None, cols=None):
 
     return ax
 
+
 def SubPlot(plot_number, rows=None, cols=None, **options):
     """Configures the number of subplots and changes the current plot.
 
@@ -202,7 +108,6 @@ def Clf():
     """Clears the figure and any hints that have been set."""
     global LOC
     LOC = None
-    _Brewer.ClearIter()
     plt.clf()
     fig = plt.gcf()
     fig.set_size_inches(8, 6)
@@ -223,7 +128,6 @@ def Plot(obj, ys=None, style='', **options):
       style: style string passed along to plt.plot
       options: keyword args passed to plt.plot
     """
-    options = _UnderrideColor(options)
     label = getattr(obj, 'label', '_nolegend_')
     options = _Underride(options, linewidth=3, alpha=0.7, label=label)
 
@@ -231,7 +135,7 @@ def Plot(obj, ys=None, style='', **options):
     if ys is None:
         if hasattr(obj, 'Render'):
             xs, ys = obj.Render()
-        if isinstance(obj, pandas.Series):
+        if isinstance(obj, pd.Series):
             ys = obj.values
             xs = obj.index
 
@@ -250,7 +154,6 @@ def Vlines(xs, y1, y2, **options):
       y2: sequence of y values
       options: keyword args passed to plt.vlines
     """
-    options = _UnderrideColor(options)
     options = _Underride(options, linewidth=1, alpha=0.5)
     plt.vlines(xs, y1, y2, **options)
 
@@ -264,9 +167,41 @@ def Hlines(ys, x1, x2, **options):
       x2: sequence of x values
       options: keyword args passed to plt.vlines
     """
-    options = _UnderrideColor(options)
     options = _Underride(options, linewidth=1, alpha=0.5)
     plt.hlines(ys, x1, x2, **options)
+
+
+def axvline(x, **options):
+    """Plots a vertical line.
+
+    Args:
+      x: x location
+      options: keyword args passed to plt.axvline
+    """
+    options = _Underride(options, linewidth=1, alpha=0.5)
+    plt.axvline(x, **options)
+
+
+def axhline(y, **options):
+    """Plots a horizontal line.
+
+    Args:
+      y: y location
+      options: keyword args passed to plt.axhline
+    """
+    options = _Underride(options, linewidth=1, alpha=0.5)
+    plt.axhline(y, **options)
+
+
+def tight_layout(**options):
+    """Adjust subplots to minimize padding and margins.
+    """
+    options = _Underride(options,
+                         wspace=0.1, hspace=0.1,
+                         left=0, right=1,
+                         bottom=0, top=1)
+    plt.tight_layout()
+    plt.subplots_adjust(**options)
 
 
 def FillBetween(xs, y1, y2=None, where=None, **options):
@@ -279,7 +214,6 @@ def FillBetween(xs, y1, y2=None, where=None, **options):
       where: sequence of boolean
       options: keyword args passed to plt.fill_between
     """
-    options = _UnderrideColor(options)
     options = _Underride(options, linewidth=0, alpha=0.5)
     plt.fill_between(xs, y1, y2, where, **options)
 
@@ -292,7 +226,6 @@ def Bar(xs, ys, **options):
       ys: sequence of y values
       options: keyword args passed to plt.bar
     """
-    options = _UnderrideColor(options)
     options = _Underride(options, linewidth=0, alpha=0.6)
     plt.bar(xs, ys, **options)
 
@@ -304,10 +237,10 @@ def Scatter(xs, ys=None, **options):
     ys: y values
     options: options passed to plt.scatter
     """
-    options = _Underride(options, color='blue', alpha=0.2, 
+    options = _Underride(options, alpha=0.2,
                          s=30, edgecolors='none')
 
-    if ys is None and isinstance(xs, pandas.Series):
+    if ys is None and isinstance(xs, pd.Series):
         ys = xs.values
         xs = xs.index
 
@@ -344,7 +277,7 @@ def Pdfs(pdfs, **options):
 
     Options are passed along for all PDFs.  If you want different
     options for each pdf, make multiple calls to Pdf.
-    
+
     Args:
       pdfs: sequence of PDF objects
       options: keyword args passed to plt.plot
@@ -462,7 +395,7 @@ def Pmfs(pmfs, **options):
 
     Options are passed along for all PMFs.  If you want different
     options for each pmf, make multiple calls to Pmf.
-    
+
     Args:
       pmfs: sequence of PMF objects
       options: keyword args passed to plt.plot
@@ -503,7 +436,7 @@ def Cdf(cdf, complement=False, transform=None, **options):
 
     scale = dict(xscale='linear', yscale='linear')
 
-    for s in ['xscale', 'yscale']: 
+    for s in ['xscale', 'yscale']:
         if s in options:
             scale[s] = options.pop(s)
 
@@ -527,7 +460,7 @@ def Cdf(cdf, complement=False, transform=None, **options):
         scale['yscale'] = 'log'
 
     if transform == 'gumbel':
-        xs = xp.delete(xs, 0)
+        xs = np.delete(xs, 0)
         ps = np.delete(ps, 0)
         ps = [-math.log(p) for p in ps]
         scale['yscale'] = 'log'
@@ -539,7 +472,7 @@ def Cdf(cdf, complement=False, transform=None, **options):
 
 def Cdfs(cdfs, complement=False, transform=None, **options):
     """Plots a sequence of CDFs.
-    
+
     cdfs: sequence of CDF objects
     complement: boolean, whether to plot the complementary CDF
     transform: string, one of 'exponential', 'pareto', 'weibull', 'gumbel'
@@ -551,7 +484,7 @@ def Cdfs(cdfs, complement=False, transform=None, **options):
 
 def Contour(obj, pcolor=False, contour=True, imshow=False, **options):
     """Makes a contour plot.
-    
+
     d: map from (x, y) to z, or object that provides GetDict
     pcolor: boolean, whether to make a pseudocolor plot
     contour: boolean, whether to make a contour plot
@@ -586,11 +519,11 @@ def Contour(obj, pcolor=False, contour=True, imshow=False, **options):
     if imshow:
         extent = xs[0], xs[-1], ys[0], ys[-1]
         plt.imshow(Z, extent=extent, **options)
-        
+
 
 def Pcolor(xs, ys, zs, pcolor=True, contour=False, **options):
     """Makes a pseudocolor plot.
-    
+
     xs:
     ys:
     zs:
@@ -613,7 +546,7 @@ def Pcolor(xs, ys, zs, pcolor=True, contour=False, **options):
     if contour:
         cs = plt.contour(X, Y, Z, **options)
         plt.clabel(cs, inline=1, fontsize=10)
-        
+
 
 def Text(x, y, s, **options):
     """Puts text in a figure.
@@ -649,17 +582,20 @@ def Config(**options):
     global LEGEND
     LEGEND = options.get('legend', LEGEND)
 
-    if LEGEND:
+    # see if there are any elements with labels;
+    # if not, don't draw a legend
+    ax = plt.gca()
+    handles, labels = ax.get_legend_handles_labels()
+
+    if LEGEND and len(labels) > 0:
         global LOC
         LOC = options.get('loc', LOC)
         frameon = options.get('frameon', True)
 
-        warnings.filterwarnings('error', category=UserWarning)
         try:
             plt.legend(loc=LOC, frameon=frameon)
         except UserWarning:
             pass
-        warnings.filterwarnings('default', category=UserWarning)
 
     # x and y ticklabels can be made invisible
     val = options.get('xticklabels', None)
@@ -675,6 +611,39 @@ def Config(**options):
             ax = plt.gca()
             labels = ax.get_yticklabels()
             plt.setp(labels, visible=False)
+
+def set_font_size(title_size=16, label_size=16, ticklabel_size=14, legend_size=14):
+    """Set font sizes for the title, labels, ticklabels, and legend.
+    """
+    def set_text_size(texts, size):
+        for text in texts:
+            text.set_size(size)
+
+    ax = plt.gca()
+
+    # TODO: Make this function more robust if any of these elements
+    # is missing.
+
+    # title
+    ax.title.set_size(title_size)
+
+    # x axis
+    ax.xaxis.label.set_size(label_size)
+    set_text_size(ax.xaxis.get_ticklabels(), ticklabel_size)
+
+    # y axis
+    ax.yaxis.label.set_size(label_size)
+    set_text_size(ax.yaxis.get_ticklabels(), ticklabel_size)
+
+    # legend
+    legend = ax.get_legend()
+    if legend is not None:
+        set_text_size(legend.texts, legend_size)
+
+
+def bigger_text():
+    sizes = dict(title_size=16, label_size=16, ticklabel_size=14, legend_size=14)
+    set_font_size(**sizes)
 
 
 def Show(**options):
@@ -712,6 +681,10 @@ def Save(root=None, formats=None, **options):
 
     For options, see Config.
 
+    Note: With a capital S, this is the original save, maintained for
+    compatibility.  New code should use save(), which works better
+    with my newer code, especially in Jupyter notebooks.
+
     Args:
       root: string filename root
       formats: list of string formats
@@ -724,10 +697,12 @@ def Save(root=None, formats=None, **options):
         if option in options:
             save_options[option] = options.pop(option)
 
+    # TODO: falling Config inside Save was probably a mistake, but removing
+    # it will require some work
     Config(**options)
 
     if formats is None:
-        formats = ['pdf', 'eps']
+        formats = ['pdf', 'png']
 
     try:
         formats.remove('plotly')
@@ -740,6 +715,29 @@ def Save(root=None, formats=None, **options):
             SaveFormat(root, fmt, **save_options)
     if clf:
         Clf()
+
+
+def save(root, formats=None, **options):
+    """Saves the plot in the given formats and clears the figure.
+
+    For options, see plt.savefig.
+
+    Args:
+      root: string filename root
+      formats: list of string formats
+      options: keyword args passed to plt.savefig
+    """
+    if formats is None:
+        formats = ['pdf', 'png']
+
+    try:
+        formats.remove('plotly')
+        Plotly(clf=False)
+    except ValueError:
+        pass
+
+    for fmt in formats:
+        SaveFormat(root, fmt, **options)
 
 
 def SaveFormat(root, fmt='eps', **options):
@@ -777,14 +775,10 @@ contour = Contour
 pcolor = Pcolor
 config = Config
 show = Show
-save = Save
 
 
 def main():
-    color_iter = _Brewer.ColorGenerator(7)
-    for color in color_iter:
-        print(color)
-
+    pass
 
 if __name__ == '__main__':
     main()
