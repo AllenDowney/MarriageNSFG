@@ -77,6 +77,13 @@ class SurvivalFunction(object):
 
         return HazardFunction(lams, label=label)
 
+    def MakeCdf(self):
+        """Makes a CDF of lifetimes.
+
+        returns: Cdf
+        """
+        return thinkstats2.Cdf(self.ts, 1-self.ss)
+    
     def MakePmf(self, filler=None):
         """Makes a PMF of lifetimes.
 
@@ -84,7 +91,7 @@ class SurvivalFunction(object):
 
         returns: Pmf
         """
-        cdf = thinkstats2.Cdf(self.ts, 1-self.ss)
+        cdf = self.MakeCdf()
         pmf = thinkstats2.Pmf()
         for val, prob in cdf.Items():
             pmf.Set(val, prob)
@@ -110,19 +117,20 @@ class SurvivalFunction(object):
         return pd.Series(d)
 
 
-def MakeSurvivalFromSeq(values, label=''):
+def MakeSurvivalFromSeq(seq, label=''):
     """Makes a survival function based on a complete dataset.
 
-    values: sequence of observed lifespans
-    
+    seq: sequence of observed lifespans
+    label: string
+
     returns: SurvivalFunction
     """
-    counter = Counter(values)
-    ts, freqs = zip(*sorted(counter.items()))
-    ts = np.asarray(ts)
-    ps = np.cumsum(freqs, dtype=np.float)
-    ps /= ps[-1]
-    ss = 1 - ps
+    s = pd.Series(seq)
+    pmf = s.value_counts(sort=False, normalize=True)
+    pmf.sort_index(inplace=True)
+    cdf = pmf.cumsum()
+    ts = cdf.index.values
+    ss = 1 - cdf.values
     return SurvivalFunction(ts, ss, label)
 
 
@@ -130,7 +138,7 @@ def MakeSurvivalFromCdf(cdf, label=''):
     """Makes a survival function based on a CDF.
 
     cdf: Cdf
-    
+
     returns: SurvivalFunction
     """
     ts = cdf.xs
@@ -216,7 +224,7 @@ def PlotConditionalSurvival(durations):
     durations: list of durations
     """
     pmf = thinkstats2.Pmf(durations)
-    
+
     times = [8, 16, 24, 32]
     thinkplot.PrePlot(len(times))
 
@@ -304,7 +312,7 @@ def EstimateHazardFunction(complete, ongoing, label='', verbose=False):
 
         lams[t] = ended / at_risk
         if verbose:
-            print('%0.3g\t%d\t%d\t%d\t%0.2g' % 
+            print('%0.3g\t%d\t%d\t%d\t%0.2g' %
                   (t, at_risk, ended, censored, lams[t]))
         at_risk -= ended + censored
 
@@ -387,7 +395,7 @@ def ResampleSurvival(resp, iters=101):
 
     resp: DataFrame of respondents
     iters: number of resamples
-    """ 
+    """
     _, sf = EstimateMarriageSurvival(resp)
     thinkplot.Plot(sf)
 
@@ -451,7 +459,7 @@ def PlotMarriageData(resp):
 
 def PlotPregnancyData(preg):
     """Plots survival and hazard curves based on pregnancy lengths.
-    
+
     preg:
 
 
@@ -517,13 +525,13 @@ def PlotResampledByDecade(resps, iters=11, predict_flag=False, omit=None):
     predict_flag: whether to also plot predictions
     """
     for i in range(iters):
-        samples = [thinkstats2.ResampleRowsWeighted(resp) 
+        samples = [thinkstats2.ResampleRowsWeighted(resp)
                    for resp in resps]
         sample = pd.concat(samples, ignore_index=True)
         groups = sample.groupby('decade')
 
         if omit:
-            groups = [(name, group) for name, group in groups 
+            groups = [(name, group) for name, group in groups
                       if name not in omit]
 
         # TODO: refactor this to collect resampled estimates and
@@ -554,9 +562,9 @@ def ReadFemResp1995():
                 (11759-1, 11762),
                 (14-1, 16),
                 (12350-1, 12359)]
-    df = pd.read_fwf(dat_file, 
-                         compression='gzip', 
-                         colspecs=colspecs, 
+    df = pd.read_fwf(dat_file,
+                         compression='gzip',
+                         colspecs=colspecs,
                          names=names)
 
     df.timesmar.replace([98, 99], np.nan, inplace=True)
@@ -571,7 +579,7 @@ def ReadFemResp2002():
 
     returns: DataFrame
     """
-    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw', 
+    usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
                'evrmarry', 'parity', 'finalwgt']
     df = ReadFemResp(usecols=usecols)
     df['evrmarry'] = (df.evrmarry == 1)
@@ -639,7 +647,7 @@ def CleanFemResp(resp):
     resp['age'] = (resp.cmintvw - resp.cmbirth) / 12.0
 
     month0 = pd.to_datetime('1899-12-15')
-    dates = [month0 + pd.DateOffset(months=cm) 
+    dates = [month0 + pd.DateOffset(months=cm)
              for cm in resp.cmbirth]
     resp['year'] = (pd.DatetimeIndex(dates).year - 1900)
     resp['decade'] = resp.year // 10
@@ -648,7 +656,7 @@ def CleanFemResp(resp):
 
 def main():
     thinkstats2.RandomSeed(17)
-    
+
     preg = nsfg.ReadFemPreg()
     sf1 = PlotPregnancyData(preg)
 
