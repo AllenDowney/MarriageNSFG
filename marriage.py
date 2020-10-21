@@ -204,7 +204,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
     predict_flag: whether the lines are predicted or actual
     colormap: map from group name to color
     """
-    for name, sf_seq in sorted(sf_map.items(), reverse=True):
+    for name, sf_seq in sorted(sf_map.items(), reverse=False):
         if len(sf_seq) == 0:
             continue
 
@@ -213,14 +213,15 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
             continue
 
         ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
-        thinkplot.FillBetween(ts, rows[0], rows[2], color='gray', alpha=0.2)
+        plt.fill_between(ts, rows[0], rows[2], lw=0, color='gray', alpha=0.2)
 
         if not predict_flag:
             if colormap:
                 color = colormap[name]
-                thinkplot.Plot(ts, rows[1], label='%ds'%name, color=color)
+                plt.plot(ts, rows[1], label='19%ds'%name,
+                               color=color, alpha=0.8)
             else:
-                thinkplot.Plot(ts, rows[1], label='%ds'%name)
+                plt.plot(ts, rows[1], label='19%ds'%name, alpha=0.8)
 
 
 def MakePredictions(hf_map):
@@ -262,7 +263,7 @@ def MakeSurvivalCI(sf_seq, percents):
     ts.sort()
 
     # evaluate each sf at all times
-    ss_seq = [sf.Probs(ts) for sf in sf_seq if len(sf) > 0]
+    ss_seq = [100*(1-sf.Probs(ts)) for sf in sf_seq if len(sf) > 0]
 
     # return the requested percentiles from each column
     rows = thinkstats2.PercentileRows(ss_seq, percents)
@@ -606,6 +607,57 @@ def ReadFemResp2017():
     return df
 
 
+def ReadFemResp2019():
+    """Reads respondent data from NSFG Cycle 11.
+
+    returns: DataFrame
+    """
+    # removed 'cmmarrhx', 'cmdivorcx', 'cmbirth',
+    usecols = ['caseid', 'cmintvw', 'ager',
+               'evrmarry', 'parity', 'wgt2017_2019',
+               'mardat01', 'marend01', 'mardis01', 'rmarital',
+               'fmarno', 'mar1diss']
+
+    df = ReadResp('2017_2019_FemRespSetup.dct',
+                  '2017_2019_FemRespData.dat.gz',
+                  usecols=usecols)
+
+    invalid = [9997, 9998, 9999]
+    df.cmintvw.replace(invalid, np.nan, inplace=True)
+
+    # since cmbirth and cmmarrhx are no longer included,
+    # we have to compute them based on other variables;
+    # the result can be off by up to 12 months
+    df['cmbirth'] = df.cmintvw - df.ager*12
+    df['cmmarrhx'] = (df.mardat01-1900) * 12
+
+    df['evrmarry'] = (df.evrmarry==1)
+    df['divorced'] = (df.marend01==1)
+    df['separated'] = (df.marend01==2)
+    df['widowed'] = (df.marend01==3)
+    df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
+
+    df['finalwgt'] = df.wgt2017_2019
+    df['cycle'] = 11
+
+    df['agemarry'] = (df.cmmarrhx - df.cmbirth) / 12.0
+    df['age'] = (df.cmintvw - df.cmbirth) / 12.0
+
+    # if married, we need agemarry; if not married, we need age
+    df['missing'] = np.where(df.evrmarry,
+                             df.agemarry.isnull(),
+                             df.age.isnull())
+
+    month0 = pd.to_datetime('1899-12-15')
+    dates = [month0 + pd.DateOffset(months=cm)
+             for cm in df.cmbirth]
+    df['year'] = (pd.DatetimeIndex(dates).year - 1900)
+
+    DigitizeResp(df)
+
+    return df
+
+
 def ReadResp(dct_file, dat_file, **options):
     """Reads the NSFG respondent data.
 
@@ -873,6 +925,54 @@ def ReadMaleResp2017():
     return df
 
 
+def ReadMaleResp2019():
+    """Reads respondent data from NSFG Cycle 11.
+
+    returns: DataFrame
+    """
+    usecols = ['caseid', 'mardat01', 'cmintvw', 'ager',
+               'evrmarry', 'wgt2017_2019',
+               'marend01', 'rmarital', 'fmarno', 'mar1diss']
+
+    df = ReadResp('2017_2019_MaleSetup.dct',
+                      '2017_2019_MaleData.dat.gz',
+                      usecols=usecols)
+
+    # since cmbirth and cmmarrhx are no longer included,
+    # we have to compute them based on other variables;
+    # the result can be off by up to 12 months
+    df['cmbirth'] = df.cmintvw - df.ager*12
+    df['cmmarrhx'] = (df.mardat01-1900) * 12
+
+    df['evrmarry'] = (df.evrmarry==1)
+    df['divorced'] = (df.marend01==1)
+    df['separated'] = (df.marend01==2)
+    df['widowed'] = (df.marend01==3)
+    df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
+
+    df['finalwgt'] = df.wgt2017_2019
+    df['cycle'] = 11
+
+    # Instead of calling CleanResp, we have to customize
+    #CleanResp(df)
+
+    df['agemarry'] = (df.cmmarrhx - df.cmbirth) / 12.0
+    df['age'] = (df.cmintvw - df.cmbirth) / 12.0
+
+    # if married, we need agemarry; if not married, we need age
+    df['missing'] = np.where(df.evrmarry,
+                                 df.agemarry.isnull(),
+                                 df.age.isnull())
+
+    month0 = pd.to_datetime('1899-12-15')
+    dates = [month0 + pd.DateOffset(months=cm)
+                 for cm in df.cmbirth]
+    df['year'] = (pd.DatetimeIndex(dates).year - 1900)
+
+    DigitizeResp(df)
+    return df
+
+
 def Validate1982(df):
     assert(len(df) == 7969)
     assert(len(df[df.evrmarry]) == 4651)
@@ -917,6 +1017,11 @@ def Validate2015(df):
 def Validate2017(df):
     assert(len(df) == 5554)
     assert(sum(df.evrmarry) == 2582)
+    assert(df.agemarry.value_counts().max() == 29)
+
+def Validate2019(df):
+    assert(len(df) == 6141)
+    assert(sum(df.evrmarry) == 2722)
     assert(df.agemarry.value_counts().max() == 29)
 
 def main():
