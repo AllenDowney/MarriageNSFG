@@ -204,7 +204,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
     predict_flag: whether the lines are predicted or actual
     colormap: map from group name to color
     """
-    for name, sf_seq in sorted(sf_map.items(), reverse=False):
+    for name, sf_seq in sorted(sf_map.items(), reverse=True):
         if len(sf_seq) == 0:
             continue
 
@@ -245,7 +245,7 @@ def MakePredictions(hf_map):
         hf_map[name] = hf, sf
 
 
-def MakeSurvivalCI(sf_seq, percents):
+def MakeSurvivalCI(sf_seq, percents, flip=False):
     """Makes confidence intervals from a list of survival functions.
 
     sf_seq: list of SurvivalFunction
@@ -263,7 +263,11 @@ def MakeSurvivalCI(sf_seq, percents):
     ts.sort()
 
     # evaluate each sf at all times
-    ss_seq = [100*(1-sf.Probs(ts)) for sf in sf_seq if len(sf) > 0]
+    if flip:
+        ys = 1-sf.Probs(ts)
+    else:
+        ys = sf.Probs(ts)
+    ss_seq = [100*ys for sf in sf_seq if len(sf) > 0]
 
     # return the requested percentiles from each column
     rows = thinkstats2.PercentileRows(ss_seq, percents)

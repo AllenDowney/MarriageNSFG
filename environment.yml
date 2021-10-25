@@ -1,0 +1,18 @@
+name: NSFG
+
+dependencies:
+  - python>=3.6
+  - jupyter
+  - numpy
+  - matplotlib
+  - pandas
+  - statsmodels
+  - scipy
+  - pytables
+  - pip
+  - pip:
+    - empiricaldist
+
+
+
+
