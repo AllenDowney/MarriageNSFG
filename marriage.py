@@ -1,11 +1,9 @@
-"""This file contains code for use with "Think Stats",
-by Allen B. Downey, available from greenteapress.com
+"""This file contains code for use in MarriageNSFG
+by Allen B. Downey
 
 Copyright 2014 Allen B. Downey
 License: GNU GPLv3 http://www.gnu.org/licenses/gpl.html
 """
-
-from __future__ import print_function, division
 
 import bisect
 
@@ -60,10 +58,9 @@ def ResampleRowsWeighted(df, column='finalwgt'):
 
     returns: DataFrame
     """
-    weights = df['finalwgt'].copy()
-    weights /= sum(weights)
-    indices = np.random.choice(df.index, len(df), replace=True, p=weights)
-    return df.loc[indices]
+    weights = df[column]
+    sample = df.sample(n=len(df), replace=True, weights=weights)
+    return sample
 
 
 def Jitter(df, column, jitter=1):
@@ -500,7 +497,8 @@ def ReadFemResp2013():
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
                'evrmarry', 'parity', 'wgt2011_2013',
-               'mardat01', 'marend01', 'mardis01', 'rmarital',
+               'mardat01', 'mardat02', 'mardat03', 'mardat04', 
+               'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
     df = ReadResp('2011_2013_FemRespSetup.dct',
@@ -531,7 +529,8 @@ def ReadFemResp2015():
     """
     usecols = ['caseid', 'cmmarrhx', 'cmdivorcx', 'cmbirth', 'cmintvw',
                'evrmarry', 'parity', 'wgt2013_2015',
-               'mardat01', 'marend01', 'mardis01', 'rmarital',
+               'mardat01', 'mardat02', 'mardat03', 'mardat04', 
+               'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
     df = ReadResp('2013_2015_FemRespSetup.dct',
@@ -563,7 +562,8 @@ def ReadFemResp2017():
     # removed 'cmmarrhx', 'cmdivorcx', 'cmbirth',
     usecols = ['caseid', 'cmintvw', 'ager',
                'evrmarry', 'parity', 'wgt2015_2017',
-               'mardat01', 'marend01', 'mardis01', 'rmarital',
+               'mardat01', 'mardat02', 'mardat03', 'mardat04', 
+               'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
     df = ReadResp('2015_2017_FemRespSetup.dct',
@@ -619,7 +619,8 @@ def ReadFemResp2019():
     # removed 'cmmarrhx', 'cmdivorcx', 'cmbirth',
     usecols = ['caseid', 'cmintvw', 'ager',
                'evrmarry', 'parity', 'wgt2017_2019',
-               'mardat01', 'marend01', 'mardis01', 'rmarital',
+               'mardat01', 'mardat02', 'mardat03', 'mardat04', 
+               'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
     df = ReadResp('2017_2019_FemRespSetup.dct',
