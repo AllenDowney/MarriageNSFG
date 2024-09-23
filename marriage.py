@@ -484,7 +484,7 @@ def ReadFemResp2010():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgtq1q16
+    df = df.rename(columns={'wgtq1q16':'finalwgt'})
     df['cycle'] = 7
     CleanResp(df)
     return df
@@ -516,7 +516,7 @@ def ReadFemResp2013():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2011_2013
+    df = df.rename(columns={'wgt2011_2013':'finalwgt'})
     df['cycle'] = 8
     CleanResp(df)
     return df
@@ -548,7 +548,7 @@ def ReadFemResp2015():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2013_2015
+    df = df.rename(columns={'wgt2013_2015':'finalwgt'})
     df['cycle'] = 9
     CleanResp(df)
     return df
@@ -587,7 +587,7 @@ def ReadFemResp2017():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2015_2017
+    df = df.rename(columns={'wgt2015_2017':'finalwgt'})
     df['cycle'] = 10
 
     # Instead of calling CleanResp, we have to customize
@@ -642,7 +642,7 @@ def ReadFemResp2019():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2017_2019
+    df = df.rename(columns={'wgt2017_2019':'finalwgt'})
     df['cycle'] = 11
 
     df['agemarry'] = (df.cmmarrhx - df.cmbirth) / 12.0
@@ -820,7 +820,7 @@ def ReadMaleResp2010():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgtq1q16
+    df = df.rename(columns={'wgtq1q16':'finalwgt'})
     df['cycle'] = 7
 
     CleanResp(df)
@@ -848,7 +848,7 @@ def ReadMaleResp2013():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2011_2013
+    df = df.rename(columns={'wgt2011_2013':'finalwgt'})
     df['cycle'] = 8
 
     CleanResp(df)
@@ -876,7 +876,7 @@ def ReadMaleResp2015():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2013_2015
+    df = df.rename(columns={'wgt2013_2015':'finalwgt'})
     df['cycle'] = 9
     CleanResp(df)
     return df
@@ -907,7 +907,7 @@ def ReadMaleResp2017():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2015_2017
+    df = df.rename(columns={'wgt2015_2017':'finalwgt'})
     df['cycle'] = 10
 
     # Instead of calling CleanResp, we have to customize
@@ -955,7 +955,7 @@ def ReadMaleResp2019():
     df['widowed'] = (df.marend01==3)
     df['stillma'] = (df.fmarno == 1) & (df.rmarital==1)
 
-    df['finalwgt'] = df.wgt2017_2019
+    df = df.rename(columns={'wgt2017_2019':'finalwgt'})
     df['cycle'] = 11
 
     # Instead of calling CleanResp, we have to customize
