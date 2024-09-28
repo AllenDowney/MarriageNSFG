@@ -13,6 +13,7 @@ import marriage
 import thinkstats2
 import thinkplot
 
+
 class Test(unittest.TestCase):
 
     def testMakeSurvival(self):
@@ -27,7 +28,7 @@ class Test(unittest.TestCase):
         complete = [1, 2, 3, 4, 5]
         ongoing = [3, 4, 5]
         hf = marriage.EstimateHazardFunction(complete, ongoing)
-        self.assertAlmostEqual(hf[3], 1/6.0)
+        self.assertAlmostEqual(hf[3], 1 / 6.0)
         self.assertAlmostEqual(hf[5], 0.5)
 
         sf = hf.MakeSurvival()
