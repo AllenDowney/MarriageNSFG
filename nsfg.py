@@ -14,8 +14,7 @@ import sys
 import thinkstats2
 
 
-def ReadFemPreg(dct_file='2002FemPreg.dct',
-                dat_file='2002FemPreg.dat.gz'):
+def ReadFemPreg(dct_file="2002FemPreg.dct", dat_file="2002FemPreg.dat.gz"):
     """Reads the NSFG pregnancy data.
 
     dct_file: string file name
@@ -24,7 +23,7 @@ def ReadFemPreg(dct_file='2002FemPreg.dct',
     returns: DataFrame
     """
     dct = thinkstats2.ReadStataDct(dct_file)
-    df = dct.ReadFixedWidth(dat_file, compression='gzip')
+    df = dct.ReadFixedWidth(dat_file, compression="gzip")
     CleanFemPreg(df)
     return df
 
@@ -39,8 +38,8 @@ def CleanFemPreg(df):
 
     # birthwgt_lb contains at least one bogus value (51 lbs)
     # replace with NaN
-    df.loc[df.birthwgt_lb > 20, 'birthwgt_lb'] = np.nan
-    
+    df.loc[df.birthwgt_lb > 20, "birthwgt_lb"] = np.nan
+
     # replace 'not ascertained', 'refused', 'don't know' with NaN
     na_vals = [97, 98, 99]
     df.birthwgt_lb.replace(na_vals, np.nan, inplace=True)
@@ -54,7 +53,7 @@ def CleanFemPreg(df):
     # convert to a single column in lb
     # NOTE: creating a new column requires dictionary syntax,
     # not attribute assignment (like df.totalwgt_lb)
-    df['totalwgt_lb'] = df.birthwgt_lb + df.birthwgt_oz / 16.0    
+    df["totalwgt_lb"] = df.birthwgt_lb + df.birthwgt_oz / 16.0
 
     # due to a bug in ReadStataDct, the last variable gets clipped;
     # so for now set it to NaN
@@ -100,7 +99,8 @@ def main(script):
     key = max(weights.keys())
     assert df.finalwgt.value_counts()[key] == 6
 
-    print('%s: All tests passed.' % script)
+    print("%s: All tests passed." % script)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(*sys.argv)
