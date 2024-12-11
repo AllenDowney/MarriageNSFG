@@ -19,6 +19,17 @@ import survival
 from statadict import parse_stata_dict
 
 
+def value_counts(series, **options):
+    """Counts the values in a series and returns sorted.
+
+    series: pd.Series
+
+    returns: pd.Series
+    """
+    options = underride(options, dropna=False)
+    return series.value_counts(**options).sort_index()
+
+
 class FixedWidthVariables(object):
     """Represents a set of variables in a fixed width file."""
 
@@ -514,11 +525,13 @@ def ReadFemResp1982():
         "fmarital",
         "cmintvw",
         "cmbirth",
-        "f18m1",
+        "marend01",
         "cmdivorcx",
         "cmstphsbx",
         "fmarno",
+        "rmarital",
     ]
+
     colspecs = [
         (976 - 1, 982),
         (1001 - 1, 1002),
@@ -531,6 +544,7 @@ def ReadFemResp1982():
         (619 - 1, 622),
         (625 - 1, 628),
         (1142 - 1, 1143),
+        (1006 - 1, 1006),
     ]
 
     df = pd.read_fwf(
@@ -547,7 +561,13 @@ def ReadFemResp1982():
     df["cmmarrhx"] = df["cmmarrhx"].replace([9797, 9898, 9999], np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace([9797, 9898, 9999], np.nan)
     df["cmstphsbx"] = df["cmstphsbx"].replace([9797, 9898, 9999], np.nan)
-    df["f18m1"] = df["f18m1"].replace([7, 8, 9], np.nan)
+    df["marend01"] = df["marend01"].replace(
+        [4, 5, 7, 8, 9], [1, 2, np.nan, np.nan, np.nan]
+    )
+
+    # in fmarno, blank means never married, 0 means no formal marriages
+    # we'll treat them the same
+    df["fmarno"] = df["fmarno"].replace(np.nan, 0)
 
     # CM values above 9000 indicate month unknown
     df.loc[df.cmintvw > 9000, "cmintvw"] -= 9000
@@ -556,11 +576,14 @@ def ReadFemResp1982():
     df.loc[df.cmdivorcx > 9000, "cmdivorcx"] -= 9000
     df.loc[df.cmstphsbx > 9000, "cmstphsbx"] -= 9000
 
+    invalid = df["cmdivorcx"] < df["cmmarrhx"]
+    df.loc[invalid, "cmdivorcx"] = np.nan
+
     df["evrmarry"] = df.fmarno > 0
 
-    df["divorced"] = df.f18m1 == 4
-    df["separated"] = df.f18m1 == 5
-    df["widowed"] = df.f18m1 == 3
+    df["divorced"] = df.marend01 == 1
+    df["separated"] = df.marend01 == 2
+    df["widowed"] = df.marend01 == 3
     df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df["cycle"] = 3
@@ -582,10 +605,11 @@ def ReadFemResp1988():
         "firstcm",
         "cmintvw",
         "cmbirth",
-        "f23m1",
+        "marend01",
         "cmdivorcx",
         "cmstphsbx",
         "fmarno",
+        "rmarital",
     ]
 
     colspecs = [
@@ -599,6 +623,7 @@ def ReadFemResp1988():
         (1565 - 1, 1569),
         (1570 - 1, 1574),
         (2441 - 1, 2442),
+        (2160 - 1, 2160),
     ]
 
     df = pd.read_fwf(
@@ -620,17 +645,20 @@ def ReadFemResp1988():
     df["currentcm"] = df["currentcm"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["cmstphsbx"] = df["cmstphsbx"].replace(invalid, np.nan)
+    df["marend01"] = df["marend01"].replace(
+        [1, 2, 3, 7, 8, 9], [3, 1, 2, np.nan, np.nan, np.nan]
+    )
 
     # combine current and first marriage
     df["cmmarrhx"] = df["firstcm"].fillna(df["currentcm"])
-
+    
     # define evrmarry if either currentcm or firstcm is non-zero
     df["evrmarry"] = df.fmarno > 0
 
-    df["divorced"] = df.f23m1 == 2
-    df["separated"] = df.f23m1 == 3
-    df["widowed"] = df.f23m1 == 1
-    df["stillma"] = (df.fmarno == 1) & (df.f23m1.isnull())
+    df["divorced"] = df.marend01 == 1
+    df["separated"] = df.marend01 == 2
+    df["widowed"] = df.marend01 == 3
+    df["stillma"] = (df.fmarno == 1) & (df.marend01.isnull())
 
     df["cycle"] = 4
 
@@ -654,6 +682,8 @@ def ReadFemResp1995():
         "cmdivorcx",
         "cmstphsbx",
         "marstat",
+        "fmarno",
+        "rmarital",
     ]
 
     colspecs = [
@@ -662,10 +692,12 @@ def ReadFemResp1995():
         (11759 - 1, 11762),
         (14 - 1, 16),
         (12350 - 1, 12359),
-        (4713 - 1, 4713),
+        (11799 - 1, 11799),
         (4718 - 1, 4721),
         (4722 - 1, 4725),
         (17 - 1, 17),
+        (11758 - 1, 11758),
+        (11757 - 1, 11757),
     ]
 
     df = pd.read_fwf(dat_file, compression="gzip", colspecs=colspecs, names=names)
@@ -677,6 +709,7 @@ def ReadFemResp1995():
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["cmstphsbx"] = df["cmstphsbx"].replace(invalid, np.nan)
     df["timesmar"] = df["timesmar"].replace([98, 99], np.nan)
+    df["marend01"] = df["marend01"].replace([7, 8, 9], [np.nan, np.nan, np.nan])
 
     df["evrmarry"] = df.timesmar > 0
     df["divorced"] = df.marend01 == 1
@@ -763,6 +796,9 @@ def ReadFemResp2010():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
 
+    invalid = df["cmdivorcx"] < df["cmmarrhx"]
+    df.loc[invalid, "cmdivorcx"] = np.nan
+
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
@@ -790,9 +826,6 @@ def ReadFemResp2013():
         "parity",
         "wgt2011_2013",
         "mardat01",
-        "mardat02",
-        "mardat03",
-        "mardat04",
         "marend01",
         "mardis01",
         "rmarital",
@@ -837,9 +870,6 @@ def ReadFemResp2015():
         "parity",
         "wgt2013_2015",
         "mardat01",
-        "mardat02",
-        "mardat03",
-        "mardat04",
         "marend01",
         "mardis01",
         "rmarital",
@@ -883,14 +913,10 @@ def ReadFemResp2017():
         "parity",
         "wgt2015_2017",
         "mardat01",
-        "mardat02",
-        "mardat03",
-        "mardat04",
         "marend01",
         "mardis01",
         "rmarital",
         "fmarno",
-        "mar1diss",
     ]
 
     df = ReadResp(
@@ -900,26 +926,24 @@ def ReadFemResp2017():
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
 
-    # since cmbirth and cmmarrhx are no longer included,
-    # we have to compute them based on other variables;
-    # the result can be off by up to 12 months
-    df["cmbirth"] = df.cmintvw - df.ager * 12
-    df["cmmarrhx"] = (df.mardat01 - 1900) * 12
-
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
     df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
 
+    # since cmbirth and cmmarrhx are no longer included,
+    # we have to compute them based on other variables;
+    # the result can be off by up to 6 months in either direction
+    df["cmbirth"] = df.cmintvw - df.ager * 12 + 6
+    df["cmmarrhx"] = (df.mardat01 - 1900) * 12 + 6
+    df["cmdivorcx"] = np.nan
+    df.loc[df["divorced"], "cmdivorcx"] = (df.mardis01 - 1900) * 12 + 6
+
     df = df.rename(columns={"wgt2015_2017": "finalwgt"})
     df["cycle"] = 10
 
-    # Instead of calling clean_resp, we have to customize
-    # clean_resp(df)
-
     df["agemarry"] = (df.cmmarrhx - df.cmbirth) / 12.0
-    df["ager"] = (df.cmintvw - df.cmbirth) / 12.0
 
     # if married, we need agemarry; if not married, we need age
     df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())
@@ -947,14 +971,10 @@ def ReadFemResp2019():
         "parity",
         "wgt2017_2019",
         "mardat01",
-        "mardat02",
-        "mardat03",
-        "mardat04",
-        "marend01",
-        "mardis01",
-        "rmarital",
-        "fmarno",
-        "mar1diss",
+        "marend01",  # how first marriage ended
+        "mardis01",  # year of first marriage dissolution
+        "rmarital",  # marital status
+        "fmarno",  # number of formal marriages
     ]
 
     df = ReadResp(
@@ -964,23 +984,24 @@ def ReadFemResp2019():
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
 
-    # since cmbirth and cmmarrhx are no longer included,
-    # we have to compute them based on other variables;
-    # the result can be off by up to 12 months
-    df["cmbirth"] = df.cmintvw - df.ager * 12
-    df["cmmarrhx"] = (df.mardat01 - 1900) * 12
-
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
     df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
 
+    # since cmbirth and cmmarrhx are no longer included,
+    # we have to compute them based on other variables;
+    # the result can be off by up to 6 months in either direction
+    df["cmbirth"] = df.cmintvw - df.ager * 12 + 6
+    df["cmmarrhx"] = (df.mardat01 - 1900) * 12 + 6
+    df["cmdivorcx"] = np.nan
+    df.loc[df["divorced"], "cmdivorcx"] = (df.mardis01 - 1900) * 12 + 6
+
     df = df.rename(columns={"wgt2017_2019": "finalwgt"})
     df["cycle"] = 11
 
     df["agemarry"] = (df.cmmarrhx - df.cmbirth) / 12.0
-    df["ager"] = (df.cmintvw - df.cmbirth) / 12.0
 
     # if married, we need agemarry; if not married, we need age
     df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())
@@ -1030,6 +1051,7 @@ def ReadMaleResp2002():
         "fmarit",
         "timesmar",
         "marrend4",
+        "rmarital",
         #'marrend', 'marrend2', 'marrend3', marrend5', 'marrend6',
     ]
 
