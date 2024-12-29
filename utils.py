@@ -1,9 +1,20 @@
+from lifelines import KaplanMeierFitter
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import norm
 
-import re
-import os
+
+def value_counts(series, **options):
+    """Counts the values in a series and returns sorted.
+
+    series: pd.Series
+
+    returns: pd.Series
+    """
+    options = underride(options, dropna=False)
+    return series.value_counts(**options).sort_index()
 
 
 def sample_rows(df, nrows, replace=False):
@@ -43,30 +54,35 @@ def resample_rows_weighted(df, column="finalwgt"):
     return sample
 
 
-def values(series):
-    """Count the values and sort.
+def resample_by_cycle(unweighted):
+    """Resample a DataFrame, grouped by cycle.
+    
+    unweighted: DataFrame
 
-    series: pd.Series
-
-    returns: series mapping from values to frequencies
+    returns: DataFrame
     """
-    return series.value_counts(dropna=False).sort_index()
+    dfs = []
+
+    for name, group in unweighted.groupby('cycle'):
+        df = resample_rows_weighted(group, 'finalwgt')
+        dfs.append(df)
+
+    return pd.concat(dfs).reset_index(drop=True)
 
 
-def round_into_bins(df, var, bin_width, high=None, low=0):
+def round_into_bins(series, bin_width, low=0, high=None):
     """Rounds values down to the bin they belong in.
 
-    df: DataFrame
-    var: string variable name
+    series: pd.Series
     bin_width: number, width of the bins
 
     returns: array of bin values
     """
     if high is None:
-        high = df[var].max()
+        high = series.max()
 
     bins = np.arange(low, high + bin_width, bin_width)
-    indices = np.digitize(df[var], bins)
+    indices = np.digitize(series, bins)
     return bins[indices - 1]
 
 
@@ -122,3 +138,126 @@ def anchor_legend(x, y):
     y: axis coordinate
     """
     plt.legend(bbox_to_anchor=(x, y), loc="upper left", ncol=1)
+
+
+def set_palette(*args, **kwds):
+    """Set the matplotlib color cycler.
+    
+    args, kwds: same as for sns.color_palette
+    
+    Also takes a boolean kwd, `reverse`, to indicate
+    whether the order of the palette should be reversed.
+    
+    returns: list of colors
+    """
+    reverse = kwds.pop('reverse', False)
+    palette = sns.color_palette(*args, **kwds)
+    
+    palette = list(palette)
+    if reverse:
+        palette.reverse()
+        
+    cycler = plt.cycler(color=palette)
+    plt.gca().set_prop_cycle(cycler)
+    return palette
+
+
+def estimate_proportion(success_series, weights_series, confidence_level=0.95):
+    """
+    Calculate the weighted proportion and Wilson score interval for weighted data.
+
+    Parameters:
+    success_series (pd.Series): A boolean series where True represents a success.
+    weights_series (pd.Series): A series of weights corresponding to the success_series.
+    confidence_level (float): The confidence level for the Wilson score interval
+
+    Returns:
+    tuple of (weighted_proportion, lower, upper)
+    """
+    # Ensure the series are aligned and of correct type
+    success_series = success_series.astype(float)
+    weights_series = weights_series.astype(float)
+
+    # Calculate weighted proportion
+    total_weight = weights_series.sum()
+    weighted_successes = (success_series * weights_series).sum()
+    p = weighted_successes / total_weight
+
+    # Calculate the z-score for the given confidence level
+    z = norm.ppf(1 - (1 - confidence_level) / 2)
+
+    # Wilson score interval adjusted for weighted data
+    denominator = 1 + z**2 / total_weight
+    center = (p + z**2 / (2 * total_weight)) / denominator
+    sd = (
+        np.sqrt((p * (1 - p) + z**2 / (4 * total_weight)) / total_weight)
+        / denominator
+    )
+
+    # Lower and upper bounds of the Wilson interval
+    lower = center - z * sd
+    upper = center + z * sd
+
+    return p, lower, upper
+
+
+def percentile_rows(row_seq, percentiles):
+    """Generates a sequence of percentiles from a sequence of rows.
+
+    row_seq: sequence of rows
+    percentiles: sequence of percentiles ranks (0-100)
+
+    returns: sequence of percentiles
+    """
+    array = np.asarray(row_seq)
+    return np.percentile(array, percentiles, axis=0)
+
+
+def make_kmf_map(grouped):
+    """Dictionary that maps from cohort name to survival function
+
+    grouped: GroupBy object
+
+    returns: dictionary that maps from cohort name to survival Series
+    """
+    kmf_map = {}
+
+    for cohort, group in grouped:
+        kmf = KaplanMeierFitter()
+        kmf.fit(group['duration'], group['observed'])
+        series = (1 - kmf.survival_function_['KM_estimate']) * 100
+        series.name = cohort
+        kmf_map[cohort] = series
+        
+    return kmf_map
+
+
+def add_text(x, y, text, **options):
+    """Add text to the current axes.
+
+    x: float
+    y: float
+    text: string
+    options: keyword arguments passed to plt.text
+    """
+    ax = plt.gca()
+    underride(
+        options,
+        transform=ax.transAxes,
+        color="0.2",
+        ha="left",
+        va="bottom",
+        fontsize=9,
+    )
+    plt.text(x, y, text, **options)
+
+
+def remove_spines():
+    """Remove the spines of a plot but keep the ticks visible."""
+    ax = plt.gca()
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    
+    # Ensure ticks stay visible
+    ax.xaxis.set_ticks_position('bottom')
+    ax.yaxis.set_ticks_position('left')
