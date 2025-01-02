@@ -20,7 +20,6 @@ from statadict import parse_stata_dict
 import pyreadstat
 
 
-
 def value_counts(series, **options):
     """Counts the values in a series and returns sorted.
 
@@ -533,10 +532,12 @@ def ReadFemResp1982():
         "fmarno",
         "rmarital",
         "parity",
-        #"nchildhh",  # Number of respondent's children (18 or younger) living in household
+        # "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
-        "addexp",  # Central number of additional births expected    
+        "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Type of sterilization operation
+        "wantkid2", # Want another kid
     ]
 
     colspecs = [
@@ -552,10 +553,12 @@ def ReadFemResp1982():
         (625 - 1, 628),
         (1142 - 1, 1143),
         (1006 - 1, 1006),
-        (1034 - 1, 1035), # parity
-        (1036 - 1, 1036), # intent
-        (1211 - 1, 1213), # addexp    
-        (1451 - 1, 1454), # agebaby1
+        (1034 - 1, 1035),  # parity
+        (1036 - 1, 1036),  # intent
+        (1211 - 1, 1213),  # addexp
+        (1451 - 1, 1454),  # agebaby1
+        (1156 - 1, 1156),  # strloper
+        (1152 - 1, 1152),  # wantkid2
     ]
 
     df = pd.read_fwf(
@@ -580,6 +583,9 @@ def ReadFemResp1982():
     # in fmarno, blank means never married, 0 means no formal marriages
     # we'll treat them the same
     df["fmarno"] = df["fmarno"].replace(np.nan, 0)
+
+    # replace no, yes with yes, no
+    df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
 
     # CM values above 9000 indicate month unknown
     df.loc[df.cmintvw > 9000, "cmintvw"] -= 9000
@@ -624,10 +630,12 @@ def ReadFemResp1988():
         "fmarno",
         "rmarital",
         "parity",
-        #"nchildhh",  # Number of respondent's children (18 or younger) living in household
+        # "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
-        "addexp",  # Central number of additional births expected    
+        "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper", # Type of sterilization operation
+        "wantkid2", # Want another kid
     ]
 
     colspecs = [
@@ -642,10 +650,12 @@ def ReadFemResp1988():
         (1570 - 1, 1574),
         (2441 - 1, 2442),
         (2160 - 1, 2160),
-        (2254 - 1, 2255), # parity
-        (2334 - 1, 2334), # intent
-        (2331 - 1, 2333), # addexp
-        (2237 - 1, 2240), # agebaby1
+        (2254 - 1, 2255),  # parity
+        (2334 - 1, 2334),  # intent
+        (2331 - 1, 2333),  # addexp
+        (2237 - 1, 2240),  # agebaby1
+        (2316 - 1, 2316),  # strloper
+        (2310 - 1, 2310),  # wantkid2
     ]
 
     df = pd.read_fwf(
@@ -673,9 +683,12 @@ def ReadFemResp1988():
         [1, 2, 3, 7, 8, 9], [3, 1, 2, np.nan, np.nan, np.nan]
     )
 
+    # replace no, yes with yes, no
+    df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
+
     # combine current and first marriage
     df["cmmarrhx"] = df["firstcm"].fillna(df["currentcm"])
-    
+
     # define evrmarry if either currentcm or firstcm is non-zero
     df["evrmarry"] = df.fmarno > 0
 
@@ -709,13 +722,15 @@ def ReadFemResp1995():
         "fmarno",
         "rmarital",
         "parity",
-        #"nchildhh",  # Number of respondent's children (18 or younger) living in household
+        # "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strlopev",  # Ever had a sterilization operation
+        # "rwant",  # It looks like no version of rwant was asked in this cycle
     ]
 
-    # get colspecs from the 1995FemRespSetup.sas
+    # get colspecs from 1995FemRespSetup.sas
     colspecs = [
         (12360 - 1, 12363),
         (4637 - 1, 4638),
@@ -728,10 +743,11 @@ def ReadFemResp1995():
         (17 - 1, 17),
         (11758 - 1, 11758),
         (11757 - 1, 11757),
-        (11290 - 1, 11291), # parity
-        (12244 - 1, 12244), # intent
-        (12245 - 1, 12247), # addexp
-        (11296 - 1, 11299), # agebaby1
+        (11290 - 1, 11291),  # parity
+        (12244 - 1, 12244),  # intent
+        (12245 - 1, 12247),  # addexp
+        (11296 - 1, 11299),  # agebaby1
+        (8947 - 1, 8947),  # strlopev
     ]
 
     df = pd.read_fwf(dat_file, compression="gzip", colspecs=colspecs, names=names)
@@ -747,12 +763,16 @@ def ReadFemResp1995():
     df["marend01"] = df["marend01"].replace([7, 8, 9], [np.nan, np.nan, np.nan])
     df["addexp"] /= 10
 
+    # replace yes, no with "other operation" and "not surgically sterile"
+    df["strloper"] = df["strlopev"].replace([1, 2], [4, 5])
+
     df["evrmarry"] = df.timesmar > 0
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
     df["stillma"] = (df.timesmar == 1) & (df.marend01.isnull())
 
+    df["rwant"] = np.nan
     df["cycle"] = 5
 
     clean_resp(df)
@@ -779,10 +799,12 @@ def ReadFemResp2002():
         "rmarital",
         "fmarno",
         "mar1diss",
-        #"nchildhh",  # Number of respondent's children (18 or younger) living in household
+        # "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
 
     df = ReadResp("2002FemResp.dct", "2002FemResp.dat.gz", usecols=usecols)
@@ -793,6 +815,7 @@ def ReadFemResp2002():
     df["cmbirth"] = df["cmbirth"].replace(invalid, np.nan)
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -830,6 +853,8 @@ def ReadFemResp2010():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
@@ -842,6 +867,7 @@ def ReadFemResp2010():
     df["cmbirth"] = df["cmbirth"].replace(invalid, np.nan)
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
     df["addexp"] /= 10
 
     invalid = df["cmdivorcx"] < df["cmmarrhx"]
@@ -883,6 +909,8 @@ def ReadFemResp2013():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
@@ -895,6 +923,7 @@ def ReadFemResp2013():
     df["cmbirth"] = df["cmbirth"].replace(invalid, np.nan)
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -933,6 +962,8 @@ def ReadFemResp2015():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
@@ -945,6 +976,7 @@ def ReadFemResp2015():
     df["cmbirth"] = df["cmbirth"].replace(invalid, np.nan)
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -981,6 +1013,8 @@ def ReadFemResp2017():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
@@ -989,6 +1023,7 @@ def ReadFemResp2017():
 
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1044,6 +1079,8 @@ def ReadFemResp2019():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
@@ -1052,6 +1089,7 @@ def ReadFemResp2019():
 
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
@@ -1095,31 +1133,31 @@ def ReadFemResp2023():
         "cmintvw",
         "ager",
         "evrmarry",
-        "parity",    # Number of live births
+        "parity",  # Number of live births
         "wgt2022_2023",
         "mardat01",
         "marend01",  # how first marriage ended
         "mardis01",  # year of first marriage dissolution
         "rmarital",  # marital status
-        "fmarno",    # number of formal marriages
+        "fmarno",  # number of formal marriages
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
-        "intent",    # Intentions for additional births
-        "addexp",    # Central number of additional births expected
+        "intent",  # Intentions for additional births
+        "addexp",  # Central number of additional births expected
+        "strloper",  # Ever had a sterilization operation
+        "rwant",  # Want more children
     ]
     # for some reason, agebaby1 is the only variable that is not in upper case
     usecols_upper = [col.upper() for col in usecols] + ["agebaby1"]
 
-    # Path to your SAS file
     file_path = "NSFG-2022-2023-FemRespPUFData.sas7bdat"
-
-    # Read the SAS file into a pandas DataFrame
     df, meta = pyreadstat.read_sas7bdat(file_path, usecols=usecols_upper)
     df.columns = df.columns.str.lower()
 
     df["agebaby1"] = df["agebaby1"].replace(97, np.nan)
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
     df["addexp"] /= 10
-    
+
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
@@ -1141,7 +1179,7 @@ def ReadFemResp2023():
 
     # if married, we need agemarry; if not married, we need age
     df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())
-    
+
     month0 = pd.to_datetime("1899-12-15")
     dates = [month0 + pd.DateOffset(months=cm) for cm in df.cmbirth]
     df["year"] = pd.DatetimeIndex(dates).year - 1900
@@ -1187,11 +1225,20 @@ def ReadMaleResp2002():
         "timesmar",
         "marrend4",
         "rmarital",
-        #'marrend', 'marrend2', 'marrend3', marrend5', 'marrend6',
+        "addexp",
+        "intent",
+        "evrchil",  # Ever had a biological child
+        "evrchiln",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
     ]
 
     df = ReadResp("2002Male.dct", "2002Male.dat.gz", usecols=usecols)
 
+    df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["addexp"] /= 10
     df["cmintvw"] = df["cmintvw"].replace([9797, 9898, 9999], np.nan)
     df["marrend4"] = df["marrend4"].replace([8, 9], np.nan)
     df["timesmar"] = df["timesmar"].replace([98, 99], np.nan)
@@ -1230,10 +1277,20 @@ def ReadMaleResp2010():
         "rmarital",
         "fmarno",
         "mar1diss",
+        "addexp",
+        "intent",
+        "evrchil",  # Ever had a biological child
+        "evrchiln",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
     ]
 
     df = ReadResp("2006_2010_MaleSetup.dct", "2006_2010_Male.dat.gz", usecols=usecols)
 
+    df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1266,13 +1323,22 @@ def ReadMaleResp2013():
         "rmarital",
         "fmarno",
         "mar1diss",
+        "addexp",
+        "intent",
+        # "evrchil", # Ever had a biological child
+        "biokids",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
         "2011_2013_MaleSetup.dct", "2011_2013_MaleData.dat.gz", usecols=usecols
     )
 
+    df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
@@ -1281,6 +1347,7 @@ def ReadMaleResp2013():
     df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
 
     df = df.rename(columns={"wgt2011_2013": "finalwgt"})
+    df = df.rename(columns={"biokids": "numbiokid"})
     df["cycle"] = 8
 
     clean_resp(df)
@@ -1304,13 +1371,22 @@ def ReadMaleResp2015():
         "rmarital",
         "fmarno",
         "mar1diss",
+        "addexp",
+        "intent",
+        # "evbiokid", # Ever had a biological child
+        "biokids",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
         "2013_2015_MaleSetup.dct", "2013_2015_MaleData.dat.gz", usecols=usecols
     )
 
+    df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
@@ -1319,6 +1395,7 @@ def ReadMaleResp2015():
     df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
 
     df = df.rename(columns={"wgt2013_2015": "finalwgt"})
+    df = df.rename(columns={"biokids": "numbiokid"})
     df["cycle"] = 9
     clean_resp(df)
     return df
@@ -1340,6 +1417,12 @@ def ReadMaleResp2017():
         "rmarital",
         "fmarno",
         "mar1diss",
+        "addexp",
+        "intent",
+        # "evbiokid", # Ever had a biological child
+        "biokids",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
@@ -1351,7 +1434,10 @@ def ReadMaleResp2017():
     # the result can be off by up to 12 months
     df["cmbirth"] = df.cmintvw - df.ager * 12
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
+    df["addexp"] /= 10
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
@@ -1359,6 +1445,7 @@ def ReadMaleResp2017():
     df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
 
     df = df.rename(columns={"wgt2015_2017": "finalwgt"})
+    df = df.rename(columns={"biokids": "numbiokid"})
     df["cycle"] = 10
 
     # Instead of calling clean_resp, we have to customize
@@ -1394,11 +1481,86 @@ def ReadMaleResp2019():
         "rmarital",
         "fmarno",
         "mar1diss",
+        "addexp",
+        "intent",
+        # "evbiokid", # Ever had a biological child
+        "biokids",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
     ]
 
     df = ReadResp(
         "2017_2019_MaleSetup.dct", "2017_2019_MaleData.dat.gz", usecols=usecols
     )
+
+    # since cmbirth and cmmarrhx are no longer included,
+    # we have to compute them based on other variables;
+    # the result can be off by up to 12 months
+    df["cmbirth"] = df.cmintvw - df.ager * 12
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["cmmarrhx"] = (df.mardat01 - 1900) * 12
+
+    df["addexp"] /= 10
+    df["evrmarry"] = df.evrmarry == 1
+    df["divorced"] = df.marend01 == 1
+    df["separated"] = df.marend01 == 2
+    df["widowed"] = df.marend01 == 3
+    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
+
+    df = df.rename(columns={"wgt2017_2019": "finalwgt"})
+    df = df.rename(columns={"biokids": "numbiokid"})
+    df["cycle"] = 11
+
+    # Instead of calling clean_resp, we have to customize
+    # clean_resp(df)
+
+    df["agemarry"] = (df.cmmarrhx - df.cmbirth) / 12.0
+    df["ager"] = (df.cmintvw - df.cmbirth) / 12.0
+
+    # if married, we need agemarry; if not married, we need age
+    df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())
+
+    month0 = pd.to_datetime("1899-12-15")
+    dates = [month0 + pd.DateOffset(months=cm) for cm in df.cmbirth]
+    df["year"] = pd.DatetimeIndex(dates).year - 1900
+
+    digitize_resp(df)
+    return df
+
+
+def ReadMaleResp2023():
+    """Reads respondent data from NSFG Cycle 12.
+
+    returns: DataFrame
+    """
+    usecols = [
+        "caseid",  # Case ID
+        "mardat01",  # Date of first marriage
+        "cmintvw",  # Date of interview
+        "ager",  # Age of respondent at interview
+        "evrmarry",  # Ever married
+        "wgt2022_2023",  # Final weight
+        "marend01",  # How first marriage ended
+        "rmarital",  # Marital status
+        "fmarno",  # Number of formal marriages
+        "mar1diss",  # Year of first marriage dissolution
+        "addexp",  # Central number of additional births expected
+        "intent",  # Intentions for additional births
+        "evbiokid",  # Ever had a biological child
+        "numbiokid",  # Number of biological children
+        "everoper",  # Ever had an operation to prevent pregnancy
+        "rwant",  # Want more children
+    ]
+    usecols_upper = [col.upper() for col in usecols]
+
+    file_path = "NSFG-2022-2023-MaleRespPUFData.sas7bdat"
+    df, meta = pyreadstat.read_sas7bdat(file_path, usecols=usecols_upper)
+    df.columns = df.columns.str.lower()
+
+    df["mardat01"] = df["mardat01"].replace(9997, np.nan)
+    df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["addexp"] /= 10
 
     # since cmbirth and cmmarrhx are no longer included,
     # we have to compute them based on other variables;
@@ -1412,8 +1574,10 @@ def ReadMaleResp2019():
     df["widowed"] = df.marend01 == 3
     df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
 
-    df = df.rename(columns={"wgt2017_2019": "finalwgt"})
-    df["cycle"] = 11
+    df["numbiokid"] = df["numbiokid"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
+    df["everoper"] = df["everoper"].replace([8, 9], np.nan)
+    df = df.rename(columns={"wgt2022_2023": "finalwgt"})
+    df["cycle"] = 12
 
     # Instead of calling clean_resp, we have to customize
     # clean_resp(df)
