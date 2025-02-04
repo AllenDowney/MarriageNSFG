@@ -1,0 +1,12 @@
+jupyter
+lifelines
+numpy
+matplotlib
+pandas
+pyreadstat
+seaborn
+scipy
+statadict
+statsmodels
+tables
+empiricaldist
