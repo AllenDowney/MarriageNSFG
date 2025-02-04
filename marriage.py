@@ -538,6 +538,7 @@ def ReadFemResp1982():
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation
         "wantkid2", # Want another kid
+        "educat",  # Years of education
     ]
 
     colspecs = [
@@ -559,6 +560,7 @@ def ReadFemResp1982():
         (1451 - 1, 1454),  # agebaby1
         (1156 - 1, 1156),  # strloper
         (1152 - 1, 1152),  # wantkid2
+        (1010 - 1, 1011),  # educat
     ]
 
     df = pd.read_fwf(
@@ -586,6 +588,9 @@ def ReadFemResp1982():
 
     # replace no, yes with yes, no
     df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
+
+    # Recode years of educaction
+    df['anycoll'] = df['educat'] >= 13
 
     # CM values above 9000 indicate month unknown
     df.loc[df.cmintvw > 9000, "cmintvw"] -= 9000
@@ -636,6 +641,7 @@ def ReadFemResp1988():
         "agebaby1",  # Age at first live birth
         "strloper", # Type of sterilization operation
         "wantkid2", # Want another kid
+        "educat",  # Years of education
     ]
 
     colspecs = [
@@ -656,6 +662,7 @@ def ReadFemResp1988():
         (2237 - 1, 2240),  # agebaby1
         (2316 - 1, 2316),  # strloper
         (2310 - 1, 2310),  # wantkid2
+        (2169 - 1, 2170),  # educat
     ]
 
     df = pd.read_fwf(
@@ -685,6 +692,9 @@ def ReadFemResp1988():
 
     # replace no, yes with yes, no
     df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
+
+    # Recode years of educaction
+    df['anycoll'] = df['educat'] >= 13
 
     # combine current and first marriage
     df["cmmarrhx"] = df["firstcm"].fillna(df["currentcm"])
@@ -728,6 +738,7 @@ def ReadFemResp1995():
         "agebaby1",  # Age at first live birth
         "strlopev",  # Ever had a sterilization operation
         # "rwant",  # It looks like no version of rwant was asked in this cycle
+        "hieduc",  # Highest level of education
     ]
 
     # get colspecs from 1995FemRespSetup.sas
@@ -748,6 +759,7 @@ def ReadFemResp1995():
         (12245 - 1, 12247),  # addexp
         (11296 - 1, 11299),  # agebaby1
         (8947 - 1, 8947),  # strlopev
+        (10892 - 1, 10893),  # hieduc
     ]
 
     df = pd.read_fwf(dat_file, compression="gzip", colspecs=colspecs, names=names)
@@ -761,10 +773,10 @@ def ReadFemResp1995():
     df["cmstphsbx"] = df["cmstphsbx"].replace(invalid, np.nan)
     df["timesmar"] = df["timesmar"].replace([98, 99], np.nan)
     df["marend01"] = df["marend01"].replace([7, 8, 9], [np.nan, np.nan, np.nan])
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(1, 16),
+                                        [1,1,1,1,1,1,1,2,4,5,7,8,9,10,11])
     df["addexp"] /= 10
-
-    # replace yes, no with "other operation" and "not surgically sterile"
-    df["strloper"] = df["strlopev"].replace([1, 2], [4, 5])
 
     df["evrmarry"] = df.timesmar > 0
     df["divorced"] = df.marend01 == 1
@@ -803,8 +815,11 @@ def ReadFemResp2002():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp("2002FemResp.dct", "2002FemResp.dat.gz", usecols=usecols)
@@ -815,7 +830,11 @@ def ReadFemResp2002():
     df["cmbirth"] = df["cmbirth"].replace(invalid, np.nan)
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
+    df["tubs"] = df["tubs"].replace([1, 2], [1, 5])
+    df["hyst"] = df["hyst"].replace([1, 2], [1, 5])
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -853,8 +872,11 @@ def ReadFemResp2010():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -867,7 +889,11 @@ def ReadFemResp2010():
     df["cmbirth"] = df["cmbirth"].replace(invalid, np.nan)
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
+    df["tubs"] = df["tubs"].replace([1, 2], [1, 5])
+    df["hyst"] = df["hyst"].replace([1, 2], [1, 5])
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
 
     invalid = df["cmdivorcx"] < df["cmmarrhx"]
@@ -909,8 +935,11 @@ def ReadFemResp2013():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -924,6 +953,8 @@ def ReadFemResp2013():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -962,8 +993,11 @@ def ReadFemResp2015():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -977,6 +1011,8 @@ def ReadFemResp2015():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1013,8 +1049,11 @@ def ReadFemResp2017():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -1024,6 +1063,8 @@ def ReadFemResp2017():
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1079,8 +1120,11 @@ def ReadFemResp2019():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -1090,6 +1134,8 @@ def ReadFemResp2019():
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
@@ -1143,8 +1189,11 @@ def ReadFemResp2023():
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
-        "strloper",  # Ever had a sterilization operation
+        "strloper",  # Type of sterilization operation in effect
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
     # for some reason, agebaby1 is the only variable that is not in upper case
     usecols_upper = [col.upper() for col in usecols] + ["agebaby1"]
@@ -1156,6 +1205,7 @@ def ReadFemResp2023():
     df["agebaby1"] = df["agebaby1"].replace(97, np.nan)
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 5
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1231,6 +1281,7 @@ def ReadMaleResp2002():
         "evrchiln",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp("2002Male.dct", "2002Male.dat.gz", usecols=usecols)
@@ -1238,6 +1289,8 @@ def ReadMaleResp2002():
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
     df["cmintvw"] = df["cmintvw"].replace([9797, 9898, 9999], np.nan)
     df["marrend4"] = df["marrend4"].replace([8, 9], np.nan)
@@ -1283,6 +1336,7 @@ def ReadMaleResp2010():
         "evrchiln",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp("2006_2010_MaleSetup.dct", "2006_2010_Male.dat.gz", usecols=usecols)
@@ -1290,6 +1344,8 @@ def ReadMaleResp2010():
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
 
@@ -1329,6 +1385,7 @@ def ReadMaleResp2013():
         "biokids",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -1338,6 +1395,8 @@ def ReadMaleResp2013():
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1377,6 +1436,7 @@ def ReadMaleResp2015():
         "biokids",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -1386,6 +1446,8 @@ def ReadMaleResp2015():
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1423,6 +1485,7 @@ def ReadMaleResp2017():
         "biokids",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -1435,6 +1498,8 @@ def ReadMaleResp2017():
     df["cmbirth"] = df.cmintvw - df.ager * 12
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["addexp"] /= 10
@@ -1487,6 +1552,7 @@ def ReadMaleResp2019():
         "biokids",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
 
     df = ReadResp(
@@ -1498,6 +1564,8 @@ def ReadMaleResp2019():
     # the result can be off by up to 12 months
     df["cmbirth"] = df.cmintvw - df.ager * 12
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 10
+    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12
 
     df["addexp"] /= 10
@@ -1551,6 +1619,7 @@ def ReadMaleResp2023():
         "numbiokid",  # Number of biological children
         "everoper",  # Ever had an operation to prevent pregnancy
         "rwant",  # Want more children
+        "hieduc",  # Highest level of education
     ]
     usecols_upper = [col.upper() for col in usecols]
 
@@ -1560,6 +1629,7 @@ def ReadMaleResp2023():
 
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    df["anycoll"] = df["hieduc"] >= 5
     df["addexp"] /= 10
 
     # since cmbirth and cmmarrhx are no longer included,
