@@ -1,0 +1,7 @@
+-r requirements.txt
+black
+flake8
+nbformat
+nbmake
+nb_black==1.0.5
+pytest
