@@ -140,6 +140,20 @@ def anchor_legend(x, y):
     plt.legend(bbox_to_anchor=(x, y), loc="upper left", ncol=1)
 
 
+def adjust_legend(**options):
+    """Adjusts the properties of the lines in a legend.
+
+    If draw lots of lines with low alpha, the legend is hard to read.
+    Label the first line in each category, then change the properties
+    of the line, usually alpha and linewidth.
+
+    options: keyword arguments passed to line.set
+    """
+    legend = plt.gca().get_legend()
+    for line in legend.get_lines():
+        line.set(**options)
+
+
 def set_palette(*args, **kwds):
     """Set the matplotlib color cycler.
     
