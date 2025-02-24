@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import norm
 
+import matplotlib.image as mpimg
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
 
 def value_counts(series, **options):
     """Counts the values in a series and returns sorted.
@@ -275,3 +278,54 @@ def remove_spines():
     # Ensure ticks stay visible
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position('left')
+
+
+
+
+
+def add_logo(filename="logo-hq-small.png", location=(1.0, -0.3), size=(0.6, 0.3)):
+    """Add a logo inside an inset axis positioned relative to the main plot."""
+
+    logo = mpimg.imread(filename)
+
+    # Create an inset axis in the given location (transAxes places it relative to the axes)
+    ax = plt.gca()
+    ax_inset = inset_axes(
+        ax,
+        width=size[0],
+        height=size[1],
+        loc="lower right",
+        bbox_to_anchor=location,
+        bbox_transform=ax.transAxes,
+        borderpad=0,
+    )
+
+    # Display the logo
+    ax_inset.imshow(logo)
+    ax_inset.axis("off")
+
+    return ax_inset
+
+
+def add_subtext(text):
+    """Add a text label below the current plot.
+
+    Args:
+        text: string
+    """
+    ax = plt.gca()
+    plt.figtext(
+        0, -0.3, text, ha="left", va="bottom", fontsize=8, transform=ax.transAxes
+    )
+
+
+def add_title(title, subtitle, pad=20):
+    """Add a title and subtitle to the current plot.
+
+    Args:
+        title (str): Title of the plot
+        subtitle (str): Subtitle of the plot
+        pad (int): Padding between the title and subtitle
+    """
+    plt.title(title, loc="left", pad=pad)
+    add_text(0, 1.02, subtitle) 
