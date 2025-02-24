@@ -9,15 +9,22 @@ import matplotlib.image as mpimg
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
-def value_counts(series, **options):
-    """Counts the values in a series and returns sorted.
+def value_counts(seq, **options):
+    """Make a series of values and the number of times they appear.
 
-    series: pd.Series
+    Returns a DataFrame because they get rendered better in Jupyter.
+
+    Args:
+        seq: sequence
+        options: passed to pd.Series.value_counts
 
     returns: pd.Series
     """
     options = underride(options, dropna=False)
-    return series.value_counts(**options).sort_index()
+    series = pd.Series(seq).value_counts(**options).sort_index()
+    series.index.name = "values"
+    series.name = "counts"
+    return pd.DataFrame(series)
 
 
 def sample_rows(df, nrows, replace=False):
@@ -280,9 +287,6 @@ def remove_spines():
     ax.yaxis.set_ticks_position('left')
 
 
-
-
-
 def add_logo(filename="logo-hq-small.png", location=(1.0, -0.3), size=(0.6, 0.3)):
     """Add a logo inside an inset axis positioned relative to the main plot."""
 
@@ -329,3 +333,15 @@ def add_title(title, subtitle, pad=20):
     """
     plt.title(title, loc="left", pad=pad)
     add_text(0, 1.02, subtitle) 
+
+def savefig(prefix, fig_number, extra_artist):
+    """Save the current figure with the given filename.
+
+    Args:
+        fig_number (int): The figure number
+        extra_artist: Additional artist to include in the bounding box
+    """
+    filename = f"{prefix}{fig_number:02d}"
+    plt.savefig(
+        filename, dpi=150, bbox_inches="tight", bbox_extra_artists=[extra_artist]
+    )
