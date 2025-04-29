@@ -1,55 +1,64 @@
-# Marriage and Education: CPS Figures
+# Marriage and Education: CPS Data
 
-This page presents a series of figures illustrating the relationship between marriage and education using data from the Current Population Survey (CPS). Each figure highlights a different aspect of the trends or differences by educational attainment.
+Outline:
 
----
+* Motivated by "Gender Gaps in College: What Do They Mean for Marriage?", which shows that marriage rates have sharply declined among women without a college degree.
 
-## Figure 1: marriage_education_cps01.png
+* Which raises several related questions: 
+
+    - What do these patterns look like at different ages (not just 40-49)? 
+    
+    - What do they look like for men? 
+    
+    - And how are they different if we look at "ever married" rather than "married when interviewed"
+
+* Primary findings:
+
+    - Early marriage (at or before age 24): In previous generations, college-educated men and women were less likely to get married early. Now early marriage is less likely across the board, and there is no difference between people with and without a college degree.
+
+    - Marriage by age 33: Among both men and women, marriage at or before age 33 has crossed over -- that is, in previous generations, the college-educated were less likely to marry on a nominal schedule. Now they are more likely (but not by a lot).
+
+    - The pattern is similar in marriage by age 45. People with college degrees are more likely to marry, but the difference is only about 5 percentage points.
+
+Comparison with previous results: the education gap is bigger if we look at marital status, rather than "ever married". Likely explanations: people without degrees were more likely to marry early (shown), and more likely to divorce (not shown, but could be).
+
+
+## Married by 24
+
+Women
 
 ![Figure 1](marriage_education_cps01.png)
 
-**Figure 1.** _[Insert description of the data shown in this figure, e.g., overall marriage rates by education level.]_
 
----
+Men
 
-## Figure 2: marriage_education_cps02.png
 
 ![Figure 2](marriage_education_cps02.png)
 
-**Figure 2.** _[Insert description of trends over time or comparison across demographic groups.]_
 
 ---
 
-## Figure 3: marriage_education_cps03.png
+## Married by 33
+
+Women
 
 ![Figure 3](marriage_education_cps03.png)
 
-**Figure 3.** _[Insert explanation of how marriage rates vary by age and education.]_
 
----
-
-## Figure 4: marriage_education_cps04.png
+Men
 
 ![Figure 4](marriage_education_cps04.png)
 
-**Figure 4.** _[Insert caption interpreting cross-sectional differences or historical changes.]_
 
----
 
-## Figure 5: marriage_education_cps05.png
+## Married by 45
+
+Women
 
 ![Figure 5](marriage_education_cps05.png)
 
-**Figure 5.** _[Add a brief note about what this figure adds to the analysis or confirms about earlier trends.]_
-
----
-
-## Figure 6: marriage_education_cps06.png
+Men
 
 ![Figure 6](marriage_education_cps06.png)
 
-**Figure 6.** _[Provide any final observations or synthesize findings from the full set of figures.]_
 
----
-
-_This page is part of an ongoing analysis of marriage and education using CPS data. All figures are generated from publicly available datasets and can be reproduced using the associated code repository._
