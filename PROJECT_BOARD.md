@@ -8,11 +8,11 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 
 - **Task 1:** Reorganize the repo — not started. Design in `planning/repo_reorganization.md`.
 - **Task 2:** Rebuild the conda environment — not started. Design in `planning/environment.md`.
-- **Task 3:** Commit 17 months of pending work — not started. **Do this first.**
+- **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
 - **Task 4:** Remove NSFG/IPUMS data from the repo and its history — not started.
 - **Task 5:** Write the data download script — not started.
-- **Task 6:** Update the analysis for cycle 12 — not started; blocked on Task 7.
-- **Task 7:** Cycle 12's education recode is wrong — **confirmed**, not started.
+- **Task 6:** Update the analysis for cycle 12 — not started; **unblocked**.
+- **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
 - **Task 8:** PEP-8 rename — not started.
 - **Task 9:** Fix the pandas landmines — not started.
 - **Task 10:** Consolidated codebook metadata — not started.
@@ -20,7 +20,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 12:** Write `CLAUDE.md` — not started.
 - **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
 
-**Three things are urgent and cheap.** `fertility.ipynb` has never been committed and exists only on this machine (Task 3). `.gitattributes` has never been committed, so the repo is unusable from a fresh clone (Task 4). And cycle 12's `bdegree` is wrong by roughly 17 percentage points, which affects the analysis this update is for (Task 7).
+**All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. Task 6 is unblocked and is the natural next piece of work.
 
 ### How this repo fits together
 
@@ -46,7 +46,7 @@ There are effectively **two codebases** here. The modern one — `utils.py` plus
 ### Traps
 
 - Every reader in `marriage.py` uses a **bare relative filename** and assumes the CWD is the repo root.
-- `.gitattributes` is **untracked**. Clones get 130-byte LFS pointers, not data.
+- `.gitattributes` is committed as of `5d3a315`, but LFS goes away entirely in Task 4 — do not add data files expecting LFS to keep covering them.
 - `make lint` and `make format` reference a `code/` directory and a `pyproject.toml`; neither exists. `make tests` needs `pytest` and `nbmake`, which are not installed.
 - `marriage_test.py` tests two functions that do not exist in `marriage.py`.
 - `validate1995/2002/2010/2013data.ipynb` import `nsfg3`, which does not exist anywhere. They have been unrunnable since 2017.
@@ -113,7 +113,7 @@ The current env is Python 3.10.14 with pandas 2.2.3 and numpy 1.26.4 — pinned 
 
 ## Task 3: Commit the 17 months of pending work
 
-**Status:** Not started. **Do this before anything else.**
+**Status:** Done 2026-09-20 (`5d3a315`).
 
 **Context:** The last commit is `62df0b8`, 2025-04-29. Since then 13 tracked files have been modified — including `clean_nsfg.ipynb`, `marriage.py` and `utils.py` — and none of it is committed.
 
@@ -121,12 +121,23 @@ Worse, `fertility.ipynb` has **never been committed at all**. It is 1.8 MB of ac
 
 This is a separate task from the reorg because it is pure risk reduction and takes minutes. The commits made here will be rewritten by Task 4's history purge, but the *content* survives — that is the point.
 
-### Scope
+### Scope narrowed during execution
 
-- [ ] Commit `fertility.ipynb`
-- [ ] Commit the 13 modified files
-- [ ] Commit `.gitattributes` (it is deleted again in Task 4, but commit it now so nothing depends on an untracked file)
-- [ ] Note: `FemMarriageData.csv` is currently a plain blob and is modified; committing it converts it to LFS silently. Harmless, since Task 4 purges it
+The original scope said "commit the 13 modified files." That was wrong: five of
+the thirteen are data, totalling 157 MB. Committing them would have pushed new
+LFS objects that Task 4 then has to purge — and since GitHub does not drop
+orphaned LFS objects without a support request, that makes the cleanup harder
+rather than merely wasteful. `FemMarriageData.csv` compounds it: it is currently
+a plain blob, so committing it converts it to LFS silently, invisibly in the diff.
+
+- [x] Commit `fertility.ipynb`
+- [x] Commit the eight modified code and notebook files
+- [x] Commit `.gitattributes` — closes the broken-clone hole until Task 4 drops LFS
+- [x] Deliberately leave the five data files uncommitted for Task 4
+
+`clean_nsfg.ipynb` was committed as-is and still carries the Task 7 defect. That
+is intentional — the snapshot and the fix are separate concerns, and the snapshot
+was the urgent one.
 
 ---
 
@@ -205,56 +216,102 @@ CPS and IPUMS extracts (`cps_00012.dta.gz`, `usa_00002.csv.gz`, `jun24pub.csv`) 
 | `FemMarriageData.hdf` | (75769, 52) | 5,586 |
 | `MaleMarriageData.hdf` | (38769, 43) | 4,371 |
 
-What remains is downstream: re-run the analysis notebooks, refresh the figures, and update the write-ups. But `bdegree` and `anycoll` are wrong for cycle 12 (Task 7), and those are exactly the variables the education analysis turns on — so Task 7 comes first or the figures get published wrong.
+What remains is downstream: re-run the analysis notebooks, refresh the figures, and update the write-ups.
+
+**One caveat has to be stated in the write-ups.** Weighted `bdegree` among women
+25–45 rises 0.378 → 0.465 between cycles 11 and 12, against typical cycle-to-cycle
+moves of 1–4 points. The recode is correct (Task 7), so this is either real
+educational change over a six-year gap or an artifact of the 2022–2023 cycle's
+move to web self-administration and its lower response rate — most likely some of
+both. Any claim about education and marriage that leans on the cycle-12 point
+needs to acknowledge it.
 
 ### Scope
 
-- [ ] Fix Task 7 first
 - [ ] Re-run `marriage_education`, `marriage_education_cps`, `fertility`, `intent`, `marriage_lifelines`, `agebaby_lifelines`
 - [ ] Refresh `figures/*.png` and the `.md` write-ups
-- [ ] Check the cycle-11 → cycle-12 boundary on every derived variable, not just `hieduc` — the same class of error could be hiding elsewhere
+- [ ] State the cycle-12 education caveat wherever a cycle-12 education estimate appears
+- [ ] Check the cycle-11 → cycle-12 boundary on every other derived variable too — `hieduc` came out clean, but nothing else has been checked
+- [ ] Compare cycle 12 against an external benchmark (CPS educational attainment for the same years) to separate real change from mode effect
 
 ---
 
-## Task 7: Cycle 12's education recode is wrong
+## Task 7: Is cycle 12's education recode wrong?
 
-**Status:** Confirmed 2026-09-20, not started. **Blocks Task 6.**
+**Status:** Resolved 2026-09-20 — **not a defect.** The recode is correct. A
+separate, real question about the cycle-12 education distribution is recorded
+below and moves to Task 6. No longer blocks Task 6.
 
-**Context:** Cycles 5–11 compute `bdegree` and `anycoll` on the **raw** `hieduc` scale and then remap it:
+**How it looked:** Cycles 5–11 compute `bdegree` and `anycoll` on the raw
+`hieduc` scale and then remap it, while cycle 12 uses different-looking cutoffs
+and no remap:
 
 ```python
+# cycles 5-11
 df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
 df["anycoll"] = df["hieduc"] >= 10
 df["hieduc"]  = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-```
 
-Cycle 12 (`marriage.py:1228`) uses different cutoffs and no remap:
-
-```python
+# cycle 12 (marriage.py:1228)
 df["bdegree"] = (df["hieduc"] >= 8).where(df["hieduc"].notna())
 df["anycoll"] = df["hieduc"] >= 5
 ```
 
-At first glance these agree — raw 12 maps to 8, raw 10 maps to 5. But the remap collapses 5, 6 and 7 all to 1, so cycles 5–11 end up on a **sparse 9-value** subset `{1,2,4,5,7,8,9,10,11}`, while cycle 12 uses a **dense 11-value** 1–11 scale. Same cutoff number, different underlying coding.
+Cycle 11 has zero respondents at `hieduc` 3 and 6 while cycle 12 has 2.7% and
+6.3%, and unweighted `bdegree` among women 25–45 jumped 0.334 → 0.503. That
+looked like two incompatible scales.
 
-The distributions settle it. Cycle 11 has **zero** mass at `hieduc` 3 and 6 — values the remap cannot produce — while cycle 12 has 2.7% and 6.3%:
+**What the codebook says.** From `codebooks/2022-2023-FemResp-Codebook.txt`,
+cycle 12's `HIEDUC` is:
 
-| `hieduc` | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| cycle 11 | .185 | .005 | — | .263 | .200 | — | .083 | .175 | .072 | .010 | .007 |
-| cycle 12 | .112 | .030 | .027 | .144 | .171 | .063 | .050 | .227 | .135 | .024 | .016 |
+| | | | |
+|---|---|---|---|
+| 1 Less than HS completion | 4 High school graduate | 7 Associate: academic | 10 Professional degree |
+| 2 12th grade, no diploma | 5 Some college, no degree | 8 Bachelor's degree | 11 Doctoral degree |
+| 3 GED or equivalent | 6 Associate: occup/tech/voc | 9 Master's degree | |
 
-Downstream, among women aged 25–45, `bdegree` jumps **0.334 → 0.503** and `anycoll` jumps **0.636 → 0.788** between cycles 11 and 12. Those are 17- and 15-point discontinuities in a single cycle, which is not plausible as real change.
+So `hieduc >= 8` is exactly "Bachelor's or higher" and `hieduc >= 5` is exactly
+"some college or more". **Both cutoffs are right.**
 
-**What is not yet known:** the correct mapping. That needs the 2022–2023 codebook entry for `hieduc`, which has not been read. Do not guess a threshold.
+And the old remap `[1,1,1,2,4,5,7,8,9,11,10]` maps the pre-2022 scale *onto this
+same coding* — that is what it is for. It never produces 3 or 6 because the older
+scale could not distinguish a GED from a high school diploma, nor academic from
+vocational associate degrees. That is a documented limit of harmonizing the two
+scales, not a bug. The male file uses identical coding, so `ReadMaleResp2023` is
+correct too.
+
+**What is real, and belongs to Task 6.** Weighting halves the jump but does not
+remove it:
+
+| cycle | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|
+| `bdegree`, unweighted | .320 | .353 | .334 | .503 |
+| `bdegree`, weighted by `finalwgt` | .380 | .388 | .378 | **.465** |
+| `anycoll`, weighted | .674 | .689 | .674 | **.742** |
+
+An 8.7-point weighted rise in one cycle against a typical 1–4 points is still
+large. The likely explanation is not the recode but the survey: the 2022–2023
+cycle moved to web self-administration with a substantially lower response rate,
+which plausibly skews the respondent pool toward higher education in a way the
+weights do not fully correct. That is a caveat the analysis has to state, not
+code to fix.
 
 ### Scope
 
-- [ ] Read the 2022–2023 codebook entry for `hieduc`
-- [ ] Establish the correct mapping from the cycle-12 coding onto the cycles 5–11 scale
-- [ ] Apply the remap in `ReadFemResp2023` and `ReadMaleResp2023`
-- [ ] Confirm the cycle-11 → cycle-12 discontinuity disappears
-- [ ] Add a cross-cycle continuity check to the validation suite (Task 11) so this class of error is caught next time
+- [x] Read the 2022–2023 codebook entry for `hieduc` — cached in `codebooks/`
+- [x] Confirm the cycle-12 cutoffs against it — both correct
+- [x] Confirm the cycles 5–11 remap targets the same coding — it does
+- [x] Check the male file — identical coding
+- [x] Re-check the discontinuity with weights applied
+- [ ] Carry the weighted cycle-12 education shift into Task 6 as a stated caveat
+- [ ] Still worth doing: a cross-cycle continuity check in the validation suite
+      (Task 11), which would have answered this in seconds
+
+### Lesson for Task 10
+
+This took a codebook lookup to settle, and the codebook was not in the repo. It
+is now. The same question will recur for every derived variable at every cycle
+boundary, which is the argument for the consolidated variable table.
 
 ---
 
@@ -330,8 +387,24 @@ Task 7 is a direct consequence: a coding change between cycles was invisible bec
 
 The goal is one harmonized variable table — for each output column, which source variable it comes from in each cycle, what the value coding is, and what recoding is applied.
 
+**Started 2026-09-20.** The 2022–2023 codebooks and recode specs are now cached
+as greppable text in `codebooks/`, fetched by `scripts/fetch_codebooks.py`. That
+is 3.5 MB of text standing in for 24 MB of PDFs, and it is what settled Task 7.
+NCHS documentation is a US government work in the public domain, so unlike the
+microdata it can live in the repo.
+
+```bash
+python scripts/fetch_codebooks.py          # fetch anything missing
+python scripts/fetch_codebooks.py --list   # show what is cached
+grep -A16 '^HIEDUC$' codebooks/2022-2023-FemResp-Codebook.txt
+```
+
+Still to do: the older cycles, and the distillation into a real table.
+
 ### Scope
 
+- [x] Cache the 2022–2023 codebooks and recode specs as text
+- [ ] Extend `fetch_codebooks.py` to the 2002–2019 cycles
 - [ ] Read the per-cycle codebooks for the variables actually used
 - [ ] Build one machine-readable variable table (CSV or YAML in `nsfg/`)
 - [ ] Cross-check it against what the readers actually do — discrepancies here are bugs

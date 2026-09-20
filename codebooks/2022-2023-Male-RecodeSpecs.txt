@@ -1,0 +1,3029 @@
+                   2022-2023 National Survey of Family Growth
+                    Male Respondent File Recode Specifications
+
+ ** Recodes shown in blue font and noted with a double asterisk were defined based on
+ final, imputed values of other recodes and have no imputation flags. Therefore, their
+ variable type in the codebooks and file indexes is “computed in post-processing.”
+
+
+     Section A Recodes: Demographic Characteristics; Household Roster; Childhood
+                        Background; Marital/Cohabiting Experience
+
+
+AGER:         R’s Age at Interview
+
+AGER= age_r
+
+Values of Blaise-computed variable age_r (defined in Flow Check A-2 in the CRQ) are used to
+determine values of AGER:
+
+If there was a valid response (not DK/RF) for date of birth (AA-2 BIRTHDAY), then
+age_r =INT[(date of interview (in m/d/y) - m/d/y date of birth (AA-2 BIRTHDAY))/365.25]
+
+Else if AA-2 BIRTHDAY = DK/RF, then age_r = age in years (AA-1 AGE_A)
+
+Note: Respondents aged 50 at interview were 49 at time of household screener.
+
+Code categories:
+      15-50 = age in years
+
+
+FMARITAL:            Formal (legal) marital status relative to opposite-sex spouses
+
+Note: This recode defines formal (legal) marital status based only on opposite-sex couples.
+      Computed variable ssmarcoh can be used to identify respondents in same-sex marriages
+      and cohabitations.
+
+FMARITAL is based on values of Blaise-computed variable fmarit (defined in Flow Check A-
+44).
+
+       If fmarit in(1 2 3 4 5) then FMARITAL= fmarit;
+       else if fmarit=0 then FMARITAL=5;
+
+Code categories:
+      1 = Married to a person of the opposite sex
+      2 = Widowed
+      3 = Divorced or annulled
+      4 = Separated
+
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 1 of 61
+       5 = Never married
+
+
+RMARITAL:             Informal marital status relative to opposite-sex spouses or partners
+
+Note: This recode defines informal marital status based only on opposite-sex couples.
+      Computed variable ssmarcoh can be used to identify respondents in same-sex marriages
+      and cohabitations.
+
+RMARITAL = 1          if R is married to a female (rmarit = 1).
+Else
+RMARITAL = 2          if R reports living with a female partner (rmarit=2).
+Else
+RMARITAL = 3          if R is widowed from a female (fmarit=2).
+Else
+RMARITAL = 4          if R is divorced from a female (fmarit=3).
+Else
+RMARITAL = 5          if R is separated from a female (fmarit=4).
+Else
+RMARITAL = 6          if R has never been married to a female (fmarit=5).
+
+Code categories:
+      1 = Currently married to a person of the opposite sex
+      2 = Not married but living with a partner of the opposite sex
+      3 = Widowed
+      4 = Divorced or annulled
+      5 = Separated (for reasons of marital discord)
+      6 = Never been married to, nor currently cohabiting with a person of the opposite-sex
+
+
+HIEDUC: Highest completed year of school or highest degree received
+
+       HIEDUC = AE-1 ATTAIN
+
+Note: The original HIEDUC recode, as defined above, was bottom-coded for public use at 1 to
+      represent less than 12th grade. The full-detail variable called INHIEDUC is available
+      through the NCHS Research Data Center.
+
+Imputation Note:      This recode is logically imputed. Cases with imputed values may have
+                      inconsistent information in AE-2y EARNHS_Y or AE-4 EARNBA_Y
+                      because values on those raw variables were not revised based on the
+                      imputed value of HIEDUC.
+
+Code categories for HIEDUC (public-use variable):
+      1 = Less than 12th grade
+      2 = 12th grade, no diploma
+      3 = GED or equivalent
+      4 = High school graduate
+
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 2 of 61
+       5 = Some college, no degree
+       6 = Associate degree: occupational, technical, or vocational program
+       7 = Associate degree: academic program
+       8 = Bachelor’s degree (Example: BA, AB, BS, BBA)
+       9 = Master’s degree (Example: MA, MS, Mend, Med, MBA)
+       10 = Professional school degree (Example: MD, DDS, DVM, JD)
+       11 = Doctoral degree (Example: PhD, EdD)
+
+Code categories for INHIEDUC (restricted-use variable):
+      0 = No formal schooling
+      1 = Grade 1-11
+      2 = 12th grade, no diploma
+      3= GED or equivalent
+      4 = High school graduate
+      5 = Some college, no degree
+      6 = Associate degree: occupational, technical, or vocational program
+      7 = Associate degree: academic program
+      8= Bachelor’s degree (Example: BA, AB, BS, BBA)
+      9 = Master’s degree (Example: MA, MS, Mend, Med, MBA)
+      10 = Professional school degree (Example: MD, DDS, DVM, JD)
+      11 = Doctoral degree (Example: PhD, EdD)
+
+
+HISPANIC: Hispanic origin of respondent
+
+If AC-1 HISP =1 then HISPANIC=1.
+Else if HISP=5 then HISPANIC=2.
+
+Imputation Note:     Information from the screener was used to impute a value on HISPANIC,
+                     when needed.
+
+Code categories:
+      1       = Hispanic
+      2       = Non-Hispanic
+
+
+HISPRACE2:           Race and Hispanic origin – based on 1997 OMB guidelines
+
+This recode was defined by first defining intermediate variables RACE and NUMRACE:
+
+Define intermediate variable RACE:
+
+If R reported only one race (AC-3 RRACE_01 = 1 to 14) and reported that:
+--       She is black (AC-3 RRACE_01= 2), then RACE=1.
+--       She is white (AC-3 RRACE_01= 1), then RACE=2.
+--       She is some other race (AC-3 RRACE_01 = 3 to 14), then RACE=3.
+
+If R reported more than one race (more than one non-missing value on AC-3 RRACE_01
+
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 3 of 61
+through RRACE_14), and reported that the race that best describes her is:
+--      Black (AC-4 RACEBEST_=2), then RACE=1.
+--      White (AC-4 RACEBEST_=1), then RACE=2.
+--      Some other race (AC-4 RACEBEST_=3 to 14), then RACE=3.
+
+Define intermediate variable NUMRACE for multiple race reporting:
+
+       NUMRACE=1 if AC-4 RACEBEST_=blank (not asked because R reported only 1 race)
+       NUMRACE=2 if RACEBEST_ NE blank (more than 1 race reported)
+
+Create recode HISPRACE2:
+
+       If recode HISPANIC=1 then HISPRACE2=1.
+
+              Else if NUMRACE=1 then do;
+
+                      If RACE=1 then HISPRACE2=3.
+                      Else, if RACE=2 then HISPRACE2=2.
+                      Else, if RACE=3 then HISPRACE2=4.
+
+              Else if NUMRACE=2 then HISPRACE2=4.
+
+Imputation Note:      Information from the household screener was used to impute a value on
+                      HISPRACE2, when needed.
+
+Code categories:
+      1       = Hispanic (regardless of race reporting)
+      2       = Non-Hispanic White, Single Race
+      3       = Non-Hispanic Black, Single Race
+      4       = Non-Hispanic Other or Multiple Race
+
+
+NUMKDHH:              Number of biological/adopted/related/legal children under age 18 in
+                      household
+
+NUMKDHH is initialized to 0. For each member of the household, NUMKDHH is increased by
+    one each time a household member's relationship to R is biological child, adopted child,
+    step child, partner’s child, grandchild, niece/nephew, legal ward, or foster child (AD-5
+    RELAR[x]=3 or 4 or 5 or 6 or 7 or 8 or 9 or 10) and age is less than 18 (AD-4
+    AGE[x]<18) and it is the household member’s usual residence (AD-2 USUALRES[x] =
+    1).
+
+Note: The original NUMKDHH recode, as defined above, was top-coded for public use at 4 to
+      represent “4 children or more.” The full-detail variable called INNUMKDHH is
+      available through the NCHS Research Data Center.
+
+Imputation Note: No imputation needed because NUMKDHH is initialized to 0.
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 4 of 61
+Code categories for NUMKDHH (public-use variable):
+      0-3     = number of children
+      4       = 4 children or more
+
+Code categories for INNUMKDHH (restricted-use variable):
+      0-nn = number of children
+
+
+NUMFMHH:               Number of family members in household
+
+NUMFMHH is initialized to 0. For each member of the household, NUMFMHH is increased by
+one each time a household member's relationship to R is husband/wife, male/female partner,
+biological child, step-child, adopted child, grandchild, niece/nephew, biological parent, step-
+parent, adoptive parent, grandparent, aunt/uncle, brother/sister, other relative, (AD-5
+RELAR[x]= 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 17, 18, 19, 20) and it is the household member’s usual
+residence (AD-2 USUALRES[x] = 1).
+
+Note: The original NUMFMHH recode, as defined above, was top-coded for public use at 6 to
+      represent “6 family members or more.” The full-detail variable called INNUMFMHH is
+      available through the NCHS Research Data Center.
+
+Imputation Note: No imputation needed because NUMFMHH is initialized to 0.
+
+Code categories for NUMFMHH (public-use variable):
+      0-5     = number of family members
+      6       = 6 or more family members
+
+Code categories for INNUMFMHH (restricted-use variable):
+      0-nn = number of family members
+
+
+HHFAMTYP:              Type of household/family structure
+
+This variable provides a summary measure of household/family structure at the time of
+       interview.
+
+If there is no spouse in the household (no AD-5 RELAR[x] = 1) and there is no partner in the
+household (no AD-5 RELAR[x] = 2) and no household members are “child under age 19” (child
+includes biological child, stepchild, adopted child, legal ward, foster child, or partner’s child) (no
+AD-5 RELAR[x] = 3 through 8, with AD-4 AGE[x] less than 19)
+then HHFAMTYP=1
+
+else, if
+There is a spouse or partner in the household (AD-5 RELAR[x]=1 or 2) but no children under
+age 19 in the household, (no AD-5 RELAR[x] = 3 through 8, with AD-4 AGE[x] less than 19),
+then HHFAMTYP=2
+
+else, if
+                                                                     NSFG-2022-2023-Male-RecodeSpecs
+                                                                                         Page 5 of 61
+There is a spouse in the household (AD-5 RELAR[x]=1) and one or more children under age 19
+in the household, (any AD-5 RELAR[x] = 3 through 8, with AD-4 AGE[x] less than 19),
+then HHFAMTYP=3
+
+else, if
+There is a partner in the household (AD-5 RELAR[x]=2) and one or more children under age 19
+in the household, (any AD-5 RELAR[x] = 3 through 8, with AD-4 AGE[x] less than 19),
+then HHFAMTYP=4
+
+else, HHFAMTYP=5
+
+Imputation Note: No imputation needed because HHFAMTYP defaults to value 5.
+
+Code categories:
+      1       = No spouse/partner and no child(ren) (of R) 18 or younger
+      2       = Spouse/partner, but no child(ren) (of R) 18 or younger
+      3       = Spouse and R’s child(ren) 18 or younger
+      4       = Cohabiting partner and R’s child(ren) 18 or younger
+      5       = No spouse/partner, but child(ren) of R, 18 or younger
+
+
+HHPARTYP:              Type of parental situation in household
+
+This variable provides a summary measure of the respondent’s parental living situation at the
+       time of interview.
+
+- if there are two biological parents in the household (AD-5 RELAR[x]=11 for 2 household
+members) or two adoptive parents in the household (AD-5 RELAR[x]=13 for 2 household
+members),
+then HHPARTYP=1
+
+- else if there is a biological parent in the household, along with a step or adoptive parent (any
+AD-5 RELAR[x]=11, and any AD-5 RELAR[x]=12 or 13),
+then HHPARTYP=2
+
+- else if there is only one biological, adoptive, or stepparent in the household,
+HHPARTYP=3
+
+- else, HHPARTYP=4
+
+Imputation Note: No imputation needed because HHPARTYP defaults to value 4.
+
+Code categories:
+      1       = Both biological or both adoptive parents
+      2       = Biological and step or adoptive parent
+      3       = Single parent (biological, adoptive, or stepparent)
+      4       = Other
+
+
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 6 of 61
+NCHILDHH:              Number of respondent’s children (18 or younger) living in household
+
+This variable provides a counter of all persons in the household 18 or younger who can be
+considered the respondent’s child. This includes biological child, stepchild, adopted child, legal
+ward, foster child, or partner’s child.
+
+NCHILDHH is initialized to 0.
+
+For each member of the household who is respondent’s child under age 19, NCHILDHH is
+incremented by one. (for each time AD-5 RELAR[x] = 3 through 8, with AD-4 AGE[x] less than
+19, NCHILDHH=NCHILDHH+1).
+
+If NCHILDHH is greater than or equal to 3, NCHILDHH=3.
+
+Note: The original NCHILDHH recode, as defined above, was top-coded for public use at 3 to
+      represent 3 or more children. The full-detail variable called INNCHILDHH is available
+      through the NCHS Research Data Center
+
+Imputation Note: No imputation needed because NCHILDHH is initialized to 0.
+
+Code categories for NCHILDHH (public-use variable):
+      0-2     = number of respondent’s children 18 or younger in the household
+      3       = 3 or more of respondent’s children 18 or younger in the household
+
+Code categories for INNCHILDHH (restricted-use variable):
+      0-nn = number of respondent’s children 18 or younger in the household
+
+
+HHKIDTYP:              Whether R has children (18 or younger), and whether bio/non-bio,
+                       living in household
+
+This variable provides a summary description of persons 18 or younger living in the household,
+       based on their relationship to the respondent and their age.
+
+If
+There are no biological children ages 18 or under in the household (no AD-5 RELAR[x]=3, with
+        AD-4 AGE[x]<19) and there are no non-biological children ages 18 or under in the
+        household (no AD-5 RELAR[x]=4 through 8, with AD-4 AGE[x]<19)
+(note: there could be biological or non-biological children 19 or older in the household) Then
+        HHKIDTYP=0
+
+Else, if
+There are no non-biological children of any age in the household (no AD-5 RELAR[x]=4
+         through 8), then if there are any biological children age 18 or under in the household (any
+         AD-5 RELAR[x]=3, with AD-4 AGE[x]<19)
+Then HHKIDTYP=1
+
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 7 of 61
+Else, if
+There are any non-biological children age 18 or under in the household (any AD-5 RELAR[x]=4
+         through 8, with AD-4 AGE[x]<19)
+Then HHKIDTYP=2
+
+Imputation note: No imputation needed because HHKIDTYP defaults to 0.
+
+Code categories:
+      0       = no child(ren) 18 or younger in HH or only older child(ren)
+      1       = at least one biological child (of R’s) under 18 in HH, no nonbiological
+              child(ren)
+      2       = any non-biological child (of R’s) 18 or younger in HH
+
+
+CSPBBHH:               Number of R’s biological children (aged 18 or younger) with current
+                       wife or cohabiting partner who live in the household
+
+CSPBBHH is blank (inapplicable) if R is not currently married or cohabiting with a female
+partner (rmarit NE 1 or 2).
+
+This variable indicates the number of the married or cohabiting male respondent’s biological
+children who are also the biological children of his current wife or cohabiting partner, are 18 or
+younger, and who live in the household.
+
+For each member of the household 18 years of age or younger (AD-4 AGE[x] <= 18),
+CSPBBHH is increased by one each time a household member’s relationship to the R is
+biological child (AD-5 RELAR[x] = 3) and his wife or partner is the biological mother of this
+child (AD-9 RELSPCH = 1).
+
+Note: The original CSPBBHH recode, as defined above, was top-coded for public use at 3 to
+      represent “3 or more joint biological children.” The full-detail variable called
+      INCSPBBHH is available through the NCHS Research Data Center.
+
+Imputation Note: No imputation needed because CSPBBHH is initialized to 0 for applicable
+                 respondents.
+
+Code categories for CSPBBHH (public-use variable):
+      Blank = inapplicable
+      0-2     = number of joint biological children 18 or younger in household
+      3       = 3 or more joint biological children 18 or younger in household
+
+Code categories for INCSPBBHH (restricted-use variable):
+      Blank = inapplicable
+      0-nn = number of joint biological children 18 or younger in household
+
+
+CSPSBHH:               Number of male R’s nonbiological children (aged 18 or younger) in
+                       household who are the biological children of his current wife or
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                       Page 8 of 61
+                       cohabiting partner
+
+CSPSBHH is blank (inapplicable) if R is not currently married or cohabiting with a female
+partner (rmarit NE 1 or 2).
+
+This variable indicates the number of the married or cohabiting male’s children who are the
+biological children of his current wife or cohabiting partner and are his step or adopted children,
+or his partner’s children.
+
+For each member of the household 18 years of age or younger (AD-4 AGE[x] <= 18),
+CSPSBHH is increased by one each time a household member’s relationship to the R is:
+1)     step or adopted child (AD-5 RELAR[x] = 4, 5) and his wife or partner is the biological
+       mother of this household member (AD-9 RELSPCH[x] = 1); OR
+2)     his partner’s child RELAR[x] = 8 and his wife or partner is the biological mother of this
+       household member or the relationship of the woman to the child is missing (AD-9
+       RELSPCH[x] = 1 or . (sysmis)).
+
+Note: The original CSPSBHH recode, as defined above, was top-coded for public use at 1 to
+      represent “1 child or more.” The full-detail variable called INCSPSBHH is available
+      through the NCHS Research Data Center.
+
+Imputation Note: No imputation needed because CSPSBHH is initialized to 0 for applicable
+                 respondents.
+
+Code categories for CSPSBHH (public-use variable):
+      Blank           = inapplicable
+      0               = No children under 19 in household
+      1               = 1 or more children under 19 in household
+
+Code categories for CSPSBHH (restricted-use variable):
+      Blank           = inapplicable
+      0-n             = Number of children under 19 in household
+
+
+CSPOKDHH:              Number of all other children (aged 18 or younger) in household living
+                       with R and his current wife or cohabiting partner
+
+CSPOKDHH is blank (inapplicable) if R is not currently married or cohabiting with a female
+partner (rmarit NE 1 or 2).
+
+This variable indicates the number of children in the married or cohabiting male’s household
+who are:
+1)     his biological, step, or adopted child, or his partner’s child who is not the biological child
+       of his current wife or cohabiting partner, OR
+2)     his legal ward or foster child.
+
+Grandchildren, nieces, and nephews living with the respondent are not included in this count.
+
+
+                                                                     NSFG-2022-2023-Male-RecodeSpecs
+                                                                                         Page 9 of 61
+For each member of the household 18 years of age or younger (AD-4 AGE[x] <= 18),
+CSPOKDHH is increased by one each time a household member’s relationship to the R is:
+1)    his biological, step, or adopted child (AD-5 RELAR[x] = 3, 4, 5) and his current wife or
+       partner is not the biological mother of the child) (AD-9 RELSPCH[x] ≠ 1, 8, 9); OR
+2)    his partner’s child (AD-5 RELAR[x] = 8) and the relationship of the current wife or partner
+       is not the child’s biological parent and is not missing AD-9 RELSPCH = 2, 3, 4, 5, 6);
+       OR
+3)    his foster child or legal ward (AD-5 RELAR[x] = 6 or 7), regardless of the relationship of
+       his current wife or partner to the child.
+
+Note: The original CSPOKDHH recode, as defined above, was top-coded for public use at 1 to
+      represent “1 child or more.” The full-detail variable called INCSPOKDHH is available
+      through the NCHS Research Data Center.
+
+Imputation note:     No imputation needed because CSPOKDHH is initialized to 0 for applicable
+                     respondents.
+
+Code categories for CSPOKDHH (public-use variable):
+      Blank = inapplicable
+      0       = No children under 19 in household
+      1       = 1 or more children under 19 in household
+
+Code categories for INCSPOKDHH (restricted-use variable):
+      Blank = inapplicable
+      0-n     = Number of children under 19 in household
+
+
+INTCTFAM:             Intact status of childhood family
+
+INTCTFAM=intact18
+
+Values of Blaise-computed variable intact18 (defined in Flow Check A-21 in the CRQ) are used
+to determine values of INTCTFAM:
+
+intact18 = 1 (yes) -- if R always lived with both biological/adoptive parents from birth
+                   until age 18 or until interview or until lived on own (for Rs under 18
+                   who have lived on own) (AF-1 INTACT=1)
+
+intact18 = 2 (no) -- if R did not always live with both biological/adoptive parents from birth
+                  until time specified above (AF-1 INTACT=5) or
+                  -- if R is less than 18 (AGE_R<18) and doesn’t currently live with both
+                  biological/adoptive parents (computed variable wthparnw=2) and has never
+                  lived away from parents/guardians (computed variable onown18 NE 1).
+
+Imputation note: Imputed if intact18 is missing.
+
+Code categories:
+      1       = two biological or adoptive parents from birth
+
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 10 of 61
+       2       = anything other than 2 biological or adoptive parents from birth
+
+
+PARAGE14:               Parental living situation at age 14
+
+PARAGE14=1            If R always lived with both biological parents from birth until age
+18/interview/living on own (computed variable intact18=1).
+
+OR
+                       If R lived with both biological parents at age 14 (AF-3 LVSIT14F=2 and
+                       AF-4 LVSIT14M=2) or (AF-3 LVSIT14F=4 AND AF-4 LVSIT14M=4)
+
+Else
+PARAGE14=2             If R lived with biological mother and stepfather at age 14 (AF-3
+                       LVSIT14F=2 and AF-4 LVSIT14M=3).
+
+Else
+PARAGE14=3             If R lived in any other parental situation at age 14, including: one
+biological parent and no other parents(s)/parent-figures; or no
+parent(s)/parent-figures.
+
+Note: This recode PARAGE14 is based on original, full-detail inputs INLVSIT14F and
+INLVSIT14M. The PUF versions of these inputs had categories combined for
+reduction of disclosure risk. The full-detail variables, INLVSIT14F and INLVSIT14M,
+are available through the NCHS Research Center. The full-detail recode called
+INPARAGE14 is also available through the NCHS Research Center.
+
+Imputation note: Imputed when intact18 NE 1 and LVSIT14F and/or LVSIT14M are missing.
+
+Code categories for PARAGE14 (public-use variable):
+      1       = R lived with both biological or adoptive parents at age 14
+      2       = R lived with biological mother and stepfather at age 14
+      3       = R lived in any other parental situation or a non-parental situation at age 14
+
+Code categories for INPARAGE14 (restricted-use variable):
+      1       = R lived with both biological or adoptive parents at age 14
+      2       = R lived with one biological parent and one adoptive parent at age 14
+      3       = R lived with one biological and one stepparent at age 14
+      4       = R lived with one biological parent and no other parent/parent-figure at age 14
+      5       = R lived with other parent(s)/parent-figure(s) or in non-parental situation at age
+      14
+
+
+EDUCMOM:                Mother's (or mother figure's) education
+
+EDUCMOM =              Highest level of education completed by mother or mother figure (AF-6
+                       MOMDEGRE)
+
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                       Page 11 of 61
+EDUCMOM=95            If R was asked who he thought of as the woman who mostly raised him
+                      when he was a teenager, and identified no one, (AF-5 WOMRASDU = 9,
+                      98, 99), (no mother figure identified or refused or don’t know response to
+                      AF-5 WOMRASDU).
+
+Note: The original EDUCMOM recode, as defined above, was collapsed into 4 categories for
+      public use so that 3 represents “Some college, including 2-year degrees” and 4
+      represents “bachelor’s degree or higher.” The full-detail variable called INEDUCMOM
+      is available through the NCHS Research Data Center.
+
+Imputation Note: Imputed when MOMDEGRE is missing for respondents who have a mother or
+                 mother figure.
+
+Code categories for EDUCMOM (public-use variable):
+      1       = less than high school
+      2       = high school graduate or GED
+      3       = some college, including 2-year degrees
+      4       = Bachelor’s degree or higher
+      95      = No mother/mother figure identified
+
+Code categories for INEDUCMOM (restricted-use variable):
+      1       = less than high school
+      2       = high school graduate or GED
+      3       = some college but no degree
+      4       = 2-year college degree (e.g., Associates degree)
+      5       = 4-year college graduate (e.g., BA, BS)
+      6       = graduate or professional school
+      95      = No mother/mother figure identified
+
+
+AGEMOMB1:              Age of mother (or mother figure) at first birth
+
+If R reported a valid age for his mother at first birth (1 LE AF-9 MOMFSTCH LE 5), then
+AGEMOMB1=AF-9 MOMFSTCH.
+
+Else if R did not identify a mother or mother figure (AF-5 WOMRASDU =9,98,99) then
+        AGEMOMB1=95.
+
+Else if R’s mother figure had no biological children (AF-9 MOMFSTCH=96), then
+AGEMOMB1=96.
+
+Imputation Note: Imputed when MOMFSTCH is missing for applicable respondents.
+
+Code categories:
+      1       = Less than 18 years
+      2       = 18-19 years
+      3       = 20-24 years
+      4       = 25-29 years
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 12 of 61
+       5      = 30 or older
+       95     = No mother or mother figure
+       96     = Mother figure had no biological children
+
+
+FMARNO:         Number of times R has been married to a woman
+
+Note: The FMARNO recode for females is defined based solely on a question asked in female
+      Section C, in contrast to how male FMARNO is defined.
+
+FMARNO = 0 if R has never been married to a woman (recode FMARITAL = 5).
+
+Else if Blaise-computed variable numwife NE DK/RF (as computed in Flow Check A-40) and
+AG-2 TIMESMAR NE DK/RF and AH-2 TIMESMARB NE DK/RF, then FMARNO=numwife.
+
+Else if numwife=DK/RF or AG-2 TIMESMAR=DK/RF or AH-2 TIMESMARB=DK/RF, then
+FMARNO=1 (FMARNO is set to 1 in this situation).
+
+Code categories:
+      0 = Never been married
+      1-n = Number of times married
+
+
+                                    Sections B-E Recodes
+Section B: Ever Sex with a Female Partner, Sex Communication and Education, Vasectomy and
+Physical Ability to Father Children, Number of Female Sexual Partners, Enumeration and
+Relationship With Up To 3 Recent (Or Last) Female Sexual Partner(s)
+Section C: Current Spouse or Cohabiting Partner
+Section D: Recent Female Sexual Partners
+Section E: First Former Wife and First Former Female Cohabiting Partner; First Female
+Sexual Partner
+
+
+HADSEX: Whether R ever had sexual intercourse with a female
+
+Values of Blaise-computed variable rhadsex (defined in Flow Check B-1b in the CRQ) are used
+to determine values of HADSEX.
+
+If rhadsex=1 then HADSEX=1.
+Else if rhadsex=0 or 2 then HADSEX=2.
+
+Imputation Note: None is needed because rhadsex is set to 0 in Flow Check B-1b when BA-1
+                 EVERSEX=DK/RF so HADSEX=2.
+
+Code categories:
+      1       = Yes, R ever had intercourse with a female
+      2       = No, R never had intercourse with a female
+
+                                                              NSFG-2022-2023-Male-RecodeSpecs
+                                                                                 Page 13 of 61
+SEXONCE:                 Whether R has had sexual intercourse with a female only once
+
+SEXONCE is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+     HADSEX=no).
+
+Otherwise:
+
+SEXONCE=1 (R had sex only once) if BA-2 SXMTONCE=5 (no).
+
+SEXONCE=2 (R had sex more than once) if:
+--   R has ever been married or ever cohabited (If FMARITAL NE 5 or COHEVER = 1)
+--   R reported that he has had sex more than once (BA-2 SXMTONCE=1)
+
+Imputation Note: Imputed for cases with BA-2 SXMTONCE = DK or RF.
+
+Code categories:
+      Blank = inapplicable
+      1       = Yes (R has had sex only once)
+      2       = No (R has had sex more than once)
+
+
+VRY1STSX:               CM Date of First Sexual Intercourse with a Female
+
+The following is an outline for the VRY1STSX recode to aid in understanding how it is created.
+
+- Begin outline:
+
+VRY1STSX is inapplicable if R never had sex.
+Otherwise:
+
+   1.    if never married or cohabited:
+        a. only one partner in life
+             1. only had sex once
+                        - get info from last sex with this one partner, in BD series
+             2. had sex more than once
+                        - get info from first sex with this one partner, in DE series
+
+        b. 2-3 partners in life and last sex was within past 12 months for each of them:
+               If none of the partners in the past 12 months was the first partner (as reported in
+               BD- 25 FIRST):
+                       - get info from earliest date among all dates in DD, DE and EC series
+
+               If partner [n] in the past 12 months was the first partner (as reported in BD-25
+               FIRST):
+                       1. If only had sex once with that partner
+                           - get info from last sex with that partner, in BD series
+                                                                     NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 14 of 61
+                         2.    If had sex more than once with that partner
+                              - get info from first sex with that partner, in DE series
+
+       c.    more than 3 partners in life and in last 12 months, or more partners in life than in last
+            12 months
+            (for example: there is 1+ partner before past 12 months or there are >3 partners in past 12 months -
+            in other words, if there is a partner not captured in this loop because he either a) exceeded the
+            maximum for the loop (3), or b) the last partner(s) occurred before loop’s timeframe)
+
+            then:
+                         - get info from first sex ever (EC) series
+
+2. If ever married or ever cohabited:
+       a. only one partner in life
+          1. currently married or cohabiting
+                       - get info from first sex with wife/partner (CC series)
+          2. not currently married nor cohabiting
+                       - get info from first sex with (last) partner, in DE series
+       b. 2-3 partners in life and last sex was within past 12 months for each of them and
+          If none of the partners in the past 12 months was the first partner (as reported in BD-
+          25 FIRST):
+                       - get info from earliest date among all dates in: BD, DE, CC, and EC
+series
+
+
+
+            If partner [n] in the past 12 months was the first partner (as reported in BD-25 FIRST)
+            and
+                    1. currently married to or cohabiting with that partner
+                        - get info from first sex with wife/partner (CC series)
+                    2. formerly married to or cohabiting with that partner
+                        - get info from first sex with that partner (DE series)
+                    3. never married to or cohabited with that partner
+                        a. only had sex once with that partner
+                             - get info from last sex with that partner (BD series)
+                        b. had sex more than once with that partner
+                             - get info from first sex with that partner (DE series)
+
+c. more than 3 partners in life and in last 12 months, or more partners in life than in last 12
+months then:
+      - get info from first sex ever (EC) series
+
+-      End of outline
+
+-      Begin recode specifications:
+
+VRY1STSX is blank (inapplicable) if R never had sexual intercourse with a female (recode
+HADSEX = no).
+
+                                                                             NSFG-2022-2023-Male-RecodeSpecs
+                                                                                                Page 15 of 61
+1. If never married and never cohabited (If FMARITAL NE 5 or COHEVER = 1), then:
+
+   a. If R had only one partner (computed variable lifeprts=1; lifeprts defined in Flow Check
+      B-10), then:
+
+               If R had sex only once (computed variable sexstat=1 or 3), then:
+               VRY1STSX = computed variable cmlsxp1
+               Else if R had sex more than once (computed variable sexstat=2 or 4), then:
+               VRY1STSX= computed variable cmfsxp
+
+   b. Else if R had 2-3 partners (lifeprts = 2 or 3) and last sex was within past 12 months for
+      each of them and (computed variable mon12prts=lifeprts), then:
+
+                If BD-25 FIRST=5, DK, RF, or sysmis, then:
+                use the following dates to check for minimum date, and assign VRY1STSX that
+                date:
+                       cmlsxp1, cmlsxp2, cmlsxp3,
+                       cmfsxp1, cmfsxp2, cmfsxp3, cmfstsex
+
+                Else if BD-25 FIRST=1, 2, or 3, then use value of FIRST for “x”in lines 1 and 2
+                below.
+                1. if R had sex only once with this partner (computed variable
+                mtoncep[x]=2), then:
+                                    VRY1STSX=cmlsxp[x]
+
+                2.   Else if R had sex more than once with this partner (mtoncep[x]=1), then:
+                                     VRY1STSX=cmfsxp[x]
+
+   c.    Else, if R had more than 3 partners in life and in last 12 months (lifeprts>3 and
+        mon12prts > 3), or if R had more partners in life than in last 12 months
+        (lifeprts>mon12prts), then:
+
+               VRY1STSX= computed variable cmfstsex
+
+2. If ever married or ever cohabited (recode EVMARCOH=1), then:
+
+        a. If R had only one partner (lifeprts=1), then:
+
+               If R is currently married or cohabiting with a female (rmarit=1 or 2), then:
+               VRY1STSX=computed variable cmfsxcwp
+               Else, if not currently married nor cohabiting with a female (rmarit NE 1 or 2),
+               then:
+               VRY1STSX = cmfsxp[1]
+
+        b. Else if R had 2-3 partners (lifeprts = 2 or 3) and last sex was within past 12 months for
+        each of them and (mon12prts=lifeprts), then:
+
+               If BD-25 FIRST=5, DK, RF, or sysmis, then use the following dates to check for
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                       Page 16 of 61
+               minimum date, and assign VRY1STSX that date:
+                     cmlsxp1, cmlsxp2, cmlsxp3,
+                     cmfsxp1, cmfsxp2, cmfsxp3
+                     cmfsxcwp, cmfstsex
+
+               Else if BD-25 FIRST=1, 2, or 3, then use value of FIRST for “x” in lines 1, 2 and
+               3 below.
+
+                       1. If R is currently married to or cohabiting with first partner
+                          (p[x]relation=1 or 3), then:
+                                     VRY1STSX=cmfsxcwp
+
+                       2. Else if R was formerly married to or cohabiting with first partner
+                          (p[x]relation=2, 4, or 5), then:
+                                    VRY1STSX=cmfsxp[x]
+
+                       3. Else if R never married to and never lived with first partner
+                          (p[x]relation=6) or answer is DK/RF (p[x]relation=8 or 9) then:
+                               If R had sex only once with this partner (mtoncep[x]=2), then:
+                                      VRY1STSX=cmlsxp[x]
+
+                               Else if R had sex more than once with this partner
+                               (mtoncep[x]=1), then:
+
+                                      VRY1STSX=cmfsxp[x]
+
+       c. Else, if R had more than 3 partners in life and in last 12 months (lifeprts>3 and
+       mon12prts > 3), or if R had more partners in life than in last 12 months
+       (lifeprts>mon12prts), then:
+                  VRY1STSX=cmfstsex
+
+Else if inputs above are missing but valid data exists in cmfstsex, then assign
+VRY1STSX=cmfstsx and firstpflag=1.
+
+Else if inputs above are missing and valid data does not exist in cmfstsex, then VRY1STSX=-1
+and firstpflag=9.
+
+Note: An intermediate variable called firstpflag (included on the data file) indicates which date
+      of sex, from all possible sources, was the earliest that the R reported. This, then, indicates
+      which partner was R’s 1st partner, and allows easier linkage to characteristics of the 1st
+      partner, such as age, relationship, and method use. It was used in the following recodes:
+      VRY1STAG, FSEXPAGE, FSEXRLTN, SEX1MTHD1-4. For 2022-2023, when the
+      corresponding recode VRY1STAG has been bottom-coded at 10 for public use or the date
+      reported was when the respondent was age 10 or younger, values of VRY1STSX are
+      coded as 9997 (not ascertained). The original, full-detail variable called INVRY1STSX is
+      available through the NCHS Research Data Center.
+
+Value labels for firstpflag:
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                       Page 17 of 61
+       1=     cmfstsex - CM of first sex ever, based on EC series
+       2=     cmlsxp1 - CM when R last had sex with most recent partner
+       3=     cmlsxp2 - CM when R last had sex with 2nd-to-last partner
+       4=     cmlsxp3 - CM when R last had sex with 3rd-to-last partner
+       5=     cmfsxp - CM when R first had sex with most recent partner
+       6=     cmfsxp2 - CM when R first had sex with 2nd-to-last partner
+       7=     cmfsxp3 - CM when R first had sex with 3rd-to-last partner
+       8=     cmfsxcwp - CM when R first had sex with CWP
+       9=     unable to determine: raw variable(s) missing
+
+Code categories for VRY1STSX (public-use variable):
+
+       Blank       = inapplicable
+       xxxx – 1488 = CM date of first sex
+       9997        = not ascertained
+
+Code categories for INVRY1STSX (restricted-use variable):
+
+       Blank       = inapplicable
+       xxxx – 1488 = CM date of first sex
+
+
+VRY1STAG**:           R’s age at first sexual intercourse
+
+VRY1STAG is blank (inapplicable) if R has never had intercourse (recode HADSEX=2).
+
+Otherwise,
+If VRY1STAG is computed based on the final imputed value of VRY1STSX, the recode
+indicating CM date of R’s 1st sexual intercourse, and R’s CM date of birth.
+
+SAS logic:
+       if hadsex=2 then vry1stag=.;
+       else if hadsex=1 then vry1stag = int((vry1stsx-cmbirth)/12);
+
+Note: For 2022-2023, the original VRY1STAG recode, as defined above, was bottom-coded for
+      public use at 10 to represent age 10 or younger. The full-detail variable called
+      INVRY1STAG is available through the NCHS Research Data Center.
+
+Code categories for VRY1STAG (public-use variable):
+      Blank          = inapplicable
+      10             = age 10 years or younger
+      11-49          = age in years
+
+Code categories for INVRY1STAG (restricted-use variable):
+      Blank           = inapplicable
+      xx-49           = age in years
+
+
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 18 of 61
+FSEXRLTN:              Relationship with 1st sexual partner at time of 1st sex
+
+FSEXRLTN is blank (inapplicable) if R never had sexual intercourse with a female (recode
+HADSEX = no
+
+FSEXRLTN = DE-3 PXFRLTN[x] if:
+recode VRY1STSX was drawn from the DE series (Blaise-computed variables cmfsxp[x]
+defined in Flow Check D-30, where “x” reflects R’s 1st partner and he had sex with her more
+than once).
+[note: for x above, 2=last partner, 4=next-to-last partner, 6=3rd-to last partner]
+
+Else FSEXRLTN = DC-9 PXFRLTN[x] if:
+recode VRY1STSX was drawn from the BD series (Blaise-computed variables cmlsxp1,
+cmlsxp2,or cmlsxp3, defined in Flow Checks B-19, B-27, and B-35, where 1,2, or 3 reflects R’s
+1st partner and he had sex with her only once).
+[note: for x above, 1=last partner, 3=next-to-last partner, 5=3rd-to last partner]
+
+Else FSEXRLTN = CC-3 CWPSX1RL if:
+recode VRY1STSX was drawn from Section C (Blaise-computed variable cmfsxcwp defined in
+Flow Check C-11).
+
+Else FSEXRLTN = EC-10 FPRLTN if:
+recode VRY1STSX was drawn from the EC series (Blaise-computed variable cmfstsex, defined
+in Flow Check E-18).
+
+Note: See VRY1STSX for creation of firstpflag which determines the series from which inputs to
+      this recode should be taken
+
+Imputation Note: Imputed if the relationship variable needed for the particular case is
+                 “DK/RF.”
+
+Code categories:
+  Blank =     Inapplicable
+      1=      Married to her
+      2=      Engaged to her, and living together
+      3=      Engaged to her, but not living together
+      4=      Living together in a sexual relationship, but not engaged
+      5=      In a steady relationship, but not living together or engaged
+      6=      Going out with her once in a while
+      7=      Just friends
+      8=      Had just met her
+      9=      Something else
+
+
+SEX1MTHD1:             Method used at first intercourse, if any-1st method
+
+SEX1MTHD1 is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 19 of 61
+HADSEX=2).
+
+Otherwise, for all Rs who have had sexual intercourse with a female:
+(see specs for VRY1STSX for description of intermediate firstpflag, which indicates where
+VRY1STSX was drawn from)
+
+Notes: computed variable sexstat is defined in Flow Check B-11a
+       computed variable lifeprts is defined in Flow Check B-10
+       computed variable mon12prts is defined in Flow Check B-11
+       computed variable mtoncep[x] is defined in Flow Check D-17 and D-19
+       computed variable p[x]relation (x=1 or 2 or 3) is defined in Flow Check B-36
+
+1.     If recode VRY1STSX was drawn from the DE series (Blaise-computed variables
+       cmfsxp[x] defined in Flow Check D-30, where “x” reflects R’s 1st or only partner and he
+       had sex with her more than once), then:
+
+              If no method used at first sex (DE-4 PXFUSE[x]=5), then SEX1MTHD1=96.
+              (x depends on which partner is first partner, identified in VRY1STSX/firstpflag)
+              Else SEX1MTHD1=DE-5 PXFMETH[x] (1st mention for this first partner; if R
+              only had 1 partner, or last partner was first partner, then x=01. If 2nd-to-last
+              partner was first partner, x=14. If 3rd-to-last partner was first partner, x=27.)
+
+2.     If recode VRY1STSX was drawn from the BD series (Blaise-computed variables
+       cmlsxp1, cmlsxp2, or cmlsxp3, defined in Flow Checks B-19, B-27, and B-35, where
+       1,2, or 3 is R’s first or only partner and he had sex with her only once).
+
+       If no method used at last sex (DC-1 PXLRUSE=5 and DC-3 PXLPUSE=5), then
+       SEX1MTHD1=96.
+              Else:
+                     If (DC-2 PXLRMETH1 =1,2,3,10,DK,RF and DC-4 PXLPMETH01=
+                     blank), SEX1MTHD1=DC-2 PXLRMETH1
+              {above: only R used a method
+                     Else if (DC-2 PXLRMETH1 = blank and DC-4
+                     PXLPMETH01=4,5,6,7,8,9,10,11,12), SEX1MTHD1=DC-2
+                     PXLPMETH01
+              {above: only R’s P used a method
+                     Else if DC-2 PXLRMETH1=1,2,3,10 and DC-4 PXLPMETH01=
+                     4,5,6,7,8,9,10,11,12), SEX1MTHD1=DC-2 PXLRMETH1
+              {above: both R and R’s P used a meth. R’s method goes in SEX1MTHD1. P’s
+              method goes in SEX1MTHD2.
+
+3.     If recode VRY1STSX was drawn from the CC series (Blaise-computed variable
+       cmfsxcwp defined in Flow Check C-11), then do:
+
+              If no method used at first sex (CC-4 CWPFUSE=5), then SEX1MTHD1=96. Else
+              SEX1MTHD1=CC-5 CWPFMET01.
+
+4.     If recode VRY1STSX was drawn from the EC series (Blaise-computed variable
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 20 of 61
+       cmfstsex, defined in Flow Check D-60), then do:
+
+              If no method used at first sex (EC-9 FPUSE=5), then SEX1MTHD1=96 Else
+              SEX1MTHD1=EC-10 FPMETH01
+
+Imputation Note: Unlike LSEXUSE1-4 (contraceptive use at last sex), the categories for
+                 SEX1MTHD1-4 do not contain a “95” (R used no method; R does not know if
+                 partner used a method). Instead, these are imputed on this recode. This is
+                 because only a very select group of Rs would have qualified for the “95” code
+                 on this recode (those for whom one of the 3 partners in the past 12 months
+                 was the first partner and he only had sex with her once). Also, if R DID use a
+                 method but does not know if partner used a method, SEX1MTHD2, 3, and 4
+                 are imputed (representing partner’s possible use). (In these specific cases, the
+                 respondent never used more than one method so SEX1MTHD2, 3, and 4 are
+                 all potential slots for partner use.)
+
+Code categories:
+      Blank = inapplicable
+      1       =Condom
+      2       =Withdrawal
+      3       =Vasectomy
+      4       =Pill
+      5       =Female sterilization
+      6       =Injection -- Depo-Provera/Lunelle
+      7       =Hormonal implant
+      8       =Rhythm or safe period
+      9       =Contraceptive patch
+      10      =Vaginal contraceptive ring
+      11      =IUD
+      12      =Something else
+      96      =No method used at first intercourse
+
+SEX1MTHD2-SEX1MTHD4:                 Method used at first intercourse, if any-2nd/3rd/4th
+                                     method
+
+SEX1MTHD2/3/4 is blank (inapplicable) if R has never had sexual intercourse with a female
+(recode HADSEX=2), or if R did not use a 2nd/3rd/4th method at first sex.
+
+Repeat specifications for SEX1MTHD1 for remaining values of SEX1MTHD2-4.
+Areas where method use would need to be selected for 2nd, 3rd, 4th mentions of method:
+
+1.     Where VRY1STSX drawn from DE series
+       PXFMETH01 becomes PXFMETH02,03,04 if partner # 1 in the loop is identified as 1st
+       partner or R only had 1 partner.
+       PXFMETH14 becomes PXFMETH15,16,17 if partner # 2 in the loop is identified as 1st
+       partner.
+       PXFMETH27 becomes PXFMETH28,29,30 if partner # 3 in the loop is identified as 1st
+       partner.
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 21 of 61
+2.     Where VRY1STSX drawn from BD series PXLRMETHx:
+       PXLRMETH1 becomes 2,3,4 if partner #1 in the loop is identified as 1st partner or R
+       only had 1 partner
+       PXLRMETH5 becomes 6,7,8 if partner #2 in the loop is identified as 1st partner
+       PXLRMETH9 becomes,10,11,12 if partner #3 in the loop is identified as 1st partner
+
+       PXLPMETHx:
+       PXLPMETH01 becomes 02,03,04 if partner #1 in the loop is identified as 1st partner or
+       R only had 1 partner
+       PXLPMETH11 becomes 12,13,14 if partner #2 in the loop is identified as 1st partner
+       PXLPMETH21 becomes 22,23,24 if partner #3 in the loop is identified as 1st partner
+
+       SEX1MTHD2 becomes one of the following:
+            P’s 1st mention if R and P both used one
+            R’s 2nd mention if R used > 1 and P used none
+            P’s 2nd mention if R used none and P used >1
+       SEX1MTHD3 becomes one of the following:
+            R’s 2nd mention if R used >1 and P used one
+            P’s 2nd mention if R used one and P used >1
+            R’s 2nd mention if R used >1 and P used >1
+       SEX1MTHD4 becomes P’s 2nd mention -- only happens when R used > 1 and P used > 1
+
+3.     Where VRY1STSX drawn from CC series CWPFMET01 becomes CWPFMET02,03,04
+
+4.     Where VRY1STSX drawn from EC series FPMETH01 becomes FPMETH02,03,04
+
+Note: See notes for SEX1MTHD1.
+
+Code categories:
+      see SEX1MTHD1
+
+
+LSEXDATE:             CM date of last or most recent sexual intercourse
+
+LSEXDATE is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX = 2).
+
+LSEXDATE is derived from Blaise-computed variable cmlsxp1 (date of last sex with most
+recent partner, defined in Flow Check B-19)
+
+       LSEXDATE=cmlsxp1
+
+Imputation note: LSEXDATE is imputed if computed variable cmlsxp1 is missing for applicable
+                 respondents.
+
+Code categories:
+      Blank          = inapplicable
+                                                               NSFG-2022-2023-Male-RecodeSpecs
+                                                                                  Page 22 of 61
+       xxxx - 1488    = CM date of last or most recent sexual intercourse
+
+
+SEX3MO**: Whether R had sexual intercourse in the last 3 months (including interview
+          month) (based on LSEXDATE)
+
+SEX3MO is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX = 2).
+
+Otherwise, SEX3MO is defined based on comparing R’s date of last sex (recode LSEXDATE) to
+the CM date corresponding to 3 months prior to interview (including month of interview):
+
+       SEX3MO=1 if LSEXDATE is GE (cmintvw minus 2)
+       SEX3MO=2 if LSEXDATE is LT (cmintvw minus 2)
+
+SAS logic:
+       If hadsex = 2 then sex3mo=.;
+       Else if lsexdate GE (cmintvw-2) then sex3mo = 1;
+       Else sex3mo = 2;
+
+Note: This recode includes month of interview, and 2 months before interview.
+
+Code categories:
+      Blank = Inapplicable
+      1       = Yes, had intercourse in the past 3 months (including interview month)
+      2       = No, did not have intercourse in the past 3 months (including interview month)
+
+
+SEX12MO**:            Whether R had sexual intercourse in last 12 months (including
+                      interview month) (based on LSEXDATE)
+
+SEX3MO is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX = 2).
+
+Otherwise, SEX12MO is defined based on comparing R’s date of last sex (recode LSEXDATE)
+to the CM date (cmlstyr) corresponding to 12 months prior to interview (including month of
+interview):
+
+       SEX12MO=1 if LSEXDATE GT cmlstyr
+       SEX12MO=2 if LSEXDATE LE cmlstyr
+
+SAS logic:
+       If hadsex = 2 then sex12mo=.;
+       Else if lsexdate GT cmlstyr then sex12mo = 1;
+       Else sex12mo = 2;
+
+Note: This recode includes month of interview, and 11 months before interview.
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 23 of 61
+Code categories:
+      Blank = Inapplicable
+      1       = Yes, had intercourse in the past 12 months (including interview month)
+      2       = No, did not have intercourse in the past 12 months (including interview month)
+
+
+LSEXRAGE**:            R’s age at last or most recent sexual intercourse
+
+LSEXRAGE is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+        HADSEX = 2).
+
+Otherwise, LSEXRAGE is defined based on recode LSEXDATE and R’s date of birth
+(cmbirth).
+
+SAS logic:
+       if hadsex=2 then lsexrage=.;
+       else if hadsex=1 then lsexrage= int((lsexdate-cmbirth)/12);
+
+Respondents aged 50 were 49 at time of household screener. The original LSEXRAGE recode, as
+      defined above, was bottom-coded for public use at 10 to represent age 10 or younger.
+      The full-detail variable called INLSEXRAGE is available through the NCHS Research
+      Data Center.
+
+Code categories for LSEXRAGE (public-use variable):
+      Blank = inapplicable
+      10       = age 10 years or younger at last or most recent sexual intercourse
+      11 - 50 = age in years at last or most recent sexual intercourse
+
+Code categories for INLSEXRAGE (restricted-use variable):
+      Blank = inapplicable
+      xx - 50 = age in years at last or most recent sexual intercourse
+
+
+EVMARCOH**:            Whether R ever married or cohabited with a woman
+
+Recodes FMARITAL and COHEVER are used to define EVMARCOH.
+
+Note: The computed variable evrcohab in the male questionnaire is not equivalent to the recode
+      COHEVER, which indicates whether R ever cohabited with any female, including
+      premarital cohabitation with women he later married. Computed variable evrcohab can
+      be “no” if R’s only cohabitation experience was with women he later married. See Flow
+      Check A-40 for definition of evrcohab.
+
+SAS logic:
+       If fmarital NE 5 or cohever = 1 then evmarcoh = 1;
+       Else evmarcoh = 2;
+
+Code categories:
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 24 of 61
+       1       = Yes, ever married or cohabited with a woman
+       2       = No, never married or cohabited with a woman
+
+
+LSEXRLTN:          Relationship with last sexual partner at last sex
+
+LSEXRLTN is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX=no).
+
+Create intermediate variable dcrelatn for Section D (DC series) relationship at last sex with last
+partner in past 12 months or ever:
+
+DCRELATN=.;
+if DC-9 PXFRLTN1=1 then DCRELATN=1;
+else if PXFRLTN1=2 or 3 then DCRELATN=2;
+else if PXFRLTN1=4 then DCRELATN=3;
+else if PXFRLTN1=5 then DCRELATN=4;
+else if PXFRLTN1=6 then DCRELATN=5;
+else if PXFRLTN1=7 then DCRELATN=6;
+else if PXFRLTN1=8 then DCRELATN=7;
+else if PXFRLTN1=9 then DCRELATN=8;
+
+For all Rs who have had sexual intercourse with a female (recode HADSEX = 1):
+If R is married or cohabiting with a female (rmarit=1 or 2) then:
+        If recode LSEXDATE equals cmlsxcwp and p1relation=1,2 or 3, then do:
+
+       if rmarit=1 (married), then LSEXRLTN=1
+       if rmarit=2 (cohabiting), then LSEXRLTN=3
+       end do.
+
+       Else if LSEXDATE equals cmlsxp1, and p1relation >=4 then:
+
+       LSEXRLTN = DCRELATN
+
+Else if R is not married and not cohabiting with a female (rmarit ne 1 or 2), then:
+        If R was never married to nor cohabited with last female partner (computed variable
+        p1relation=6) or R was formerly married to or cohabiting with last partner (computed
+        variable p1relation=4 or 5) or R responded don’t know or refused to relationship with
+        last partner (p1relation=8 or 9) then: LSEXRLTN = DCRELATN
+        Else if R was married to or separated from last partner (computed variable p1relation=1
+                or 2) then: LSEXRLTN=1
+        Else if R was cohabiting with last partner (computed variable p1relation=3) then:
+                LSEXRLTN=3
+
+If any LSEXRLTN=2 (“engaged to her”), assign special code 9.
+
+Notes: Males whose last partner was a current wife or cohabiting partner were not asked about
+       relationship with last partner at last sex. Therefore:
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 25 of 61
+           1)      males who were currently married, and whose last partner was their wife,
+                   were coded 1; males who were currently cohabiting, and whose last partner
+                   was their cohabiting partner, were coded 3.
+          2)      Since only those who got asked the question got a chance to answer “Engaged
+                   to her,” this category is numbered 9 and labeled “Engaged to her: only asked
+                   of a subset of Rs.” Those not asked are those who were currently cohabiting
+                   with the last partner.
+       This recode also differs from the male recode capturing relationship with partner at first
+       sexual intercourse (FSEXRLTN), in the same way as described above.
+       For further information on the cohabiting union, users may wish to use CA-7
+       ENGATHEN, which tells whether they were engaged at start of cohabitation, and CA-8
+       WILLMARR, which indicates the likelihood of marriage using 5 response categories.
+
+Imputation Note: Imputation takes into account non-missing values on P1RELATION when
+                 PXFRLTN1 is “DK/RF.” PXFRLTN1 should be used in all cases when it is a
+                 valid value.
+
+Code categories:
+      Blank = Inapplicable
+      1       = Married to her
+      3       = Living together in a sexual relationship
+      4       = In a steady relationship, but not living together or engaged
+      5       = Going out with her once in a while
+      6       = Just friends
+      7       = Had just met her
+      8       = Something else
+      9       = Engaged to her: only asked of a subset of Rs
+
+
+PARTDUR1-3:            Number of months between 1st and most recent sexual intercourse
+                       with (most recent / second-to-last / third-to-last) sexual partner (in the
+                       past 12 months)
+
+Most recent partner:
+PARTDUR1 is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX=2).
+
+If R’s most recent partner was a current wife (not separated) or cohabiting partner (p1relation=1
+or 3), and date of last and first sex are not missing (cmlsxp1 not sysmis, 9998, or 9999 and
+cmfsxcwp not sysmis, 9998, or 9999):
+
+       PARTDUR1 = (cmlsxp1 – cmfsxcwp)
+
+Else if R’s most recent partner was not a current wife or cohabiting partner (p1relation=2,4,5,6,8,
+or 9) and date of last and first sex are not missing (cmlsxp1 not sysmis, 9998, or 9999 and
+cmfsxp not sysmis, 9998, or 9999):
+
+       PARTDUR1 = (cmlsxp1 - cmfsxp)
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 26 of 61
+Else if R only had sex once with most recent partner (mtoncep=2),
+
+        PARTDUR1 = 997
+
+Second- and third- most recent partners:
+PARTDUR2/3 is blank (inapplicable) if:
+-- R has never had sexual intercourse (recode HADSEX=2), or if
+-- R had no partners or only 1 partner (for PARTDUR2) or fewer than 3 partners (for
+       PARTDUR3) in the past 12 months based on PARTS1YR
+
+If R’s 2nd/3rd most recent partner was a current wife (not separated) or cohabiting partner
+(p2relation/p3relation=1 or 3), and date of last and first sex are not missing (cmlsxp2/cmlsxp3
+not sysmis, 9998, or 9999 and cmfsxcwp not sysmis, 9998, or 9999):
+
+        PARTDUR2/3 = (cmlsxp2/cmlsxp3 – cmfsxcwp)
+
+Else if R’s 2nd/3rd most recent partner was not a current wife or cohabiting partner
+(p2relation/p3relation =2, 4,5,6,8, or 9) and date of last and first sex are not missing
+(cmlsxp2/cmlsxp3 not sysmis, 9998, or 9999 and cmfsxp2/cmfsxp3 not sysmis, 9998, or 9999):
+
+        PARTDUR1 = (cmlsxp2/cmlsxp3 - cmfsxp2/cmfsxp3)
+
+Else if R only had sex once with 2nd/3rd most recent partner (mtoncep2/mtoncep3=2):
+
+        PARTDUR2/3 = 997.
+
+Imputation Note:       Imputation can use any valid response on cmlsxp1/2/3 or cmfsxcwp or
+                       cmfsxp, cmfsxp2/3 as a constraint. In addition to when there are missing
+                       or dk/rf values on input variables, impute when century month of last sex
+                       minus century month of first sex results in a negative value.
+
+Code categories:
+      Blank      = inapplicable
+      0 – nnn    = number of months
+      997        = only had sex once with partner
+
+
+LSEXUSE1:               Method used at last sex -1st method
+
+LSEXUSE1 is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX=2).
+
+1.   Follow this block: -- if R is not currently married nor cohabiting with a female (rmarit not
+        equal to 1 or 2);
+                       -- if R is currently married (rmarit=1) but current wife is not R’s last
+                       partner (p1relation>1) or
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 27 of 61
+                      -- if R is currently cohabiting (rmarit=2) but current cohabiting partner is
+                      not R’s last partner p1relation NE 3)
+
+                      If no method used at last sex (DC-1 PXLRUSE=5 and DC-3
+                      PXLPUSE=5), then LSEXUSE1=96.
+
+                      Else if R did not use a method and does not know if his partner used a
+                      method (DC-1 PXLRUSE=5 and DC-3 PXLPUSE=DK/RF), then
+                      LSEXUSE1=95.
+
+                      Else If (DC-2 PXLRMETH1 =1,2,3,10,DK,RF and DC-4
+                      PXLPMETH01= blank), LSEXUSE1=DC-2 PXLRMETH1
+
+                      {above: only R used a method
+                             Else if (DC-2 PXLRMETH1 = blank and DC-4
+                             PXLPMETH01=4,5,6,7,8,9,10,11,12,13,DK,RF),
+                             LSEXUSE1=DC-2 PXLPMETH01
+
+                      {above: only R’s P used a method
+                             Else if DC-2 PXLRMETH1=1,2,3,10,DK,RF and DC-4
+                             PXLPMETH01= 4,5,6,7,8,9,10,11,12,13,DK,RF),
+                             LSEXUSE1=DC-2 PXLRMETH1
+                      {above: both R and R’s P used a meth. R’s method goes in LSEXUSE1.
+                             P’s method goes in LSEXUSE2, below.
+
+2.     Follow this block if R is currently married or cohabiting (rmarit = 1 or 2) and current
+       wife/partner is his last partner (p1relation=1 or 3).
+
+       If no method used at last sex (CE-2 CWPLUSE1=5 and CE-4 CWPLUSE2=5), then
+       LSEXUSE1=96.
+              Else:
+                      If (CE-3 CWPLMET14=1,2,3,10,DK,RF and CE-5 CWPLMET201=
+                      blank), LSEXUSE1=CE-6 CWPLMET14
+                      {above: only R used a method
+                      Else if (CE-3 CWPLMET14 = blank and CE-5
+                      CWPLMET201=4,5,6,7,8,9,10, 11,12,13,DK,RF), LSEXUSE1=CE-5
+                      CWPLMET201
+                      {above: only R’s P used a method
+                      Else if (CE-3 CWPLMET14 = 1,2,3,10,DK/RF and CE-5
+                      CWPLMET201=4,5,6,7,8,9,10,11,12,13,DK,RF), LSEXUSE1=CE-5
+                      CWPLMET14
+                      {above: both R and R’s P used a meth. R’s method goes in #1. P’s method
+                      goes in #2.
+
+User note:             Cases with 2 values of 12 across LSEXUSE1-4 are those where the
+                      respondent said “something else” for his own method use and also for his
+                      female partner’s method use.
+
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 28 of 61
+Imputation note: Imputation on LSEXUSE1,2,3, and 4 depends partly on dk/rf values on the
+                 input
+                 variables: “did R use a method? y/n”, “what method did R use?”,“Did R’s
+                 partner use a method? y/n”, and “what method did R’s partner use?”.
+                 Different combinations of dk/rf on these variables result in specific imputation
+                 combinations on these 4 recodes.
+
+Code categories:
+      Blank = inapplicable
+      1       = Condom
+      2       = Withdrawal
+      3       = Vasectomy
+      4       = Pill
+      5       = Female sterilization
+      6       = Injection -- Depo-Provera/Lunelle
+      7       = Hormonal implant
+      8       = Rhythm or safe period
+      9       = Contraceptive patch
+      10      = Vaginal contraceptive ring
+      11      = IUD
+      12      = Something else
+      95      = R used no method; R does not know if partner used a method
+      96      = No method used at last sex
+
+LSEXUSE2-LSEXUSE4:           Method used at last sex -2nd/3rd/4th method
+
+LSEXUSE2/3/4= blank (inapplicable) if:
+--   if R has never had sexual intercourse with a female (recode HADSEX=2), or if
+--   R did not use a 2nd/3rd/4th method at last sex.
+
+LSEXUSE2/3/4=96 if LSEXUSE1=96
+LSEXUSE2/3/4=95 if LSEXUSE1=95
+
+Repeat specifications for LSEXUSE1 for remaining values of LSEXUSE2/3/4.
+Areas where method use would need to be selected for 2nd, 3rd, 4th mentions of method:
+
+
+1:
+       PXLRMETH1 and PXLPMETH01 become PXLRMETH2-4 and PXLPMETH01-04
+       LSEXUSE2 becomes one of the following:
+            P’s 1st mention if R and P both used one
+            R’s 2nd mention if R used > 1 and P used none
+            P’s 2nd mention if R used none and P used >1
+       LSEXUSE3 becomes one of the following:
+            R’s 2nd mention if R used >1 and P used one
+            P’s 2nd mention if R used one and P used >1
+            R’s 2nd mention if R used >1 and P used >1
+       LSEXUSE4 becomes P’s 2nd mention -- only happens when R used > 1 and P used > 1
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 29 of 61
+2:
+       CWPLMET14 and CWPLMET201 become CWPLMET15-17 and CWPLMET201-204
+
+       LSEXUSE2 becomes one of the following:
+              CWP’s 1st mention if R and CWP both used one
+              R’s 2nd mention if R used > 1 and CWP used none
+              CWP’s 2nd mention if R used none and CWP used >1
+       LSEXUSE3 becomes one of the following:
+              R’s 2nd mention if R used >1 and CWP used one
+              CWP’s 2nd mention if R used one and CWP used >1
+              R’s 2nd mention if R used >1 and CWP used >1
+       LSEXUSE4 becomes CWP’s 2nd mention -- only happens when R used > 1 and CWP
+       used > 1
+
+Code categories:
+      see LSEXUSE1
+
+
+METH12M1**:           Method used at last sex in the past 12 months-1st method
+
+METH12M1 = blank (inapplicable) if:
+--  R has never had sexual intercourse with a female (recode HADSEX=2)
+--  R did not have sex in the last 12 months (recode SEX12MO=no)
+
+Else METH12M1 = recode LSEXUSE1.
+
+SAS logic:
+       If hadsex = 2 or sex12mo = 2 then meth12m1 = .;
+       Else meth12m1 = lsexuse1;
+
+Code categories:
+      Blank = inapplicable
+      1       = Condom
+      2       = Withdrawal
+      3       = Vasectomy
+      4       = Pill
+      5       = Female sterilization
+      6       = Injection -- Depo-Provera/Lunelle
+      7       = Hormonal implant
+      8       = Rhythm or safe period
+      9       = Contraceptive patch
+      10      = Vaginal contraceptive ring
+      11      = IUD
+      12      = Something else
+      95      = R used no method; R does not know if partner used a method
+      96      = No method used at last sex in the past 12 months
+
+                                                              NSFG-2022-2023-Male-RecodeSpecs
+                                                                                 Page 30 of 61
+METH12M2-METH12M4**:               Method used at last sex in the past 12 months-
+                                   2nd/3rd/4th method
+
+METH12M2/3/4 is blank (inapplicable) if:
+--  R has never had sexual intercourse with a female (recode HADSEX=2)
+--  R did not have sex in the last 12 months (recode SEX12MO=no)
+--  R did not use a 2nd/3rd/4th method at last sex in past 12 months.
+
+Else METH12M2/3/4=recode LSEXUSE2/3/4.
+
+Code categories:
+      see METH12M1
+
+
+METH3M1**:            Method used at last sex in past 3 months-1st method
+
+METH3M1 is blank (inapplicable) if:
+--  R has never had sexual intercourse with a female (recode HADSEX=2)
+--  R did not have sex in the last 3 months (recode SEX3MO=no)
+
+Else METH3M1 = recode LSEXUSE1.
+
+Code categories:
+      Blank = inapplicable
+      1       = Condom
+      2       = Withdrawal
+      3       = Vasectomy
+      4       = Pill
+      5       = Female sterilization
+      6       = Injection -- Depo-Provera/Lunelle
+      7       = Hormonal implant
+      8       = Rhythm or safe period
+      9       = Contraceptive patch
+      10      = Vaginal contraceptive ring
+      11      = IUD
+      12      = Something else
+      95      = R used no method; R does not know if partner used a method
+      96      = No method used at last sex in the past 3 months
+
+METH3M2-METH3M4**: Method used at last sex in past 3 months-2nd/3rd/4th method
+
+METH3M2/3/4 is blank (inapplicable) if:
+--  R has never had sexual intercourse with a female (recode HADSEX=2)
+--  R did not have sex in the last 3 months (recode SEX3MO=no)
+--  R did not use a 2nd/3rd/4th method at last sex in past 3 months.
+
+Else METH3M2/3/4 = recode LSEXUSE2/3/4.
+                                                              NSFG-2022-2023-Male-RecodeSpecs
+                                                                                 Page 31 of 61
+Code categories:
+      see METH3M1
+
+
+NUMP3MOS:              Number of female partners in past 3 months
+
+NUMP3MOS is blank (inapplicable) if R has never had sexual intercourse with a female (recode
+HADSEX=2).
+
+Otherwise:
+If R had no female sex partners in the last 3 months (LSEXDATE LT CMINTVW-2 ), then
+       NUMP3MOS=0
+
+Else if R had 1 or more female sex partners in the last 3 months (LSEXDATE GE CMINTVW-
+        2), then do:
+
+If the last partner was a current wife or partner, subtract the date in cmlsxcwp from the
+calculations below, because it is already in cmlsxp1. (if cmlsxcwp NE sysmis and p1relation=1
+or 3)
+                 If 1,2, or 3 partners in the past year (PARTS1YR<4) then do:
+                          For each partner for whom the date of last sex (computed variables
+                          cmlsxp1, cmlsxp2, cmlsxp3, cmlsxcwp) is within past 3 months, (date >=
+                          cmintvw-2), increment NUMP3MOS by 1. (NUMP3MOS=1, 2, or 3)
+
+Else if more than 3 partners in the last 12 months (PARTS1YR>=4), and there is no date of last
+sex with wife/cohabiting partner (cmlsxcwp=.) then do
+                       For each partner with whom the date of last sex (computed variables
+                       cmlsxp1, cmlsxp2, cmlsxp3) is within the past 3 months (cmlsxp[x] >=
+                       cmintvw-2), increment NUMP3MOS by 1 (NUMP3MOS=1, 2, or 3),
+                       except if all 3 partners fall within past 3 months, then NUMP3MOS=4. (If
+                       cmlsxp1 and cmlsxp2 and cmlsxp3 >= cmintvw-2), then
+                       NUMP3MOS=4).
+
+Else if more than 3 partners in the last 12 months (PARTS1YR>=4), and there is a date of last
+sex with wife/cohabiting partner (cmlsxcwp NE .) then do
+        If PARTS1YR=4 and all three dates of last nonmarital, noncohabiting partners fall within
+        the past 3 months (cmlsxp1 and cmlsxp2 and cmlsxp3 >= cmintvw-2) and
+        - Date of last sex with wife/partner is also within past 3 months (cmlsxcwp>=cmintvw-2)
+        then NUMP3MOS=4
+        - Date of last sex with wife/partner is not within past 3 months (cmlsxcwp<cmintvw-2)
+        then NUMP3MOS=3
+
+       Else if PARTS1YR>4 and all three dates of last nonmarital, noncohabiting partners fall
+       within the past 3 months (cmlsxp1, cmlsxp2, cmlsxp3 >= cmintvw-2) then
+       NUMP3MOS=4 (does not matter what cmlsxcwp is).
+
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 32 of 61
+       Else, for each partner with whom the date of last sex (computed variables cmlsxp1,
+       cmlsxp2, cmlsxp3, cmlsxcwp) is within the past 3 months (cmlsxp1, cmlsxp2, cmlsxp3
+       or cmlsxcwp >= cmintvw-2), increment NUMP3MOS by 1.
+
+Notes:
+-- Computed variable cmintvw is defined in Flow Check A-1
+-- Code categories:
+       The questionnaire was designed to capture a maximum of 3 female partners within the
+       past year. Therefore, for respondents who had 4 or more partners in the past year, there
+       is some degree of unknown with respect to numbers of partners in the past 3 months. If
+       all 3 partner slots are filled with dates in the past 3 months, there could have been one or
+       more additional partners within the past 3 months, but this is not ascertainable. This is
+       the reason for code category “4”and the distinction between categories 3 and 4.
+       Criteria for determining category “4” are different depending on whether one of the
+       partners in the past 3 months is a wife/cohabiting partner.
+
+Imputation Note: Created based on imputed values of the source recodes and also imputed with
+                 regression modeling if applicable computed variables have missing values.
+
+Code categories:
+      Blank = Inapplicable
+      0       = 0 partners
+      1       = 1 partner
+      2       = 2 partners
+      3       = 3 partners exactly
+      4       = 3, possibly more partners
+
+
+PARTS1YR :              Number of opposite-sex sexual partners in last 12 months
+
+PARTS1YR is based on values of Blaise-computed variable mon12prts, as defined in Flow
+Check B-11.
+
+       PARTS1YR = mon12prts
+
+Once PARTS1YR was defined as above, the following reassignment took place to reconcile
+PARTS1YR with whether the respondent had sex in the past 12 months based on comparing
+LSEXDATE with the date of interview, the latter recode being based on actual reported dates of
+last sex with recent partners. This reconciliation is consistent with that done for the analogous
+female recode PARTS1YR.
+
+       if PARTS1YR=0 and R had sex in the past 12 months based on LSEXDATE
+       (LSEXDATE GE cmintvw-11) then PARTS1YR=1;
+
+       Note: For the above cases who meet this criteria because they said “none” to number of
+             partners in past 12 months (mon12prts=0), and reported a date of last sex within
+             past 12 months (LSEXDATE GE cmintvw-11), it is likely they are only being
+             inconsistent about one partner, not multiple partners. Therefore, PARTS1YR is
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 33 of 61
+              assigned “1.”
+
+       else if PARTS1YR GE 1 and R did not have sex in the past 12 months based on
+                LSEXDATE (LSEXDATE LT cmintvw-11) then PARTS1YR=0;
+Note: The original PARTS1YR recode, as defined above, was top-coded at TBD. The full-detail
+      variable called INPARTS1YR is available through the NCHS Research Data Center.
+
+Imputation note:      Imputed with regression modeling if applicable computed variable
+                      mon12prts had missing (dk/rf) values.
+
+Code categories for PARTS1YR (public-use variable):
+      0 – 6 = number of opposite-sex partners in last 12 months
+      7       = 7 or more opposite-sex partners in last 12 months
+
+Code categories for INPARTS1YR (restricted-use variable):
+      0 – nnn = number of opposite-sex partners in last 12 months
+
+
+LIFPRTNR :             Number of opposite-sex sexual partners in lifetime
+
+LIFPRTNR is based on values of Blaise-computed variable lifeprts, as defined in Flow Check
+B-10.
+
+       LIFPRTNR = lifeprts
+
+Note: The original LIFPRTNR recode, as defined above, was top-coded for public use at 50 or
+       more opposite-sex sexual partners. The full-detail variable called INLIFPRTNR is
+       available through the NCHS Research Data Center.
+
+Imputation Note: LIFPRTNR is imputed if LIFEPRTS is DK/RF. PARTS1YR is used as a lower
+                 bound for imputation.
+
+Code categories for LIFPRTNR (public-use variable):
+      0-49 = 0-49 opposite-sex partners in lifetime
+      50 = 50 or more opposite-sex partners in lifetime
+
+Code categories for INLIFPRTNR (restricted-use variable):
+      0-nnn = number of opposite-sex partners in lifetime
+
+
+COHEVER :             Whether R ever cohabited with a woman (including premarital
+                      cohabitation)
+
+Note: This recode has no inapplicable category. If you wish to limit analysis of cohabitation to
+      those who have ever had intercourse, use HADSEX=1.
+
+Blaise-computed variable evrcohab (defined in Flow Check A-40) indicates whether R has ever
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 34 of 61
+cohabited with a woman he never married.
+
+To include premarital cohabitation as well, the following variables must be checked (only for Rs
+who have ever been married to a woman -- if recode FMARITAL = 1, 2, 3 or 4):
+
+   •   CA-4 LIVTOGSP=1 if recode RMARITAL=1 or 5 (whether R cohabited premaritally
+       with his current spouse and current spouse is a woman)
+   •   DA-3 LIVTOGN_1, LIVTOGN_2, LIVTOGN_3 (array of up to 3 variables
+       corresponding to up to 3 recent sexual partners who were also R’s wives; whether R
+       cohabited premaritally with each)
+   •   EB-4 LIVTOGN_W1 (whether R cohabited premaritally with first former wife)
+
+COHEVER = 1 (yes) if computed variable evrcohab=1 or if there is any “yes” response to the
+    above questions about premarital cohabitation.
+
+       (Note: If R was never married to a woman, only evrcohab is used to define COHEVER.)
+
+ELSE COHEVER = 2 (no).
+
+Imputation Note: This recode is logically imputed for cases with no “yes” values and DK/RF on
+                 source variables, or for cases who are ever-married and never cohabited
+                 outside marriage (evrcohab=0) but are sysmis on all or some applicable
+                 variables about whether R cohabited premaritally with a spouse (LIVTOGSP,
+                 LIVTOGN_1, LIVTOGN_2, LIVTOGN_3, LIVTOGN_W1).
+
+Code categories:
+      1       = Yes, ever cohabited with a woman (lived with her outside of marriage)
+      2       = No, never cohabited with a woman (lived with her outside of marriage)
+
+
+
+MARDAT01:             Year of R’s marriage to 1st wife
+
+Note: For 2022-2023 NSFG, this recode is only being defined for R’s 1st wives.
+
+MARDAT01 is blank (inapplicable) if R has never been married to woman (recode FMARITAL
+= 5).
+
+Otherwise:
+
+If R has only been married to a woman once (recode FMARNO=1), then do:
+
+       If R is currently married to a woman, MARDAT01 is drawn from cmcurmar in Section
+       C.
+
+       If R is not currently married to a woman, MARDAT01 is drawn from the only non-
+       sysmis value found among cmmarp[x] (from Section D) or cmmarw1 (from Section E).
+
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 35 of 61
+Else if R has been married to a woman more than once (FMARNO GT 1), then do:
+
+       MARDAT01 is drawn from the earliest (nonsysmis) value found among cmmarp[x]
+       (from Section D) or cmmarw1 (from Section E).
+
+       Note: If there is a nonsysmis value on both cmmarw1 (1st former wife, as reported in E)
+             and cmmarp[x] (recent sexual partners in last 12 months, or last partner ever),
+             then MARDAT01 should be drawn from cmmarw1, even if DK/RF.
+
+Note: This recode was defined initially as CM date of marriage, but for inclusion on the 2022-
+      2023 public-use files, the CM date was converted to years of marriage. The original CM
+      date is restricted-use, available only through the NCHS Research Data Center. Also, due
+      to questionnaire revisions in 2022-2023, information is not collected on all of men’s
+      former (non-first) marriages. For example, information on a 2nd or 3rd former wife would
+      only be collected if they are a current wife asked about in Section C or a recent sexual
+      partner asked about in Section D.
+
+Imputation Note: Imputation of MARDAT01 is needed if the applicable CM variable is DK/RF,
+                 or if previously married but there were no applicable marriage dates for the
+                 respective conditions of the case.
+
+Code categories for MARDAT01 (public-use variable):
+      Blank          = Inapplicable
+      xxxx - 2023 = Year when marriage to 1st wife began
+
+Code categories for INMARDAT01 (restricted-use variable):
+      Blank           = Inapplicable
+      xxxx-1488       = CM date when marriage to 1st wife began
+
+
+MARDIS01:            Year of dissolution of R’s marriage to 1st wife
+
+Note: For 2022-2023 NSFG, this recode is only being defined for R’s 1st wives.
+
+MARDIS01 is blank (inapplicable) if:
+-- R has never been married to a woman(recode FMARITAL=5) , or
+-- R has been married to a woman once (recode FMARNO=1) and that marriage is intact (recode
+FMARITAL=1).
+
+Otherwise:
+
+If recode MARDAT01 is drawn from Blaise-computed cmmarp[x] in Section D, then
+MARDIS01 is defined based on Section D variables corresponding to that former wife.
+ (Note: DA-7 MARREND is represented by 3 variables in the data file – MARREND_1,
+MARREND_2, & MARREND_3, so the appropriate MARREND_n variable should be used for
+MARDIS01, based on which of these 3 recent partners was R’s first former wife.)
+
+       If DA-7 MARREND = 4 (separation) then MARDIS01 = cmstopp[x].
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 36 of 61
+       Else if MARREND = 1 (death) then MARDIS01= cmendm[x].
+
+       Else if MARREND = 2 (divorce) or MARREND = 3 (annulment) then do:
+               if cmstopp[x] LT cmendm[x] then MARDIS01 = cmstopp[x]
+               else if cmstopp[x] GE cmendm[x] then MARDIS01 = cmemdm[x]
+               end do.
+
+Else if recode MARDAT01 is drawn from Blaise-computed cmmarw1 in Section E, then
+MARDIS01 is defined based on Section E variables corresponding to that former wife.
+
+       If EB-8 MARREND_W1 = 4 (separation) then MARDIS01 = cmstopw1.
+       Else if MARREND_W1 = 1 (death) then MARDIS01 = cmfmend_w1.
+       Else if MARREND_W1 = 2 (divorce) or MARREND_W1 = 3 (annulment) then do:
+               if cmstopw1 LT cmfmend_w1 then MARDIS01 = cmstopw1
+               else if cmstopw1 GE cmfmend_w1 then MARDIS01 = cmfmend_w1
+               end do.
+
+Notes:
+•      If R stopped living with his 1st wife before his divorce or annulment became final,
+       MARDIS01 is defined as the date when he last lived with her.
+•      The MARDIS01 recode was defined initially as CM date of dissolution of marriage, but
+       for inclusion on the 2022-2023 public-use files, the CM date was converted to year of
+       marriage dissolution. The original CM date is restricted-use, available only through the
+       NCHS Research Data Center. Also, due to questionnaire revisions in 2022-2023,
+       information is not collected on all of men’s former (non-first) marriages. For example,
+       information on a 2nd or 3rd former wife would only be collected if they are a current wife
+       asked about in Section C or a recent sexual partner asked about in Section D.
+
+Imputation Note: Imputation of MARDIS01 is needed if the applicable CM variable is DK/RF
+                 or all applicable CM variables are sysmis.
+
+Code categories for MARDIS01 (public-use variable):
+      Blank          = Inapplicable
+      xxxx - 2023 = Year when marriage to 1st wife ended
+
+Code categories for INMARDIS01 (restricted-use variable):
+      Blank           = Inapplicable
+      xxxx-1488       = CM date when marriage to 1st wife dissolved
+
+
+MAREND01:             How R’s marriage to 1st wife ended
+
+Note: For 2022-2023 NSFG, this recode is only being defined for R’s 1st wives.
+
+MAREND01 is blank (inapplicable) if:
+-- R has never been married to a woman (recode FMARITAL = 5), or
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 37 of 61
+-- R has been married to a woman once (recode FMARNO=1) and that marriage is intact (recode
+FMARITAL=1).
+
+Otherwise:
+
+Define MAREND01 based on DA-7 MARREND/EB-8 MARREND_W1 corresponding to that
+       former wife:
+
+        If recode MARDAT01 is drawn from Blaise-computed cmmarp[x] in Section D, then
+        check DA-7 MARREND corresponding to that former wife as shown below.
+
+              Using whichever DA-7 MARREND[x] variable is appropriate from Section D:
+
+              If DA-7 MARREND[x] =2 or 3 then MAREND01 =1.
+              Else if DA-7 MARREND[x] =4 then MAREND01 =2.
+              Else if DA-7 MARREND[x] =1 then MAREND01 =3.
+              Else if DA-7 MARREND[x] =DK/RF then impute MAREND01.
+
+        Else if recode MARDAT01 is drawn from Blaise-computed cmmarw1 in Section E, then
+        use EB-8 MARREND_W1 as shown below.
+
+              If EB-8 MARREND_W1 =2 or 3 then MAREND01 =1.
+              Else if EB-8 MARREND_W1 =4 then MAREND01 =2.
+              Else if EB-8 MARREND_W1 =1 then MAREND01 =3.
+
+Note:             Due to questionnaire revisions in 2022-2023, information is not collected on
+                  all of men’s former (non-first) marriages. For example, information on a 2nd
+                  or 3rd former wife would only be collected if they are a current wife asked
+                  about in Section C or a recent sexual partner asked about in Section D.
+
+Imputation Note: Imputed for cases with DK/RF values on whichever value of MARREND[x]
+                 corresponds to R’s 1st marriage, or if previously married but there was no
+                 applicable information on how marriage ended.
+
+Code categories:
+      Blank = Inapplicable
+      1       = Divorced or annulled
+      2       = Separated
+      3       = Widowed
+
+
+MAR1DISS**:          Months between 1st marriage to a woman and dissolution of that
+                     marriage (or date of interview)
+
+MAR1DISS is blank (inapplicable) if R has never been married to a woman (recode FMARITAL
+= 5).
+
+Otherwise, this recode is defined based on final imputed values of recodes FMARNO,
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                   Page 38 of 61
+FMARITAL, and MARDAT01, plus cmintvw indicating CM date of interview.
+
+If R’s first marriage is still intact (FMARNO = 1 and FMARITAL = 1), then:
+
+       MAR1DISS = cmintvw - MARDAT01
+
+Else   if R has been married more than once (FMARNO GT 1), or
+       if R has been married only once (FMARNO = 1) and the marriage is NOT intact
+       (FMARITAL = 2, 3, or 4),
+       then:
+
+       MAR1DISS = MARDIS01 - MARDAT01
+
+SAS logic:
+       if fmarital = 5 then mar1diss = .;
+       else if fmarno = 1 and fmarital = 1 then mar1diss = cmintvw - mardat01;
+       else if fmarno > 1 or (fmarno = 1 and fmarital in(2 3 4)) then mar1diss = mardis01-
+       mardat01;
+
+User Note:    MAR1DISS was defined based on original CM values of the applicable recodes,
+              and then redefined as a categorical variable for inclusion on the public-use file.
+              The restricted-use variable INMAR1DISS, available in the NCHS Research Data
+              Center, shows the exact number of months as originally defined.
+
+Code categories for MAR1DISS (public-use variable):
+      Blank = Inapplicable
+      1       = 0-12 months
+      2       = 13-24 months
+      3       = 25-36 months
+      4       = 37-48 months
+      5       = More than 4 years
+
+Code categories for INMAR1DISS (restricted-use variable):
+      Blank       = Inapplicable
+      000         = Less than 1 month
+      001-nnn = Months between 1st marriage and dissolution (or interview)
+
+
+PREMARW1:              Whether R lived premaritally with his first wife
+
+PREMARW1 is blank (inapplicable) if R has never been married to a woman (recode
+FMARITAL=5).
+
+Otherwise, for all Rs who have ever been married to a woman (FMARITAL NE 5):
+
+If R has never cohabited with a woman at all (recode COHEVER=2) then PREMARW1=2 (no).
+
+Else if recode MARDAT01 is drawn from Blaise-computed cmcurmar, then check CA-4
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 39 of 61
+LIVTOGSP if R is married to a woman (Blaise-computed variable rmarit = 1 ):
+
+       If LIVTOGSP=1 then PREMARW1=1.
+       Else if LIVTOGSP=5 then PREMARW1=2.
+
+Else if recode MARDAT01 is drawn from Blaise-computed cmmarp[x] (cmmarp_1, cmmarp_2,
+cmmarp_3) in Section D, then check DA-3 LIVTOGN corresponding to that former wife
+(LIVTOGN_1, LIVTOGN_2, LIVTOGN_3) as shown further below.
+
+Else if recode MARDAT01 is drawn from Blaise-computed cmmarw1 in Section E, then check
+EB-4 LIVTOGN_W1 corresponding to that former wife as shown below.
+
+       Using whichever LIVTOGN[x] variable is appropriate from Section D or E:
+       If LIVTOGN=1 then PREMARW1=1.
+       Else if LIVTOGN=5 then PREMARW1=2.
+
+Imputation note: Missing data may result in undefined values on this recode, and these were
+                 not imputed for 2022-2023.
+
+Code categories:
+
+Blank = Inapplicable
+      1      = Yes (R lived premaritally with his first wife)
+      2      = No (R did not live premaritally with his first wife)
+
+
+COHAB1: Year of first cohabitation with a woman (including premarital cohabitation)
+
+COHAB1 is blank (inapplicable) if R has never cohabited with a woman outside of marriage
+    (recode COHEVER=2).
+
+Otherwise,
+
+For all cases with COHEVER=1:
+
+If R has never been married to a woman (recode FMARITAL = 5) , set COHAB1 equal to the
+earliest non-missing value among the following Blaise-computed century month variables:
+
+       cmcohfc        CM date when R began living with 1st female former cohabiting partner,
+                      (defined in Flow Check E-8)
+       cmcohp[x]      3 CM date variables indicating when R began living with a female
+                      cohabiting partner, who was among his 3 most recent sexual partners
+                      (defined in Flow Check D-7)
+       cmcurcoh       If recode RMARITAL = 2: CM date when R began living with his current
+                      female cohabiting partner (defined in Flow Check C-3)
+
+If R has ever been married to a woman (recode FMARITAL NE 5), set COHAB1 equal to the
+earliest non-missing values among the up to 5 Blaise-computed century month variables listed
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 40 of 61
+above, along with cmcohw1:
+
+        cmcohw1       CM date variable indicating when R began living premaritally with his
+                     first former wife, who was not among his 3 most recent sexual partners;
+                     this former wife is covered in Section E, and this cm variable is defined in
+                     Flow Check E-8.
+
+Note:         COHAB1 was initially defined as CM date of first cohabitation, but for inclusion
+              on the 2022-2023 public-use files, the CM date was converted to year of first
+              cohabitation. The original CM date variable is restricted-use, available only
+              through the NCHS Research Data Center.
+
+Imputation Notes: --COHAB1 cannot equal cmcurcoh if R is currently cohabiting (RMARITAL=
+                  2) and Blaise-computed variable numcohab > 1. If this occurred, COHAB1
+                  was imputed to a value earlier than cmcurcoh.
+                  -- Imputed values of COHAB1 cannot be earlier than VRY1STSX.
+                  -- COHAB1 was imputed if there were DK/RF values on cmcohfc, cmcohw1,
+                  any of the cmcohp[x]variables that must be checked for the case, or cmcurcoh
+                  if no other applicable cohabitation dates.
+
+Code categories for COHAB1 (public-use variable):
+      Blank         = Inapplicable
+      xxxx - 2023 = Year of first cohabitation to a woman
+
+Code categories for INCOHAB1 (restricted-use variable):
+      Blank          = Inapplicable
+      xxxx-1488 = CM date when R began 1st cohabitation to a woman
+
+
+COHSTAT :            Opposite-sex cohabitation experience relative to first marriage to a
+                     woman
+
+COHSTAT = 1           if R has never cohabited with a woman (recode COHEVER = 2).
+
+Else
+COHSTAT = 2          -- if R has never been married to a woman (recode FMARITAL = 5) but
+                     has cohabited with a woman (COHEVER =1); or
+                     -- if R has ever been married to a woman (FMARITAL NE 5) and has
+                     cohabited with a woman (COHEVER =1) and date of first cohabitation
+                     (recode COHAB1) is earlier than or same as the date of first marriage
+                     (recode MARDAT01).
+                     -- if R’s only cohabitation has been with a wife (numcohab=. , 0) and he
+                     has only been married once (FMARNO=1) and said he lived with that
+                     wife before marriage (LIVTOGSP=1) even if date of cohabitation or
+                     marriage are DK/RF
+
+Else
+COHSTAT = 3          if R has ever been married to a woman (FMARITAL NE 5) and has
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 41 of 61
+                     cohabited with a woman (COHEVER =1) and date of first cohabitation is
+                     greater than date of first marriage (COHAB1 GT MARDAT01).
+
+SAS logic:
+       If COHEVER = 2 then COHSTAT = 1;
+       Else if (FMARITAL=5 and COHEVER=1) or (FMARITAL NE 5 and COHEVER=1 and
+       COHAB1 LE MARDAT01) then COHSTAT = 2;
+       Else if (FMARITAL NE 5 and COHEVER=1 and COHAB1 > MARDAT01) then
+                COHSTAT = 3;
+       Else if FMARNO=1 and numcohab in (.,0) and FMARITAL=1 and LIVTOGSP=1 then
+       COHSTAT=2;
+
+Imputation Note:      Computed based on imputed values of source recodes.
+
+Code categories:
+      1       = never cohabited with a woman outside of marriage
+      2       = first cohabited with a woman before marriage to 1st wife (including never
+      married)
+      3       = first cohabited with a woman after marriage to 1st wife
+
+
+COHOUT:       Outcome of first (if premarital) cohabitation with a woman
+
+COHOUT is blank (inapplicable) if R has never cohabited with a woman outside of marriage or
+if his first cohabitation with a woman occurred after marriage to his first wife. (recode
+COHSTAT=1 or 3).
+
+Otherwise, if COHSTAT=2 (R’s first cohabitation with a woman occurred before his first
+marriage to a woman, or he was never married to a woman):
+
+COHOUT = 1 if R is currently cohabiting with a woman (RMARITAL=2) and his first
+           cohabitation is intact (recode COHAB1 was drawn from cmcurcoh). (in this case,
+           Blaise-computed variable cmcurcoh indicates start of cohabitation with current
+           female partner, as defined in Flow Check C-3.)
+
+Else
+COHOUT = 2 if
+   • R is currently married to his first female cohabitation partner (FMARITAL=1 and the
+     date of his first cohabitation COHAB1 was drawn from cmcurcoh). (in this case, Blaise-
+     computed variable cmcurcoh indicates start of cohabitation with current wife, as defined
+     in Flow Check C-3.)
+   • R’s only cohabitation has been with a wife (numcohab=.,0) and he has only been married
+     once (FMARNO=1) and said he lived with that wife before marriage (LIVTOGSP=1),
+     even if date of cohabitation is DK/RF
+
+Else
+COHOUT = 3 if the outcome of R's first cohabitation to a woman is a marriage that dissolved
+
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                   Page 42 of 61
+    •    COHAB1 came from cmcohp[x] (1 of up to 3 recent sexual partners described in
+         Section D) and R was ever married to this woman (check for a value of 1 on the
+         corresponding P[x]RLTN1 variable -- BD-2 P1RLTN1 or BD-10 P2RLTN1 or BD-18
+         P3RLTN1), OR
+        COHAB1 came from cmcohw1
+
+Else
+COHOUT = 4 if the outcome of R's first cohabitation to a woman is dissolution without marriage
+     • COHAB1 came from cmcohfc and fcver=1 (R was never married to her; defined in
+       Flow Check E-5) and R is not currently living with this woman (Blaise-computed
+       variable cmstopfc contains a non-sysmis value; defined in Flow Check E-14), OR
+     • COHAB1 came from cmcohp[x] and R was never married to this woman (check for a
+       value not equal to 1 on the corresponding P[x]RLTN1 variable -- BD-2 P1RLTN1 or
+       BD-10 P2RLTN1 or BD-18 P3RLTN1) and R is not currently living with this woman
+       (Blaise-computed variable cmstopp[x] for this partner contains a non-sysmis value;
+       defined in Flow Check D-13).
+     • R was never married and is not currently cohabiting (RMARITAL=6)
+
+Imputation Note: Missing data may result in undefined values on this recode, and these were
+                 not imputed for 2022-2023.
+
+Code categories:
+              Blank = Inapplicable
+              1     = Intact cohabitation with a woman
+              2     = Intact marriage to a woman
+              3     = Dissolved marriage to a woman
+              4     = Dissolved cohabitation with a woman
+
+
+COH1DUR :         Duration (in months) of R’s first cohabitation (if premarital) with a
+                  woman
+
+COH1DUR is blank (inapplicable) if R has never cohabited with a woman outside of marriage to
+a woman or if his first cohabitation with a woman occurred after his first marriage to a woman
+(recode COHSTAT=1 or 3).
+
+Otherwise,
+
+if COHSTAT=2 (R’s first cohabitation to a woman occurred before his first marriage to a
+woman, or he was never married to a woman):
+
+COH1DUR = number of months between recode COHAB1 and appropriate end date from
+     below:
+     -- Blaise-computed cmintvw if 1st cohabitation to a woman is intact (recode
+     COHOUT=1)
+     or
+     -- recode MARDAT01 if 1st cohabitation to a woman resulted in marriage, whether intact
+     or
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                   Page 43 of 61
+       dissolved marriage (COHOUT=2 or 3) or
+       -- corresponding end date of 1st cohabitation to a woman (Blaise-computed cmstopfc,
+       cmstopp_1, cmstopp_2, cmstopp_3) if 1st cohabitation was before 1st marriage to a
+       woman and dissolved (COHOUT=4)
+
+Notes: COH1DUR was initially defined based on original CM dates of the applicable events,
+       and then redefined as a categorical variable for inclusion on the public-use file for
+       NSFG2022-2023. INCOH1DUR, available in the NCHS Research Data Center, shows
+       the exact number of months as originally defined.
+
+       In cases where COHOUT=2 or 3 (1st cohabitation to a woman resulted in marriage),
+       COH1DUR indicates duration of premarital cohabitation to a woman. Users may wish to
+       subset cases based on value of COHOUT, the recode indicating outcome of R’s first
+       cohabitation to a woman.
+
+Imputation Note: Computed based on imputed values of source recodes COHSTAT, COHOUT,
+                 COHAB1, MARDAT01, however imputation may be needed if DK/RF values
+                 on end date of cohabitation
+
+Code categories for COH1DUR (public-use variable) :
+      Blank = Inapplicable
+      1       = 0-12 months
+      2       = 13-24 months
+      3       = 25-36 months
+      4       = 37-48 months
+      5       = More than 4 years
+
+Code categories for INCOH1DUR (restricted-use variable):
+       Blank = inapplicable
+       0       = Less than 1 month
+       1-nn = Number of months
+
+
+SEXMAR**: Months between first intercourse and first marriage (or interview)
+
+SEXMAR is blank (inapplicable) if R has never had sexual intercourse (recode HADSEX
+= 2).
+
+Otherwise, this recode is defined based on final imputed values of recodes HADSEX,
+FMARITAL, VRY1STSX, and MARDAT01, plus cmintvw indicating CM date of interview.
+
+If R has never been married (FMARITAL = 5), SEXMAR is the number of months between
+VRY1STSX and cmintvw (cmintvw – VRY1STSX).
+
+Else if R has ever been married (FMARITAL NE 5) then:
+
+       If date of first intercourse was before or same as date of first marriage
+       (VRY1STSX LE MARDAT01) then SEXMAR = MARDAT01 - VRY1STSX.
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                   Page 44 of 61
+        Else if date of first intercourse was after date of first marriage (VRY1STSX GT
+        MARDAT01) then SEXMAR=996.
+
+SAS logic:
+       If hadsex = 2 then sexmar=.;
+       Else if fmarital = 5 then sexmar = cmintvw-vry1stsx;
+       Else if fmarital in(1 2 3 4) then do;
+                If vry1stsx LE mardat01 then sexmar = mardat01-vry1stsx;
+                Else if vry1stsx > mardat01 then sexmar = 996;
+                End;
+
+Note: SEXMAR was initially defined based on original CM values of the applicable recodes,
+      and then redefined as a categorical variable for inclusion on the public-use file.
+      INSEXMAR, available in the NCHS Research Data Center, shows the exact number of
+      months as originally defined.
+
+Code categories for SEXMAR (public-use variable):
+      Blank = inapplicable
+      1       = 0-12 months
+      2       = 13-24 months
+      3       = 25-36 months
+      4       = More than 3 years
+      5       = First intercourse after first marriage
+
+Code categories for INSEXMAR (restricted-use variable) :
+      Blank       = Inapplicable
+      00          = First intercourse in same month as marriage
+      1-nnn       = 1 to nnn months after first intercourse
+      996         = First intercourse after first marriage
+
+
+SEXUNION**:            Months between first intercourse and first coresidential union (or
+                       interview)
+
+SEXUNION is blank (inapplicable) if R has never had sexual intercourse (recode
+HADSEX = 2).
+
+Otherwise, this recode is defined based on final imputed values of recodes HADSEX,
+FMARITAL, VRY1STSX, MARDAT01, COHEVER, COHSTAT, and COHAB1, plus cmintvw
+indicating CM date of interview.
+
+If R has never been married to a woman (FMARITAL = 5) and never cohabited with a woman
+outside of marriage (COHEVER=2), then SEXUNION is based on interval between 1st sexual
+intercourse and the interview (cmintvw – VRY1STSX).
+
+Else,   if R has ever been married (FMARITAL NE 5) but has never cohabited outside of
+        marriage (COHEVER=2),
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 45 of 61
+ Or    if R has ever been married (FMARITAL NE 5), has ever cohabited outside of marriage
+       (COHEVER=1), and 1st cohabitation began after 1st marriage (COHSTAT=3):
+ Then SEXUNION has same value as SEXMAR.
+
+ Else, if R has never been married (FMARITAL=5) but has ever cohabited outside of marriage
+ (COHEVER=1), SEXUNION is based on the interval between 1st sexual intercourse and 1st
+ cohabitation:
+
+        If 1st cohabitation in same month or later than 1st intercourse (COHAB1 GE
+        VRY1STSX), then SEXUNION = COHAB1 - VRY1STSX.
+
+        Else if 1st intercourse occurred later than 1st cohabitation (VRY1STSX > COHAB1),
+        then SEXUNION = 996.
+
+ Else, if R has ever been married (FMARITAL NE 5), has ever cohabited outside of marriage
+ (COHEVER=1), and 1st cohabitation began before 1st marriage (COHSTAT=2),
+ SEXUNION is based on the interval between 1st sexual intercourse and 1st cohabitation:
+
+        If 1st cohabitation in same month or later than 1st intercourse (COHAB1 GE
+        VRY1STSX), then SEXUNION = COHAB1 - VRY1STSX.
+
+        Else if 1st intercourse occurred later than 1st cohabitation (VRY1STSX > COHAB1),
+        then SEXUNION = 996.
+
+ SAS logic:
+        If hadsex=2 then sexunion=.;
+        Else if fmarital=5 and cohever=2 then sexunion=cmintvw-vry1stsx;
+        Else if fmarital NE 5 and (cohever=2 or cohstat=3) then sexunion=sexmar;
+        Else if (fmarital=5 and cohever=1) or (fmarital NE 5 and cohstat=2) then do;
+                 if cohab1 GE vry1stsx then sexunion=cohab1-vry1stsx;
+                 else if cohab1 LT vry1stsx then sexunion=996;
+                 end;
+
+Note:   SEXUNION was initially defined based on original CM values of the applicable recodes,
+        and then redefined as a categorical variable for inclusion on the public-use file.
+        INSEXUNION, available in the NCHS Research Data Center, shows the exact number of
+        months as originally defined.
+
+ Code categories for SEXUNION (public-use variable):
+        Blank = inapplicable
+       1         = 0-12 months
+       2         = 13-24 months
+       3         = 25-36 months
+       4         = More than 3 years
+       5         = First intercourse after first union
+
+ Code categories for INSEXUNION (restricted-use variable):
+       Blank       = Inapplicable
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 46 of 61
+       000        = First intercourse in same month as marriage or cohabitation
+       1-nnn      = 1 to nnn months after first intercourse
+       996        = First intercourse after first marriage or cohabitation
+
+
+                                     Section F Recodes:
+                   Biological Children, Adoption, and Other pregnancies
+
+
+CSPBIOKD:             Number of Biological Children R Has Fathered with His Current
+                      Wife or Female Cohabiting Partner
+
+CSPBIOKD is blank (inapplicable) if R is not currently married or cohabiting with a female
+partner (recode RMARITAL NE 1 or 2).
+
+This recode indicates the number of biological children the married or cohabiting male
+respondent has ever fathered with his current wife or partner, regardless of these children’s
+current ages or living arrangements. CSPBIOKD has been modified based on revisions to the
+questionnaire made for 2022-2023, and is no longer drawn from a single questionnaire item, as
+in prior NSFG years. The Blaise-computed variable cwpkids (defined in Flow Check F-15)
+indicates whether R has fathered any biological children with his current wife or cohabiting
+partner. Other questions in the FA series allow for determining the number of these biological
+children.
+
+SAS logic:
+       If RMARITAL in (3,4,5,6) then CSPBIOKD = .;
+
+       Else if RMARITAL in (1,2) then do;
+       If CWPKIDS=0 then CSPBIOKD=0;
+       Else if CWPKIDS=1 and FA-3 ONEMOM=1 (yes) then CSPBIOKD= FA-2
+               NUMBIOKID;
+       Else if CWPKIDS=1 and FA-3 ONEMOM=missing and MOMWHO=1 then
+               CSPBIOKD=FA-2 NUMBIOKID;
+       Else if CWPKIDS=1 and FA-3 ONEMOM NE 1 then CSPBIOKD= (the count of FA-6
+               BCMOMWHO[x]=1;
+       end;
+
+Imputation Note: Imputation needed if FA-2 NUMBIOKID = DK/RF or FA-3
+                 ONEMOM=DK/RF or if FA-6 BCMOMWHO[x] is reported as DK/RF for
+                 any of R’s biological children.
+
+Code categories:
+      Blank = Inapplicable
+      0-nn = Number of biological children R has fathered with his current wife or
+                 cohabiting partner
+
+
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 47 of 61
+DATBABY1:              CM date (or Year) when R had his first biological child
+
+DATBABY1 is blank (inapplicable) if R has never had a biological child (FA-1 EVBIOKID NE
+1).
+
+Otherwise, for all Rs who have reported 1 or more biological children (FA-2 NUMBIOKD GE 1):
+DATBABY is drawn from the earliest non-sysmis century-month date of birth of all R’s
+biological children, based on the cmchdob[x] array of variables defined in Flow Check F-5.
+If FA-1 EVBIOKID NE 1 then DATBABY1=.;
+Else if FA-1 EVBIOKID=1 and FA-2 NUMBIOKID in (98,99) then DATBABY1=.;
+Else if FA-2 NUMBIOKID GE 1 and the earliest cmchdob[x] not in (9997,9998,9999) then
+DATBABY1 = earliest cmchdob[x];
+
+Note: DATBABY1 was initially defined as the CM date when R had his first biological child, but for
+      inclusion of the 2015-2017, 2017-2019 and 2022-2023 public-use files, the CM date was
+      converted to year of first biological child’s birth. The original CM date variable is
+      restricted-use, available only through the NCHS Research Data Center.
+
+Imputation Note: Imputed if earliest cmchdob[x] = 9997, 9998, or 9999.
+
+Code categories for DATBABY1 (public-use variable):
+      Blank         = Inapplicable
+      1972-2023 = Year of 1st biological child’s birth
+
+Code categories for INDATBABY1 (restricted-use variable):
+      Blank          = Inapplicable
+      xxxx –1488= CM date of 1st biological child’s birth
+
+
+AGEBABY1**:            Age when R had his first biological child
+
+AGEBABY1 is blank (inapplicable) if R has never had a biological child (recode DATBABY1 =
+blank/inapp).
+
+Otherwise,
+AGEBABY1 is defined based on final imputed value of recode DATBABY1 and R’s CM date of
+birth (cmbirth):
+
+SAS logic:
+       if datbaby1 = . then agebaby1 = .;
+       else agebaby1 = int((datbaby1-cmbirth)/12);
+
+Code categories:
+      Blank = inapplicable
+      xx – 49 = R’s age in years when his 1st biological child was born
+
+
+B1PREMAR**:           Whether R’s first biological child was born before R’s first marriage
+
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 48 of 61
+                      to a woman
+
+B1PREMAR is blank (inapplicable) if R has never had a biological child (recode DATBABY1 =
+blank/inapp).
+
+Otherwise, this recode is constructed based on final, imputed values of recodes FMARITAL and
+MARDAT01, plus blue recode DATBABY1.
+
+If R has never been married to a woman (FMARITAL = 5) or his first biological child was born
+before his first marriage to a woman (DATBABY1 < MARDAT01) then B1PREMAR = 1 (yes).
+
+SAS logic:
+       If datbaby1=. then b1premar=.;
+       Else if fmarital = 5 or datbaby1 < mardat01 then b1premar = 1;
+       Else b1premar = 2;
+
+Note: If users wish to limit to respondents who have ever been married, they should subset
+      cases with FMARITAL NE 5.
+
+Code categories:
+      Blank = Inapplicable
+      1       = Yes (1st biological child born before 1st marriage)
+      2       = No (1st biological child born in same month as or later than 1st marriage)
+
+
+MARBABY1 :            Marital or cohabiting status at time of first biological child’s birth
+
+MARBABY1 is blank (inapplicable) if R has never had a biological child (FA-1 EVBIOKID NE
+1) or FA-2 NUMBIOKD EQ DK/RF (98,99).
+
+Using the value of FA-10 BCMARLIV[x] corresponding to R’s first biological child to define
+MARBABY1 as follows:
+
+If EVBIOKID NE 1 or NUMBIOKD eq DK/RF (98,99) then MARBABY1=.;
+Else if EVBIOKID=1 and FA-10 BCMARLIV[x] for R’s first (oldest) biological child NE
+DK/RF/sysmis/not ascertained then do;
+
+       if FA-10 BCMARLIV[x] =1 then MARBABY1=1;
+       else if FA-10 BCMARLIV[x] =2 then MARBABY1=2;
+       else if FA-10 BCMARLIV[x] =3 then MARBABY1=3;
+       end;
+
+ELSE IF EVBIOKID=1 and FA-10 BCMARLIV[x] for R’s first (oldest) biological child EQ
+DK/RF then do;
+             IF FMARITAL=5 AND COHEVER=2 THEN MARBABY1=3;
+             END;
+
+Note: This recode is roughly equivalent to female recode RMAROUT3 corresponding to R’s
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 49 of 61
+       first live birth.
+
+Imputation Note: Imputed if FA-10 BCMARLIV[X] for the first birth = DK or RF or not
+                 ascertained.
+Code categories:
+       1      = Yes, married to child’s mother at time of first child’s birth
+       2      = No, not married to but living with child’s mother at time of first child’s birth
+       3      = Neither married nor living together with first child’s mother
+
+
+WANTB1:                    Wantedness of first birth if within the past 5 years
+
+WANTB1 is blank (inapplicable) if:
+-- R’s first biological child was born more than 5 years (60 months) before the interview
+(DATBABY1 LT cmintvw-60)
+Or
+-- R did not report how many biological children he has fathered (FA-2 NUMBIOKID = DK/RF
+        or sysmis)
+        Or
+-- R responded “don’t know” or “refused” to whether he was living with this child’s mother at
+the time of the birth (FA-10 BCMARLIV_nn = DK/RF)
+Or
+-- R responded “don’t know” or “refused” to whether he knew about the pregnancy before this
+child was born (FA-11 BCLRNPRG_nn= DK/RF)
+Or
+
+Otherwise, if R’s first child was born in the 5 years before the interview (DATBABY1 GE
+cmintvw-60), WANTB1 is defined using the appropriate variables corresponding to this child as
+shown further below:
+
+       if FA-17 BCWANT_01 =3 or 4 then WANTB1=5 (unwanted)
+       else if FA-17 BCWANT_01=9 then    WANTB1=6 (don’t know)
+       else if FA-18 BCTIMING_01=1 then WANTB1=3 (too soon)
+       else if FA-18 BCTIMING_01 =2 then WANTB1=2 (right time)
+       else if FA-18 BCTIMING_01 =3 then WANTB1=1 (later)
+       else if FA-18 BCTIMING_01 =4 then WANTB1=4 (didn’t care)
+       else if FA-11 BCLRNPRG_01 =2 then WANTB1=7 (didn’t know about the pregnancy)
+
+Notes:
+This recode is based on a wantedness classification comparable to that for females.
+The differences are:
+   − this includes a category for births from pregnancies that the father did not know about
+        before the birth (wantedness was not asked in those cases)
+   − it is not based on contraceptive status or questions ascertaining reasons for using/not
+        using contraceptives before the pregnancy
+   − it is based on a single item for ascertaining wanted/unwanted (ex:FA-17 BCWANT),
+        rather than a series of questions. The question ascertaining timing of the pregnancy (FA-
+        18 BCTIMING) is identical for males and females.
+                                                                    NSFG-2022-2023-Male-RecodeSpecs
+                                                                                       Page 50 of 61
+This recode has been defined for the first birth (within the past 5 years) reported by male
+respondents, which corresponds to the birth referenced by recodes DATBABY1, AGEBABY1, and
+MARBABY1. Previous NSFG file releases defined this wantedness recode for all births/children age
+18 or younger, but due to added complexity related to some births being reported out of
+chronological order, these recodes focus on men’s first biological child, if that child was born within
+the past 5 years.
+
+Imputation notes:
+- Imputation needed for cases qualifying for the recode based on date of birth, who have sysmis
+values on the applicable BCMARLIV_nn and BCLRNPRG_nn variables.
+- Due to a routing error in Year 1, quarters 1,2,3, and part of quarter 4, cases with FA-17
+BCWANT =1 or 2 were not asked FA-18 BCTIMING, thus are imputed on WANTB1 if the 1st
+child was born within the past 5 years.
+- If case to be imputed has FA-17 BCWANT_nn = 1 or 2, (definitely or probably wanted), imputed
+value was constrained to 1, 2, 3, or 4. (Could not be 5, 6, or 7, which are only possible when FA-
+17 BCWANT_nn NE 1 or 2).
+- If case to be imputed has FA-10 BCMARLIV_nn=1, imputed value could NOT equal 7.
+
+Code categories:
+      Blank = inapplicable
+      1       = Later, overdue
+      2       = Right time
+      3       = Too soon, mistimed
+      4       = Didn't care, indifferent
+      5       = Unwanted
+      6       = Don’t know, not sure
+      7       = R did not know about the pregnancy leading to the birth
+
+
+COMPREG : Number of completed pregnancies R has fathered
+
+COMPREG = 0            if R has never has sexual intercourse with a female (recode HADSEX=2)
+
+Else, if R has ever had sexual intercourse with a female (HADSEX=1), then do:
+
+If [(FC-3 OTPRGN = blank or a valid value) or (FA-2 NUMBIOKID GE 1 and NUMBIOKID
+LT 97) and totpregs_con > 0 (but < 997), then base COMPREG on computed variable
+totpregs_con if pregsnow LE TOTPREGS_CON (subtracting out any current pregnancies, based
+on Blaise-computed variable pregsnow defined in Flow Check F-22):
+               COMPREG = totpregs_con – pregsnow
+
+Else if (FC-3 OTPRGN NE DK/RF and (NUMBIOKID=sysmis or 98 or 99)) then compute
+COMPREG based on otpregs & pregsnow:
+               COMPREG = otpregs + pregsnow
+
+Else if (FC-3 OTPRGN NE DK/RF and (NUMBIOKID GE 1 and NUMBIOKID LT 97)) then
+compute COMPREG based on otpregs & pregsnow:
+
+                                                                      NSFG-2022-2023-Male-RecodeSpecs
+                                                                                         Page 51 of 61
+               COMPREG = otpregs + pregsnow
+
+Else if (FC-3 OTPRGN=DK/RF or (EVBIOKID NE 1) and FC-8 TOTPREGS_CON=DK/RF,
+then COMPREG is imputed.
+
+Note: The original COMPREG recode, as defined above, was top-coded for public use at 10 to
+      represent “10 or more completed pregnancies R has fathered.” The full-detail variable
+      called INCOMPREG is available through the NCHS Research Data Center.
+
+Code categories for COMPREG:
+      0-9 = Number of completed pregnancies that R has fathered
+      10 = 10 or more completed pregnancies that R has fathered
+
+Code categories for INCOMPREG:
+      0-nn = Number of completed pregnancies that R has fathered
+
+
+
+                                 Section G Recodes: Fathering
+
+DADTYPE:              Type of children aged 18 or younger that R has
+
+crall = Blaise-computed variable (defined in Flow Check G-0) indicating total number of
+        “eligible” coresidential children aged 18 or younger. (“eligible” coresidential children
+        can be R’s biological or adopted children, or they can be “other” children in the
+        household - specifically, step-children or partner’s children.)
+
+ncall = Blaise-computed variable (defined in Flow Check G-1) indicating number of R’s
+        biological children aged 18 or younger who live elsewhere.
+
+DADTYPE =1 if:
+R has “eligible coresidential children” 18 or younger, but no noncoresidential biological children
+18 or younger (crall >= 1 and ncall = 0).
+
+DADTYPE =2 if:
+R has noncoresidential biological children 18 or younger, but no “eligible coresidential children”
+18 or younger (crall = 0 and ncall >= 1)
+
+DADTYPE =3 if:
+R has both “eligible coresidential children” 18 or younger and noncoresidential biological
+children 18 or younger (crall >= 1 and ncall >= 1).
+
+DADTYPE =4 if:
+R has no coresidential or noncoresidential children 18 or younger (crall = 0 and ncall = 0)
+
+Note: DADTYPE = 4 includes men who have no biological or adopted children at all, but these
+men can be separated out using FA-1 EVBIOKID or Blaise-computed variable anykids .)
+
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 52 of 61
+Code categories:
+        1 = R has only coresidential children
+        2 = R has only noncoresidential children
+        3 = R has both coresidential and noncoresidential children
+        4 = R has no children aged 18 or younger, has no children at all, or has not had
+               sexual intercourse
+
+
+                                      Section H Recodes:
+                           Desire and Intentions for Future Children
+
+
+INTENT: Intentions for additional births
+
+Note:    For Rs with a currently pregnant wife/partner, INTENT refers to intentions after the
+        current pregnancy. Men who were currently married to or cohabiting with a woman were
+        asked joint intention questions; all others were asked about their individual intentions.
+
+(Blaise-computed variables rstrstat (created in Flow Check B-7) and pstrstat (created in Flow
+Check C-13) indicate surgical or nonsurgical sterility at time of interview.)
+
+INTENT=1 (“intends to have (more) children”) if:
+--   R is currently married or cohabiting (rmarit=1 or 2), neither he nor his wife/partner is
+     sterile (rstrstat=0 and pstrstat=0), and he and his wife/partner intend to have a(nother)
+     baby (HB-2 JINTEND = 1 ); or
+
+--      R is unmarried and not cohabiting (rmarit NE 1 or 2), he is not sterile (rstrtstat=0), and he
+        intends to have a(nother) baby (HC-2 INTEND = 1 or 2).
+
+INTENT=2 (“does not intend to have (more) children”) if:
+--   R is currently married or cohabiting and he or his current wife/partner is sterile (rstrstat=
+     1 or 2 or pstrstat= 1 or 2); or
+
+--      R is currently married or cohabiting (rmarit=1 or 2), neither is sterile (rstrstat=0 and
+        pstrstat=0), and they do not intend to have a(nother) baby (HB-2 JINTEND = 5); or
+
+--      R is unmarried and not cohabiting (rmarit NE 1 or 2), he is not sterile (rstrstat=0), and he
+        does not intend to have a(nother) baby (HC-2 INTEND = 3 or 4).
+
+--      R is unmarried and not cohabiting (rmarit NE 1 or 2), he is sterile (rstrstat=1 or 2), and
+        missing intend (HC-2 INTEND = . ).
+
+--      R is unmarried and not cohabiting (rmarit NE 1 or 2), he is not sterile (rstrstat=0), missing
+        intend (HC-2 INTEND = . ) and does not want any children (HA-2 RWANT=5 or 8) .
+
+INTENT=3 (“does not know his intent”) if:
+--   R is currently married or cohabiting (rmarit=1 or 2) and HB-2 JINTEND = DK); or
+
+                                                                     NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 53 of 61
+--     R is unmarried and not cohabiting (rmarit NE 1 or 2) and HC-2 INTEND = DK).
+
+INTENT=4 (“did not provide his intent”) if:
+--   R is currently married or cohabiting (rmarit=1 or 2) and HB-2 JINTEND = RF or “not
+     ascertained”; or
+--   R is unmarried and not cohabiting (rmarit NE 1 or 2) and HC-2 INTEND = RF or “not
+     ascertained”.
+
+Code categories:
+       1       =       R intends to have (more) children
+       2       =       R does not intend to have (more) children
+       3       =       R does not know his intent
+       4       =       R did not provide his intent
+
+
+ADDEXP: Central number of additional births expected
+
+Note: Currently married or cohabiting men were asked about their joint expectations; all
+      others were asked about their individual expectations.
+
+(Blaise-computed variables rstrstat (created in Flow Check B-7) and pstrstat (created in Flow
+        Check C-13) indicate surgical or nonsurgical sterility at time of interview.)
+
+If R or his current wife or cohabiting partner is sterile (rstrstat NE 0 or pstrstat NE 0), then
+ADDEXP=000.
+
+Else if R is currently married or cohabiting (rmarit=1 or 2) and neither is sterile (rstrstat=0 and
+pstrstat=0), then do:
+
+If R and his wife/partner do not intend to have a(nother) baby (HB-2 JINTEND = 5), then
+ADDEXP=0;
+
+Else if HB-2 JINTEND = DK, RF, or “not ascertained” and his largest expected is zero (HB-5
+JEXPECTL = 0), then ADDEXP=0;
+
+Else if R and his wife/partner intend to have a(nother) baby (HB-2 JINTEND = 1), and he gives
+an intended number (0 <= HB-4 JINTENDN < 96), then ADDEXP=10*JINTENDN;
+
+Else if HB-2 JINTEND = DK, RF, or “not ascertained” but he did give a largest and smallest
+number expected (0 <= HB-5 JEXPECTL < 96 and 0 <= HB-6 JEXPECTS < 96), then
+ADDEXP=10* ((JEXPECTL + JEXPECTS)/2);
+
+Else if HB-2 JINTEND = DK, RF, or “not ascertained” and he gave a largest number expected
+but smallest number is unknown (0 <= HB-5 JEXPECTL < 96 and HB-6 JEXPECTS = DK, RF,
+or “not ascertained”), then ADDEXP=10* ((JEXPECTL + 0)/2);
+
+Else if HB-2 JINTEND =1 and JINTENDN= DK, RF, or “not ascertained” but he did give a
+largest and smallest number expected (0 <= HB-5 JEXPECTL < 96 and 0 <= HB-6 JEXPECTS
+
+                                                                      NSFG-2022-2023-Male-RecodeSpecs
+                                                                                         Page 54 of 61
+< 96), then ADDEXP=10* ((JEXPECTL + JEXPECTS)/2);
+
+Else if HB-2 JINTEND =1 and JINTENDN= DK, RF, or “not ascertained” and he gave a largest
+number expected but smallest number is unknown (0 <= HB-5 JEXPECTL < 96 and
+HB-6 JEXPECTS = DK, RF, or “not ascertained”), then ADDEXP=10* ((JEXPECTL+0)/2);
+
+Else if R is not currently married or cohabiting [(rmarit NE 1 or 2)] and he is not sterile
+(rstrstat=0), then do:
+
+If R does not intend to have a(nother) baby (HC-2 INTEND = 3 or 4 ), then ADDEXP=0;
+
+Else if HC-2 INTEND = DK, RF, or “not ascertained” and his largest expected is zero (HC-4
+EXPECTL = 0), then ADDEXP=0;
+
+Else if R intends to have a(nother) baby (HC-2 INTEND = 1 or 2), and he gives an intended
+number (0 <= HC-3 INTENDN < 96), then ADDEXP=10*INTENDN;
+
+Else if HC-2 INTEND = DK, RF, or “not ascertained” but he did give a largest and smallest
+number expected (0 <= HC-4 EXPECTL < 96 and 0 <= HC-5 EXPECTS < 96), then ADDEXP
+=10 * ((EXPECTL + EXPECTS)/2).
+
+Else if HC-2 INTEND = DK, RF, or “not ascertained” and he gave a largest number expected
+but smallest number is unknown (0 < HC-4 EXPECTL < 96 and HC-5 EXPECTS = DK), then
+ADDEXP=10*((EXPECTL + 0)/2).
+
+Else if HC-2 INTEND = 1 or 2 and INTENDN=DK, RF, or “not ascertained” but he did give a
+largest and smallest number expected (0 <= HC-4 EXPECTL < 96 and 0 <= HC-5 EXPECTS <
+96), then ADDEXP =10 * ((EXPECTL + EXPECTS)/2).
+
+Else if HC-2 INTEND =1 or 2 and INTENDN= DK, RF, or “not ascertained” and he gave a
+largest number expected but smallest number is unknown (0 <= HC-4 EXPECTL
+< 96 and HC-5 EXPECTS = DK), then ADDEXP=10*((EXPECTL + 0)/2).
+
+Else if HC-2 INTEND =1 or 2 and INTENDN= DK, RF, or “not ascertained” and he gave a
+smallest number expected but largest number is unknown (0 <= HC-5 EXPECTS
+< 96 and HC-4 EXPECTL = DK), then ADDEXP=10*((EXPECTS + 0)/2).
+
+Else if R is not currently married or cohabiting [(rmarit NE 1 or 2)] and he is sterile (rstrstat=1 or
+2), then ADDEXP=0;
+
+Else if HC-2 INTEND= . (not ascertained) and RWANT NE 1 then ADDEXP=0;
+
+After all of the above statements have been executed, an additional pregnancy is added to
+ADDEXP for all Rs with a currently pregnant wife/partner:
+If R’s wife/partner is currently pregnant (currpreg = 1), then ADDEXP=ADDEXP+10
+
+Code categories:
+      000     = No additional births expected
+                                                                     NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 55 of 61
+       005       =.5 additional births
+       010       = 1 additional birth
+       015       = 1.5 additional births
+       020       = 2 additional births
+       ...etc. through...
+       100-995           = 10 or more additional births
+
+
+                                     Section I Recodes:
+                            Health Conditions and Health Services
+
+
+CURR_INS: Current health insurance coverage status
+
+User Note:     While there are alternate ways in which health insurance categories can be
+               combined, the CURR_INS recode applies the same prioritization and groupings
+               as the National Health Interview Survey. The respondent’s current health
+               insurance is obtained in the “enter all that apply” question IA-4 COVERHOW.
+               Because this question includes 10 response categories, the respondent can report
+               up to 10 types of insurance. However, in the 2022-2023 NSFG data, no
+               respondents reported more than 4 types of coverage (COVERHOW01,
+               COVERHOW02, COVERHOW03, COVERHOW04).
+
+If R was currently covered by insurance (IA-3 CURRCOV=1), then:
+
+CURR_INS = 1           If any mention of either a private health insurance or Medi-Gap in any of
+the
+                       COVERHOW variables (IA-4 COVERHOWnn = 1 or 4)
+Else
+CURR_INS = 2           If any mention of Medicaid, CHIP, or state-sponsored health plans in any
+of
+                       the COVERHOW variables (IA-4 COVERHOWnn = 2, 7 or 9)
+Else
+CURR_INS = 3           If any mention of Medicare, Military health care, or other government
+health
+                       care in any of the COVERHOW variables (IA-4 COVERHOWnn = 3, 5,
+                       or 10)
+Else
+CURR_INS = 4           If R reported only a single service plan or only Indian Health Service in
+any
+                       of the COVERHOW variables (IA-4 COVERHOWnn = 6 or 8)
+
+Else, if R was not currently covered by insurance (IA-3 CURRCOV = 5), then:
+CURR_INS = 4           Not currently covered by insurance
+
+Imputation Note: Imputed if CURRCOV or COVERHOWnn is DK/RF.
+
+Note: The original 10 categories for the raw variables COVERHOWnn used to define
+                                                                   NSFG-2022-2023-Male-RecodeSpecs
+                                                                                      Page 56 of 61
+       CURR_INS were collapsed for public-use into 8 categories. The full-detail variables of
+       INCOVERHOWnn are available through the NCHS Research Data Center.
+
+Code categories:
+      1 = currently covered by private health insurance or Medi-Gap
+      2 = currently covered by Medicaid, CHIP, or a state-sponsored health plan
+      3 = currently covered by Medicare, Military health care, or other government health care
+      4 = currently covered only by a single-service plan, only by the Indian Health Service,
+                 or currently not covered by health insurance
+
+
+
+EVHIVTST: Ever had an HIV test
+
+EVHIVTST = 0 if:              R has never donated blood, nor does he report ever having an HIV
+                              test. (IF-1 DONBLOOD = 5 (no) and IF-2 HIVTEST = 5 (no))
+
+else EVHIVTST = 1 if:         R has only had his blood tested for HIV in the context of a blood
+                              donation. (IF-1 DONBLOOD = 1 (yes) and IF-2 HIVTEST = 5
+                              (no))
+
+else EVHIVTST = 2 if:         R has never donated blood, but he reports an HIV test elsewhere.
+                              (IF-1 DONBLOOD =5 (no) and IF-2 HIVTEST =1 (yes))
+
+else EVHIVTST = 3 if:         R reported both blood donation and HIV testing outside of blood
+                              donation. (IF-1 DONBLOOD =1(yes) and IF-2 HIVTEST =1(yes))
+
+Imputation Note:      Missing data may result in undefined values on this recode, and these
+                      were not imputed for 2022-2023 NSFG.
+
+Code categories:
+      0       = No HIV test reported
+      1       = Yes, only as part of blood donation
+      2       = Yes, only outside of blood donation
+      3       = Yes, in both contexts
+
+
+                                     Section J Recodes:
+                              Residence; Religion; Work Status
+
+
+RELIGION:               Current religious affiliation
+
+RELIGION reflects the respondent’s current religious affiliation, based on information obtained
+in JB-4 RELNOW and JB-5 OTHRLNOW.
+
+RELIGION = 1          If RELNOW = 9 (No religion (agnostic, atheist))
+
+
+                                                                  NSFG-2022-2023-Male-RecodeSpecs
+                                                                                     Page 57 of 61
+RELIGION = 2         If RELNOW = 2 (Catholic),
+
+RELIGION = 3         If RELNOW = 1 (Protestant (for example: Christian-no denomination,
+                     Baptist, Methodist, Lutheran, Presbyterian, Pentecostal, Episcopalian, and
+                     others))
+
+RELIGION = 4         If R reported some other religion (RELNOW = Church of Jesus Christ of
+                     Latter Day Saints (LDS/Mormon) (3), Jewish (Judaism) (4), Muslim
+                     (Islam) (5), Buddhist (6), Hindu (7), or Other religion (8))
+
+Imputation Note:     Once all verbatim responses from IC-5 OTHRLNOW were assigned (if
+                     applicable) to an existing category of IC-4 RELNOW, those values were
+                     used in the construction of the RELIGION recode. Then any remaining
+                     missing values on RELIGION from DK/RF responses on IC-4 RELNOW
+                     were imputed.
+
+User Note:           This recode is comparable to prior file releases, but there has been a
+                     modification of the specification for the category RELIGION = 4 due to
+                     the restoration of “other-specify” verbatim responses in 2022-2023.
+
+Code categories:
+      1= No religion
+      2= Catholic
+      3= Protestant
+      4= Other religion
+
+
+LABORFOR:             Labor force status
+
+The LABORFOR recode categorizes the respondent’s activities in the week before the interview
+      in hierarchical order based on his activity status (JC-4 DOLASTWKn) and whether he
+      was working full or part-time (JC-5 RFTPTX).
+
+Assign code to LABORFOR from JC-4 DOLASTWK1 through JC-4 DOLASTWK6, taking the
+       code highest in the ranking shown below.
+
+LABORFOR=1           If (JC-4 DOLASTWK1 – DOLASTWK6 = 1) and JC-5 RFTPTX = 2
+                     (R was working full-time last week)
+Else
+LABORFOR=2           If (JC-4 DOLASTWK1 – DOLASTWK6 = 1) and JC-5 RFTPTX = 1
+                     (R was working part-time last week)
+Else
+LABORFOR=3           If JC-4 DOLASTWK1 – DOLASTWK6 = 2
+                     (R was temporarily not at work but still employed)
+Else
+LABORFOR=4           If JC-4 DOLASTWK1 – DOLASTWK6 = 3
+                     (R was not working but looking for work)
+Else
+                                                                NSFG-2022-2023-Male-RecodeSpecs
+                                                                                   Page 58 of 61
+LABORFOR=5            If JC-4 DOLASTWK1 – DOLASTWK6 = 4
+                      (R was going to school, taking classes, or on school vacation)
+Else
+LABORFOR=6            If JC-4 DOLASTWK1 – DOLASTWK6 = 5
+                      (R was taking care of house or family)
+Else
+LABORFOR=7            If JC-4 DOLASTWK1 – DOLASTWK6 = 6
+                      (R responded “something else”)
+
+Else if JC-4 DOLASTWK1 in (98 99) then LABORFOR is imputed.
+
+Imputation note:      Needed if JC-4 DOLASTWK1=DK/RF or if JC-5 RFTPTX=DK/RF.
+
+Code categories and ranking for LABORFOR:
+      1       = Working full-time
+      2       = Working part-time
+      3       = Temporarily not at work but still employed
+      4       = Not working but looking for work
+      5       = Going to school, taking classes, or on school vacation
+      6       = Taking care of house or family
+      7       = Other
+
+
+                                  Section K Recodes: CASI
+
+TOTINCR: Total income of R’s family
+
+TOTINCR = R’s income (if no family members in household) or combined income of R’s family
+from all sources in the calendar year before the interview (KL-3 TOTINC).
+
+This variable is an imputed version of KL-3 TOTINC and is created for the purposes of
+creating/imputing POVERTY.
+
+Imputation Note: If missing, the “DK follow-up” questions (KL-3a FMINCDK1, KL-
+                 3bFMINCDK2, KL-3c FMINCDK3, KL-3d FMINCDK4, and KL-3e
+                 FMINCDK5) are used as imputation bounds.
+
+Code categories:
+      1       = under $5,000/year
+      2       = $5,000-$7,499
+      3       = $7,500-$9,999
+      4       = $10,000-$12,499
+      5       = $12,500-$14,999
+      6       = $15,000-$19,999
+      7       = $20,000-$24,999
+      8       = $25,000-$29,999
+      9       = $30,000-$34,999
+
+                                                                 NSFG-2022-2023-Male-RecodeSpecs
+                                                                                    Page 59 of 61
+       10      = $35,000-$39,999
+       11      = $40,000-$49,999
+       12      = $50,000-$59,999
+       13      = $60,000-$74,999
+       14      = $75,000-$99,999
+       15      = $100,000 or more/year
+
+
+POVERTY: Family income as percentage of federal poverty threshold
+
+Poverty level income is R’s combined family income from all sources in the calendar year before
+the interview (TOTINCR) divided by the weighted average threshold income of families whose
+head of household was under 65 years of age, for a family of the size of R’s family, based on the
+annual poverty levels defined by the U.S. Census Bureau (family size is calculated by adding 1
+to the integer value of NUMFMHH, from Section A Recodes). If the value is 998 or greater, then
+POVERTY=998.
+
+--For this recode an exact family income is estimated by the midpoint of the reported range of
+annual family income (TOTINCR) as follows:
+                                            1 = $2,500
+                                            2 = $6,250
+                                            3 = $8,750
+                                           4 = $11,250
+                                           5 = $13,750
+                                           6 = $17,500
+                                           7 = $22,500
+                                           8 = $27,500
+                                           9 = $32,500
+                                          10 = $37,500
+                                          11 = $45,000
+                                          12 = $55,000
+                                          13 = $67,500
+                                          14 = $87,500
+                                         15 = $125,000
+
+The annual poverty thresholds for each family size are:
+
+         Family Size           20211                 20222
+                       (for 2022 interviews) (for 2023 interviews)
+
+         1                   $14,097               $15,230
+         2                   $18,231               $19,690
+         3                   $21,559               $23,280
+         4                   $27,740               $29,950
+         5                   $32,865               $35,510
+         6                   $37,161               $40,160
+         7                   $42,156               $45,690
+         8                   $47,093               $51,010
+         9 or larger         $56,325               $60,300
+
+                                                                     NSFG-2022-2023-Male-RecodeSpecs
+                                                                                        Page 60 of 61
+1 U.S. Census Bureau | Social, Economic, and Housing Statistics Division: Poverty. Poverty Thresholds for 2021 by
+Size of Family and Number of Related Children Under 18 Years.
+ url: https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-thresholds.html
+2 U.S. Census Bureau | Social, Economic, and Housing Statistics Division: Poverty. Poverty Thresholds for 2022
+by Size of Family and Number of Related Children Under 18 Years.
+url: https://www.census.gov/data/tables/time-series/demo/income-poverty/historical-poverty-thresholds.html
+
+Note: The original POVERTY recode, as defined above, was modified for public use, with
+      bottom-coding at 50 to represent “50 percent of poverty level or less” and top-coding at
+      700 to represent “700 percent of poverty level or greater.” The full-detail variable called
+      INPOVERTY is available through the NCHS Research Data Center.
+
+Imputation Note: If missing, the “DK follow-up” questions (KL-3a FMINCDK1, KL-3b
+                 FMINCDK2, KL-3c FMINCDK3, KL-3d FMINCDK4, and
+                 KL-3e FMINCDK5) are used as imputation bounds.
+
+Code categories: for public-use variable POVERTY:
+      50        = 50 percent of poverty level or less
+      51-699 = 51-699 percent of poverty level
+      700       = 700 percent of poverty level or greater
+
+Code categories: for restricted-use variable INPOVERTY:
+      nnn       = nnn percent of poverty level or less
+
+
+
+
+                                                                            NSFG-2022-2023-Male-RecodeSpecs
+                                                                                               Page 61 of 61
+

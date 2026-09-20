@@ -1,0 +1,2017 @@
+2022-2023 National Survey of Family Growth (NSFG)
+Public-Use Codebook - Female Pregnancy File
+
+________________________________________________________________________________________
+
+
+
+
+Observations           8247
+Variables              111
+Respondent ID and Screener Items
+CaseID
+LABEL              Respondent ID Number
+VARIABLE TYPE      raw
+UNIVERSE           Applicable for all pregnancies (respondent-level variable)
+NOTES              Not all respondents in this range of CASEID values are included on the pregnancy file, as some
+                   respondents did not report any pregnancies.
+LENGTH             8
+VARNUM             1
+
+CaseID: Distribution                                        Value                  n
+96064-106019                                             96064-106019           8247
+                                                                                8247
+
+PREGORDR
+LABEL              Pregnancy order (reflecting chronological order)
+VARIABLE TYPE      computed
+UNIVERSE           Applicable for all pregnancies
+LENGTH             8
+VARNUM             2
+
+PREGORDR: Distribution                                   Value              n
+1                                                          1             3076
+2                                                          2             2302
+3                                                          3             1380
+4                                                          4              727
+5                                                          5              374
+6                                                          6              205
+7                                                          7               92
+8                                                          8               42
+9                                                          9               18
+10                                                        10               10
+11                                                        11                8
+12                                                        12                6
+13                                                        13                4
+14                                                        14                1
+15                                                        15                1
+16                                                        16                1
+                                                                         8247
+
+FTFMODE
+LABEL              Interview mode for this case
+VARIABLE TYPE      computed
+UNIVERSE           Applicable for all pregnancies (respondent-level variable)
+LENGTH             1
+VARNUM             3
+
+FTFMODE: Distribution                                    Value              n
+In-Person/Face-to-Face mode                                1             2395
+Online/Web mode                                            2             5852
+                                                                         8247
+Section B
+Section B
+
+
+BORNALIV
+LABEL              Number of babies born alive from this pregnancy (computed in FC B-9)
+VARIABLE TYPE      computed
+UNIVERSE           Applicable if pregnancy resulted in live birth (prgoutcome = 1)
+LENGTH             8
+VARNUM             1
+
+BORNALIV: Distribution                                    Value               n
+1                                                           1              5659
+2                                                           2                89
+Inapplicable                                                .              2499
+                                                                           8247
+
+RECNT5YRPRG
+LABEL              Pregnancy ended in or later than cmjan5yr (computed in FC B-12)
+VARIABLE TYPE      computed
+UNIVERSE           Applicable for all pregnancies
+NOTES              Although applicable for all pregnancies, some missing values remain when a value could not be
+                   determined in FC B-12.
+LENGTH             8
+VARNUM             2
+
+RECNT5YRPRG: Distribution                                 Value               n
+Yes                                                         1              2480
+No                                                          5              5749
+Inapplicable                                                .                18
+                                                                           8247
+
+BABYSEX
+LABEL              BB-6a Sex of baby born from this pregnancy (if singleton)
+VARIABLE TYPE      raw
+UNIVERSE           Applicable if pregnancy resulted in live birth (prgoutcome = 1)
+LENGTH             8
+VARNUM             3
+
+BABYSEX: Distribution                                     Value               n
+Male                                                        1              2931
+Female                                                      2              2680
+Refused                                                     8                15
+Don't Know                                                  9                 1
+Inapplicable                                                .              2620
+                                                                           8247
+
+BIRTHWGT
+LABEL              BC-7 Birthweight of live birth from this pregnancy (if singleton)
+VARIABLE TYPE      raw
+UNIVERSE           Applicable if pregnancy resulted in live birth (prgoutcome = 1)
+LENGTH             8
+VARNUM             4
+
+BIRTHWGT: Distribution                                    Value               n
+Yes (weighed at least 5 1/2 pounds)                         1              5261
+No (weighed less than 5 1/2 pounds)                         2               353
+Don't Know                                                  8                10
+Refused                                                     9                 3
+Inapplicable                                                .              2620
+                                                                           8247
+
+PAYBIRTH1
+LABEL              BC-8 Way in which delivery bill was paid (1st mentioned)
+VARIABLE TYPE      raw
+UNIVERSE           Applicable if pregnancy resulted in live birth (prgoutcome = 1) and delivery occurred in or after
+                   January of 5 years prior to interview (recnt5yrprg = 1)
+Section B
+PAYBIRTH1
+LENGTH             8
+VARNUM             5
+
+PAYBIRTH1: Distribution                                  Value               n
+Insurance                                                  1              1025
+Co-payment or out-of-pocket payment                        2                78
+Medicaid                                                   3               510
+No payment required                                        4                17
+Some other way                                             5                25
+Refused                                                   98                 7
+Don't Know                                                99                 7
+Inapplicable                                               .              6578
+                                                                          8247
+
+PAYBIRTH2
+LABEL              BC-8 Way in which delivery bill was paid (2nd mentioned)
+VARIABLE TYPE      raw
+UNIVERSE           Applicable if more than 1 form of payment reported for this delivery (see BC-8 PAYBIRTH1)
+LENGTH             8
+VARNUM             6
+
+PAYBIRTH2: Distribution                                  Value               n
+Insurance                                                  1                40
+Co-payment or out-of-pocket payment                        2               412
+Medicaid                                                   3                65
+Some other way                                             5                 9
+Inapplicable                                               .              7721
+                                                                          8247
+
+PAYBIRTH3
+LABEL              BC-8 Way in which delivery bill was paid (3rd mentioned)
+VARIABLE TYPE      raw
+UNIVERSE           Applicable if more than 2 forms of payment reported for this delivery (see BC-8 PAYBIRTH1)
+LENGTH             8
+VARNUM             7
+
+PAYBIRTH3: Distribution                                  Value               n
+Insurance                                                  1                 1
+Co-payment or out-of-pocket payment                        2                 4
+Medicaid                                                   3                 6
+Some other way                                             5                 4
+Inapplicable                                               .              8232
+                                                                          8247
+
+AGEFATHER
+LABEL              BC-9 Father's age when this pregnancy ended or baby/babies born (categorical)
+VARIABLE TYPE      raw
+UNIVERSE           Applicable if pregnancy resulted in live birth (prgoutcome = 1), or pregnancy ended in miscarriage,
+                   stillbirth, or ectopic (prgoutcome = 3-5) and was either a 1st or 2nd order pregnancy or a recent
+                   pregnancy (pregordr = 1 or 2 or recnt5yrprg = 1)
+NOTES              This variable has been modified for public use, and the original variable is accessible by application to
+                   the NCHS Research Data Center.
+LENGTH             8
+VARNUM             8
+
+AGEFATHER: Distribution                                  Value               n
+Under 20 years                                             1               414
+20-24 years                                                2              1223
+25-29 years                                                3              1590
+30-34 years                                                4              1574
+35-39 years                                                5              1018
+40 years or older                                          6               632
+Father not reported                                       96               166
+Refused                                                   98                82
+Don't know                                                99               163
+Section B
+AGEFATHER: Distribution                                    Value              n
+Inapplicable                                                 .             1385
+                                                                           8247
+
+KNEWPREG
+LABEL                BC-11 Weeks pregnant when R learned she was pregnant
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if pregnancy resulted in a recent live birth (prgoutcome = 1 and recnt5yrprg = 1), or
+                     pregnancy ended in miscarriage, stillbirth, or ectopic (prgoutcome = 3-5) and was either a 1st or 2nd
+                     order pregnancy or a recent pregnancy (pregordr = 1 or 2 or recnt5yrprg = 1)
+LENGTH               8
+VARNUM               9
+
+KNEWPREG: Distribution                                     Value              n
+Less than 10 weeks                                           1             1875
+10-13 weeks                                                  2              181
+14-26 weeks                                                  3               55
+More than 26 weeks                                           4               14
+Refused                                                      8                6
+Don't Know                                                   9                7
+Inapplicable                                                 .             6109
+                                                                           8247
+
+PRIORSMK
+LABEL                BC_12 Amount R smoked in 6 mos before R knew she was pregnant
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if pregnancy resulted in a recent live birth (prgoutcome = 1 and recnt5yrprg = 1), or
+                     pregnancy ended in miscarriage, stillbirth, or ectopic (prgoutcome = 3-5) and was either a 1st or 2nd
+                     order pregnancy or a recent pregnancy (pregordr = 1 or 2 or recnt5yrprg = 1)
+LENGTH               8
+VARNUM               10
+
+PRIORSMK: Distribution                                     Value              n
+None                                                         0             1877
+About one cigarette a day or less                            1               29
+Just a few cigarettes a day (2-4)                            2               69
+About half a pack a day (5-14)                               3               96
+About a pack a day (15-24)                                   4               58
+About 1 1/2 packs a day (25-34)                              5                3
+About 2 packs a day (35-44)                                  6                2
+Refused                                                      8                4
+Inapplicable                                                 .             6109
+                                                                           8247
+
+POSTSMKS
+LABEL                BC_13 R smoked at all after R knew she was pregnant
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if pregnancy resulted in a recent live birth (prgoutcome = 1 and recnt5yrprg = 1), or
+                     pregnancy ended in miscarriage, stillbirth, or ectopic (prgoutcome = 3-5) and was either a 1st or 2nd
+                     order pregnancy or a recent pregnancy (pregordr = 1 or 2 or recnt5yrprg = 1)
+LENGTH               8
+VARNUM               11
+
+POSTSMKS: Distribution                                     Value              n
+Yes                                                          1              128
+No                                                           5             2007
+Refused                                                      8                3
+Inapplicable                                                 .             6109
+                                                                           8247
+
+GETPRENA
+LABEL                BC-14 Did R receive prenatal care during this pregnancy
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if pregnancy resulted in a recent live birth (prgoutcome = 1 and recnt5yrprg = 1), or
+                     pregnancy ended in miscarriage, stillbirth, or ectopic (prgoutcome = 3-5) and was either a 1st or 2nd
+                     order pregnancy or a recent pregnancy (pregordr = 1 or 2 or recnt5yrprg = 1)
+Section B
+GETPRENA
+LENGTH            8
+VARNUM            12
+
+GETPRENA: Distribution                                  Value               n
+Yes                                                       1              1953
+No                                                        5               182
+Refused                                                   8                 2
+Don't know                                                9                 1
+Inapplicable                                              .              6109
+                                                                         8247
+
+BGNPRENA
+LABEL             BC-15 Weeks pregnant at 1st prenatal care visit for this pregnancy
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if prenatal care was reported for this pregnancy (BC-14 GETPRENA = 1)
+LENGTH            8
+VARNUM            13
+
+BGNPRENA: Distribution                                  Value               n
+13 weeks or less                                          1              1766
+14-26 weeks                                               2               171
+More than 26 weeks                                        3                13
+Don't Know                                                9                 3
+Inapplicable                                              .              6294
+                                                                         8247
+
+KIDAGE
+LABEL             Current age (categorical) of child(ren) from this pregnancy (computed in FC B-28)
+VARIABLE TYPE     computed
+UNIVERSE          Applicable if pregnancy resulted in live birth (prgoutcome = 1)
+NOTES             This variable has been modified for public use, and the original variable is accessible by application to
+                  the NCHS Research Data Center.
+LENGTH            8
+VARNUM            14
+
+KIDAGE: Distribution                                    Value               n
+Less than 1 year old                                      0               286
+1 year old                                                1               299
+2 years old                                               2               287
+3 years old                                               3               298
+4 years old                                               4               334
+5 years old                                               5               305
+6-11 years old                                            6              1792
+12-17 years old                                           7              1055
+18 years or older                                         8              1074
+Refused                                                  98                 2
+Inapplicable                                              .              2515
+                                                                         8247
+
+FRSTEATD
+LABEL             Age (in months) when child was 1st fed something other than breast milk (computed in FC B-33)
+VARIABLE TYPE     computed
+UNIVERSE          Applicable if R reported breastfeeding this child (BC-21 ANYNURSE = 1)
+LENGTH            8
+VARNUM            15
+
+FRSTEATD: Distribution                                  Value               n
+Less than 1 month                                         0               295
+1 month                                                   1                89
+2 months                                                  2                69
+3 months                                                  3                90
+4 months                                                  4               126
+5 months                                                  5               119
+6 months                                                  6               327
+7 or more months                                        7-95              134
+Section B
+FRSTEATD: Distribution   Value      n
+Refused                   98        1
+Don’t know                99        3
+Inapplicable               .     6994
+                                 8247
+Section E
+Section E
+
+
+RECPREG5YR
+LABEL            Recent (based on cmjan5yr) or current pregnancy (computed in FC E-65)
+VARIABLE TYPE    computed
+UNIVERSE         Applicable for all pregnancies
+LENGTH           8
+VARNUM           1
+
+RECPREG5YR: Distribution                               Value               n
+Yes                                                      1              2469
+No                                                       5              5714
+Inapplicable                                             .                64
+                                                                        8247
+
+RECPREG3YR
+LABEL            Recent (based on cmjan3yr) or current pregnancy (computed in FC E-65)
+VARIABLE TYPE    computed
+UNIVERSE         Applicable for all pregnancies
+LENGTH           8
+VARNUM           2
+
+RECPREG3YR: Distribution                               Value               n
+Yes                                                      1              1624
+No                                                       5              6577
+Inapplicable                                             .                46
+                                                                        8247
+
+EVUSEINT
+LABEL            EG-1 Use any method in interval?
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                 or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                 (recnt5yrprg=1)], and if R did not know or refused to answer pregnancy beginning date and ever used
+                 a method (cmprgbeg = DK/RF and everused = 1 ) or pregnancy began prior to January [YEAR OF
+                 INTERVIEW - 3] (cmprgbeg < cmjan3yr) and R ever used a method (everused = 1)
+LENGTH           8
+VARNUM           3
+
+EVUSEINT: Distribution                                 Value               n
+Yes                                                      1              3797
+No                                                       5              2291
+Refused                                                  8                41
+Don't know                                               9                18
+Inapplicable                                             .              2100
+                                                                        8247
+
+STOPDUSE
+LABEL            EG-2 Before you became preg, stop using all methods?
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                 or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                 (recnt5yrprg=1)] and if R used a method within pregnancy interval (between 1st sex/previous
+                 pregnancy end and end of this pregnancy) (EG-1 EVUSEINT = 1) or [pregnancy began on or after
+                 Jan [YEAR OF INTERVIEW - 3] (cmprgbeg >= cmjan3yr) and R used a method in month pregnancy
+                 began (ED-6 METHX1 through METHX192 corresponding to cmprgbeg NE 1) and did not use a
+                 method in month after pregnancy began (ED-6 METHX1 through METHX192 corresponding to
+                 cmprgbeg + 1 = 1) or R used a method in the month pregnancy began and also in the month after
+                 pregnancy began, but they were different methods (ED-6 METHX1 - METHX192 for cmprgbeg ne 1
+                 and ED-6 METHX1 - METHX192 for cmprgbeg + 1 ne 1 and ne method for cmprgbeg) ]
+LENGTH           8
+VARNUM           4
+
+STOPDUSE: Distribution                                 Value               n
+Yes                                                      1              2600
+No                                                       5              1367
+Refused                                                  8                 1
+Don't know                                               9                 5
+Section E
+STOPDUSE: Distribution                                     Value               n
+Inapplicable                                                 .              4274
+                                                                            8247
+
+WHYSTOPD
+LABEL               EG-3 Stop using methods before preg because wanted preg?
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                    or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (recnt5yrprg=1)] and if R stopped using all methods before becoming pregnant (EG-2
+                    STOPDUSE = 1)
+LENGTH              8
+VARNUM              5
+
+WHYSTOPD: Distribution                                     Value               n
+Yes                                                          1              1932
+No                                                           5               665
+Don't know                                                   9                 3
+Inapplicable                                                 .              5647
+                                                                            8247
+
+WHATMETH1
+LABEL               EG-4 Method(s) using when became pregnant - 1st mention
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                    or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (recnt5yrprg=1)] and [if (pregnancy began on or after January [YEAR OF INTERVIEW-3] (cmprgbeg
+                    >= cmjan3yr) and R used a method in the month pregnancy began (EG-6 METHX1 - METHX192 for
+                    cmprgbeg ne 1) and also in the month after pregnancy began, and it was the same method in both
+                    months (ED-6 METHX1 - METHX192 corresponding to cmprgbeg + 1 ne 1 and is equal to method for
+                    cmprgbeg) or R had not stopped using all methods before becoming pregnant, or responded "don't
+                    know" or "refused" (EG STOPDUSE = 5 / DK/RF)]
+LENGTH              8
+VARNUM              6
+
+WHATMETH1: Distribution                                   Value                n
+No method used                                              1                243
+Birth control pills                                         3                446
+Condom                                                      4                457
+Partners vasectomy                                          5                  3
+Female sterilizing operation, such as tubal sterilization   6                  3
+Withdrawal, pulling out                                     7                305
+Depo-Provera, injectables (shots)                           8                 71
+Hormonal implant (Norplant, Implanon, or Nexplanon)         9                 10
+Calendar rhythm, Standard Days, or CycleBeads method 10                       39
+Safe period by temperature or cervical mucus test (Two     11                  2
+Day, Billings Ovulation, Symptothermal Method,
+Marquette Method, Natural Cycles app)
+Diaphragm                                                  12                  1
+Foam                                                       14                  4
+Jelly or cream                                             15                  1
+Suppository, insert                                        17                  1
+Today sponge                                               18                  2
+IUD                                                        19                 35
+Emergency contraception pills (or Plan B, Preven, or       20                 10
+Next Choice)
+Other method                                               21                  5
+Lunelle injectable (monthly shot)                          24                  4
+Contraceptive patch (Ortho-Evra or Xulane)                 25                 19
+Vaginal contraceptive ring                                 26                 19
+Refused                                                    98                  2
+Don't Know                                                 99                  2
+Inapplicable                                                .               6563
+                                                                            8247
+Section E
+WHATMETH2
+LABEL               EG-4 Method(s) using when became pregnant - 2nd mention
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if more than 1 method used in the month pregnancy began and the month after pregnancy
+                    began (see EG-4 WHATMETH1)
+LENGTH              8
+VARNUM              7
+
+WHATMETH2: Distribution                                   Value           n
+Birth control pills                                         3            18
+Condom                                                      4           128
+Female sterilizing operation, such as tubal sterilization   6             2
+Withdrawal, pulling out                                     7           156
+Depo-Provera, injectables (shots)                           8            20
+Hormonal implant (Norplant, Implanon, or Nexplanon)         9             1
+Calendar rhythm, Standard Days, or CycleBeads method 10                  36
+Safe period by temperature or cervical mucus test (Two     11            10
+Day, Billings Ovulation, Symptothermal Method,
+Marquette Method, Natural Cycles app)
+Diaphragm                                                  12             1
+Female condom, internal condom                             13             1
+Foam                                                       14             4
+Jelly or cream                                             15             1
+Today sponge                                               18             1
+IUD                                                        19             3
+Emergency contraception pills (or Plan B, Preven, or       20            13
+Next Choice)
+Other method                                               21             4
+Contraceptive patch (Ortho-Evra or Xulane)                 25             2
+Vaginal contraceptive ring                                 26             6
+Inapplicable                                                .          7840
+                                                                       8247
+
+WHATMETH3
+LABEL               EG-4 Method(s) using when became pregnant - 3rd mention
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if more than 2 methods used in the month pregnancy began and the month after pregnancy
+                    began (see EG-4 WHATMETH1)
+LENGTH              8
+VARNUM              8
+
+WHATMETH3: Distribution                                Value              n
+Birth control pills                                      3                5
+Condom                                                   4                5
+Withdrawal, pulling out                                  7               37
+Depo-Provera, injectables (shots)                        8                2
+Calendar rhythm, Standard Days, or CycleBeads method 10                  10
+Safe period by temperature or cervical mucus test (Two  11                2
+Day, Billings Ovulation, Symptothermal Method,
+Marquette Method, Natural Cycles app)
+Diaphragm                                               12                2
+Foam                                                    14                1
+Jelly or cream                                          15                2
+Suppository, insert                                     17                1
+Today sponge                                            18                3
+IUD                                                     19                4
+Emergency contraception pills (or Plan B, Preven, or    20                9
+Next Choice)
+Other method                                            21                4
+Contraceptive patch (Ortho-Evra or Xulane)              25                1
+Vaginal contraceptive ring                              26                1
+Inapplicable                                             .             8158
+                                                                       8247
+Section E
+WHATMETH4
+LABEL               EG-4 Method(s) using when became pregnant - 4th mention
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if more than 3 methods used in the month pregnancy began and the month after pregnancy
+                    began (see EG-4 WHATMETH1)
+LENGTH              8
+VARNUM              9
+
+WHATMETH4: Distribution                                   Value                n
+Withdrawal, pulling out                                     7                  2
+Jelly or cream                                             15                  1
+Suppository, insert                                        17                  1
+Today sponge                                               18                  2
+IUD                                                        19                  1
+Emergency contraception pills (or Plan B, Preven, or       20                  1
+Next Choice)
+Contraceptive patch (Ortho-Evra or Xulane)                  25                1
+Vaginal contraceptive ring                                  26                2
+Inapplicable                                                 .             8236
+                                                                           8247
+
+RESNOUSE
+LABEL               EG-5 Reason not using/had stopped using method bec. wanted preg?
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                    or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (recnt5yrprg=1)] and if [R did not know or refused to answer pregnancy beginning date and never
+                    used a method of birth control (cmprgbeg = DK/RF and everused = 5) or [pregnancy began prior to
+                    January[YEAR OF INTERVIEW - 3] (cmprgbeg >= cmjan3yr) and R has never used a method of birth
+                    control (everused = 5) or pregnancy began on or after January[YEAR OF INTERVIEW - 3] (cmprgbeg
+                    >= cmjan3yr) and R never used a method of birth control (everused = 5) or R did not use a method in
+                    the month pregnancy began (ED-6 METHX1 through METHX192 corresponding to cmprgbeg = 1) or R
+                    did not use a method within pregnancy interval (between 1st sex/previous pregnancy end and end of
+                    this pregnancy) or responded dont know or refused (EG-1 EVUSEINT = 5,DK,RF)]]
+LENGTH              8
+VARNUM              10
+
+RESNOUSE: Distribution                                    Value               n
+Yes                                                         1              1823
+No                                                          5              1635
+Refused                                                     8                22
+Don't Know                                                  9                17
+Inapplicable                                                .              4750
+                                                                           8247
+
+WANTBOLD
+LABEL               EG-6 Right bef preg, want to have baby at any time in future?
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                    or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (recnt5yrprg=1)] and if [R responded no to whether she stopped using all methods of birth control
+                    because she wanted to become pregnant (EG-3 WHYSTOPD = 5) or R responded no to whether the
+                    reason she did not use a method in the pregnancy interval was because she wanted to become
+                    pregnant (EG-5 RESNOUSE = 5)]
+NOTES               see recode WANTRESP or NEWWANTR
+LENGTH              8
+VARNUM              11
+
+WANTBOLD: Distribution                                    Value               n
+Yes                                                         1              2253
+No                                                          5              1490
+Not sure, Don't know                                        6                73
+Refused                                                    98                69
+Don't Know                                                 99                 7
+Inapplicable                                                .              4355
+                                                                           8247
+Section E
+PROBBABE
+LABEL             EG-7 probably want baby at any time in future or not?
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if R responded not sure, dont know about wanting a(nother) baby at any time in the future
+                  (EG-6 WANTBOLD = 6)
+LENGTH            8
+VARNUM            12
+
+PROBBABE: Distribution                                 Value              n
+Probably yes                                             1               38
+Probably not                                             5               25
+Didn't Care                                              6               17
+Refused                                                  8               62
+Don't Know                                               9                7
+Inapplicable                                             .             8098
+                                                                       8247
+
+TIMINGOK
+LABEL             EG-10 Become preg too soon, right time, or later than you wanted?
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if R responded yes to whether she stopped using all methods of birth control because she
+                  wanted to become pregnant (EG-3 WHYSTOPD = 1) or R responded yes to whether the reason she
+                  did not use a method in the pregnancy interval was because she wanted to become pregnant (EG-5
+                  RESNOUSE = 1) or R responded yes to whether, right before pregnancy, she wanted to have a baby
+                  at any time in the future (EG-6 WANTBOLD = 1) or R responded probably yes, didnt care or dont
+                  know/refused to whether, right before pregnancy, she probably wanted to have a baby at some time in
+                  the future (EG-7 PROBBABE = 1, 6, DK,RF)
+LENGTH            8
+VARNUM            13
+
+TIMINGOK: Distribution                                 Value              n
+Too soon                                                 1             1346
+Right time                                               2             4052
+Later                                                    3              579
+Didn't care                                              4               53
+Refused                                                  8               52
+Don't know                                               9               19
+Inapplicable                                             .             2146
+                                                                       8247
+
+TOOSOON_N
+LABEL             EG-11a How much sooner than wanted became preg - number of months/years
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if R said she became pregnant too soon (EG-10 TIMINGOK = 1)
+NOTES             see recode WANTRESP or NEWWANTR
+LENGTH            8
+VARNUM            14
+
+TOOSOON_N: Distribution                                Value              n
+1                                                        1              217
+2                                                        2              251
+3                                                        3              176
+4                                                        4              112
+5                                                        5              200
+6                                                        6              107
+7                                                        7               26
+8                                                        8               25
+9                                                        9               14
+10                                                      10               81
+11                                                      11                3
+12                                                      12               20
+13                                                      13                2
+14                                                      14                1
+15                                                      15                5
+16                                                      16                1
+18                                                      18                2
+20                                                      20                3
+Section E
+TOOSOON_N: Distribution                             Value             n
+24                                                   24               1
+26                                                   26               1
+36                                                   36               1
+60                                                   60               1
+Refused                                              998             11
+Don't know                                           999             85
+Inapplicable                                          .            6901
+                                                                   8247
+
+TOOSOON_P
+LABEL            EG-11b How much sooner than wanted became preg - unit (months/years)
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if R said she became pregnant too soon (EG-10 TIMINGOK = 1)
+NOTES            see recode WANTRESP or NEWWANTR
+LENGTH           8
+VARNUM           15
+
+TOOSOON_P: Distribution                             Value             n
+Months                                                1             189
+Years                                                 2            1081
+Refused                                               8              12
+Don't Know                                            9              64
+Inapplicable                                          .            6901
+                                                                   8247
+
+LATERNUM
+LABEL            EG-11c How much later than wanted became preg - number of months/years
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if R reported pregnancy came later than wanted (EG-10 TIMINGOK = 3)
+LENGTH           8
+VARNUM           16
+
+LATERNUM: Distribution                              Value             n
+1                                                     1             108
+2                                                     2             122
+3                                                     3              73
+4                                                     4              45
+5                                                     5              47
+6                                                     6              74
+7                                                     7              15
+8                                                     8              10
+9                                                     9               9
+10                                                   10              14
+11                                                   11               6
+12                                                   12              12
+13                                                   13               2
+14                                                   14               4
+15                                                   15               3
+16                                                   16               4
+18                                                   18              10
+19                                                   19               1
+20                                                   20               2
+23                                                   23               2
+30                                                   30               1
+40                                                   40               1
+Refused                                              998              3
+Don't know                                           999             11
+Inapplicable                                          .            7668
+                                                                   8247
+Section E
+LATERMY
+LABEL            EG-11d How much later than wanted became preg - unit (months/years)
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if R reported pregnancy came later than wanted (EG-10 TIMINGOK = 3)
+LENGTH           8
+VARNUM           17
+
+LATERMY: Distribution                                   Value               n
+Months                                                    1               211
+Years                                                     2               359
+Refused                                                   8                 1
+Don't Know                                                9                 8
+Inapplicable                                              .              7668
+                                                                         8247
+
+WTHPART1
+LABEL            EG-12a Right before preg, want to have baby with that partner?
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if pregnancy resulted in live birth or is current (prgoutcome = 1 or 6) in or after January of
+                 5 years prior to interview (recnt5yrprg = 1), and R responded that she became pregnant at the right
+                 time or later than she wanted or didnt care (EG-10 TIMINGOK = 2, 3, or 4) or R responded didnt care
+                 to whether she probably wanted a(nother) baby at some time in the future (EG-7 PROBBABE = 6)
+LENGTH           8
+VARNUM           18
+
+WTHPART1: Distribution                                  Value               n
+Definitely yes                                            1              1047
+Probably yes                                              2               110
+Probably no                                               3                35
+Definitely no                                             4                28
+Refused                                                   8                 5
+Don't Know                                                9                 3
+Inapplicable                                              .              7019
+                                                                         8247
+
+WTHPART2
+LABEL            EG-12b Right before preg, think might ever want to have baby w/that partner?
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if pregnancy resulted in live birth or is current (prgoutcome = 1 or 6) in or after January of
+                 5 years prior to interview (recnt5yrprg = 1) [and if R responded that she became pregnant too soon or
+                 didnt know or refused (EG-10 TIMINGOK = 1 or 4 or DK,RF) or R responded no or dont know or
+                 refused, to whether she probably wanted a(nother) baby at some time in the future (EG-7
+                 PROBBABE = 5, DK,RF) or R responded no, not sure, dont know or refused to whether, right before
+                 pregnancy, she wanted to have a baby at any time in the future (EG-6 WANTBOLD NE 1) or R
+                 responded probably not, dont know or refused to whether she probably wanted a(nother) baby at some
+                 time in the future (EG-7 PROBBABE = 5, DK, RF)]
+LENGTH           8
+VARNUM           19
+
+WTHPART2: Distribution                                  Value               n
+Definitely yes                                            1               126
+Probably yes                                              2               103
+Probably no                                               3                67
+Definitely no                                             4               123
+Refused                                                   8                 7
+Don't Know                                                9                 7
+Inapplicable                                              .              7814
+                                                                         8247
+
+FEELINPG
+LABEL            EG-13 How happy to be preg - scale (0-10)
+VARIABLE TYPE    raw
+UNIVERSE         Applicable if pregnancy is current or ended on or after January [YEAR OF INTERVIEW]
+                 (recpreg3yr = 1)
+LENGTH           8
+VARNUM           20
+Section E
+FEELINPG: Distribution                                   Value               n
+0                                                          0                60
+1                                                          1                42
+2                                                          2                43
+3                                                          3                46
+4                                                          4                41
+5                                                          5               104
+6                                                          6                54
+7                                                          7               100
+8                                                          8               112
+9                                                          9               113
+10                                                        10               869
+Refused                                                   98                20
+Don’t know                                                99                20
+Inapplicable                                               .              6623
+                                                                          8247
+
+HPWNOLD
+LABEL             EG-16 Right bef preg, did the father want R to have baby at any time in future?
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                  or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                  (recnt5yrprg=1)
+LENGTH            8
+VARNUM            21
+
+HPWNOLD: Distribution                                    Value               n
+Yes                                                        1              5448
+No                                                         5              1839
+Not sure, Don't know                                       6               219
+Refused                                                   98                84
+Don't Know                                                99                57
+Inapplicable                                               .               600
+                                                                          8247
+
+TIMOKHP
+LABEL             EG-17 R became preg sooner, right time, or later than partner wanted
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if R responded yes to whether father of pregnancy wanted her to have baby at any time in
+                  the future (EG-16 HPWNOLD = 1)
+NOTES             see recode WANTPART
+LENGTH            8
+VARNUM            22
+
+TIMOKHP: Distribution                                    Value               n
+Too soon                                                   1               887
+Right time                                                 2              4030
+Later                                                      3               472
+Didn't care                                                4                30
+Refused                                                    8                10
+Don't know                                                 9                19
+Inapplicable                                               .              2799
+                                                                          8247
+
+COHPBEG
+LABEL             EG-18a Was R married to or living w/father of preg at beginning of preg
+VARIABLE TYPE     raw
+UNIVERSE          Applicable if [pregnancy resulted in live birth or is current (prgoutcome = 1 or 6), or pregnancy is 1st
+                  or 2nd order (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                  (recnt5yrprg=1)] and if [date pregnancy began is unknown (cmprgbeg = DK,RF) or pregnancy began
+                  before date of current marriage (cmprgbeg < cmmarrch) or pregnancy is current (prgoutcome = 6)
+                  and pregnancy began before current marriage (cmprgbeg < cmmarrch)]
+NOTES             see recode RMARCON3
+LENGTH            8
+VARNUM            23
+Section E
+COHPBEG: Distribution                                      Value               n
+Married to him                                               1               669
+Living with him, but not married                             2              1779
+Neither                                                      3              2055
+Refused                                                      8                57
+Don't Know                                                   9                 9
+Inapplicable                                                 .              3678
+                                                                            8247
+
+COHPEND
+LABEL                EG-18b Was R married to or living w/father of preg when preg ended/baby was born
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if [pregnancy resulted in live birth (prgoutcome = 1), or pregnancy is 1st or 2nd order
+                     (pregordr = 1 or 2), or pregnancy ended since January of 5 years prior to interview (recnt5yrprg=1)]
+                     and if [date pregnancy ended is unknown (cmpregend = DK,RF) or pregnancy ended before date of
+                     current marriage (cmpregend < cmmarrch)]
+NOTES                see recode RMAROUT3
+LENGTH               8
+VARNUM               24
+
+COHPEND: Distribution                                      Value               n
+Married to him                                               1               644
+Living with him, but not married                             2              1694
+Neither                                                      3              1929
+Refused                                                      8                53
+Don't Know                                                   9                 5
+Inapplicable                                                 .              3922
+                                                                            8247
+
+TELLFATH
+LABEL                EG-19 Did R tell father of preg that she was pregnant
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if pregnancy did not result in a live birth (prgoutcome NE 1) and R was not living with the
+                     father of the pregnancy when the pregnancy ended (EG-18b COHPEND = 3)
+LENGTH               8
+VARNUM               25
+
+TELLFATH: Distribution                                     Value               n
+Yes                                                          1               731
+No                                                           5               135
+Refused                                                      8                 7
+Don't know                                                   9                 2
+Inapplicable                                                 .              7372
+                                                                            8247
+
+WHENTELL
+LABEL                EG-20 When did R tell father of preg about pregnancy: during or after?
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if R told the father of the pregnancy that she was pregnant (EG-19 TELLFATH = 1)
+LENGTH               8
+VARNUM               26
+
+WHENTELL: Distribution                                     Value               n
+During the pregnancy                                         1               677
+After the pregnancy ended                                    2                48
+Don't Know                                                   9                 1
+Inapplicable                                                 .              7521
+                                                                            8247
+
+TRYSCALE
+LABEL                EG-21 How hard trying to get/avoid pregnancy (0-10 scale - 0: trying hard not to get preg, 10: trying
+                     hard to get preg)
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if pregnancy is current or ended on or after January [YEAR OF INTERVIEW]
+                     (recpreg3yr = 1)
+Section E
+TRYSCALE
+LENGTH              8
+VARNUM              27
+
+TRYSCALE: Distribution                                  Value              n
+0                                                         0              127
+1                                                         1               93
+2                                                         2               74
+3                                                         3               61
+4                                                         4               70
+5                                                         5              220
+6                                                         6               60
+7                                                         7               91
+8                                                         8              120
+9                                                         9               84
+10                                                       10              570
+Refused                                                  98               29
+Don’t know                                               99               25
+Inapplicable                                              .             6623
+                                                                        8247
+
+WANTSCAL
+LABEL               EG-22 How much wanted to get/avoid pregnancy (0-10 scale - 0: wanted to avoid a preg, 10: wanted
+                    to get preg)
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if pregnancy is current or ended on or after January [YEAR OF INTERVIEW]
+                    (recpreg3yr = 1)
+LENGTH              8
+VARNUM              28
+
+WANTSCAL: Distribution                                  Value              n
+0                                                         0              148
+1                                                         1              113
+2                                                         2               51
+3                                                         3               52
+4                                                         4               51
+5                                                         5              170
+6                                                         6               44
+7                                                         7               73
+8                                                         8               89
+9                                                         9               82
+10                                                       10              700
+Refused                                                  98               29
+Don’t know                                               99               22
+Inapplicable                                              .             6623
+                                                                        8247
+
+WHYPRG1
+LABEL               EG-23 (unintended preg): method fail or R wasnt using properly-1st mention
+VARIABLE TYPE       raw
+UNIVERSE            Applicable if pregnancy is current or ended on or after January [YEAR OF INTERVIEW]
+                    (recpreg3yr = 1) and [R became pregnant too soon (EG-10 TIMINGOK = 1) or R responded no to
+                    whether she wanted to have a (nother) baby at any time in the future (EG-6 WANTBOLD = 5) or R
+                    responded probably not to whether she probably wanted a(nother) baby at some time in the future
+                    (EG-7 PROBBABE = 5)] and R used a method in month pregnancy began (ED-6
+                    METHX1 - METHX192 corresponding to cmprgbeg NE 1 or sysmis)
+LENGTH              8
+VARNUM              29
+
+WHYPRG1: Distribution                                   Value              n
+Your birth control method failed                          1               69
+You did not use your birth control method properly        2              103
+Wasn't using a method                                     3               23
+Refused                                                   8                3
+Don't Know                                                9                1
+Inapplicable                                              .             8048
+                                                                        8247
+Section E
+
+WHYPRG2
+LABEL                EG-23 (unintended preg): method fail or R wasnt using properly-2nd mention
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if more than one reason became pregnant with unintended pregnancy (see EG-23
+                     WHYPRG1)
+LENGTH               8
+VARNUM               30
+
+WHYPRG2: Distribution                                    Value             n
+Your birth control method failed                           1               7
+You did not use your birth control method properly         2              14
+Inapplicable                                               .            8226
+                                                                        8247
+
+WHYNOUSE1
+LABEL                EG-24 (unintended preg) Reason didn't use contraception - 1st mention
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if conditions met for EG-23 WHYPRG1 and R did not use a method in month pregnancy
+                     began (ED-6 METHX1 through METHX192 corresponding to cmprgbeg = 1)
+LENGTH               8
+VARNUM               31
+
+WHYNOUSE1: Distribution                                  Value             n
+I did not expect to have sex                               1              32
+I did not think I could get pregnant                       2              64
+I didn't really mind if I got pregnant                     3              44
+I was worried about the side effects of birth control      4              32
+My male partner did not want me to use a birth control     5               2
+method
+My male partner himself did not want to use a birth        6              18
+control method
+Respondent was using a method                              7               6
+I could not get a method                                   8              13
+I was not taking, or using, my method consistently         9              70
+Refused                                                   98               4
+Don't Know                                                99               5
+Inapplicable                                               .            7957
+                                                                        8247
+
+WHYNOUSE2
+LABEL                EG-24 (unintended preg) Reason didn't use contraception - 2nd mention
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if more than 1 reason R didnt use a method before unintended pregnancy began (see
+                     EG-24 WHYNOUSE1)
+LENGTH               8
+VARNUM               32
+
+WHYNOUSE2: Distribution                                  Value             n
+I did not think I could get pregnant                       2               8
+I didn't really mind if I got pregnant                     3               8
+I was worried about the side effects of birth control      4               5
+My male partner did not want me to use a birth control     5               5
+method
+My male partner himself did not want to use a birth        6               3
+control method
+I could not get a method                                   8               1
+I was not taking, or using, my method consistently         9              14
+Inapplicable                                               .            8203
+                                                                        8247
+
+WHYNOUSE3
+LABEL                EG-24 (unintended preg) Reason didn't use contraception - 3rd mention
+VARIABLE TYPE        raw
+UNIVERSE             Applicable if more than 2 reasons R didnt use a method before unintended pregnancy began (see
+                     EG-24 WHYNOUSE1)
+Section E
+WHYNOUSE3
+LENGTH                8
+VARNUM                33
+
+WHYNOUSE3: Distribution                                  Value              n
+I did not think I could get pregnant                       2                1
+I didn't really mind if I got pregnant                     3                2
+I was worried about the side effects of birth control      4                2
+My male partner himself did not want to use a birth        6                3
+control method
+I could not get a method                                    8               1
+I was not taking, or using, my method consistently          9               3
+Inapplicable                                                .            8235
+                                                                         8247
+
+WHYNOUSE4
+LABEL                 EG-24 (unintended preg) Reason didn't use contraception - 4th mention
+VARIABLE TYPE         raw
+UNIVERSE              Applicable if more than 3 reasons R didnt use a method before unintended pregnancy began (see
+                      EG-24 WHYNOUSE1)
+LENGTH                8
+VARNUM                34
+
+WHYNOUSE4: Distribution                                  Value              n
+I did not think I could get pregnant                       2                1
+My male partner himself did not want to use a birth        6                2
+control method
+I was not taking, or using, my method consistently          9               1
+Inapplicable                                                .            8243
+                                                                         8247
+
+MAINOUSE
+LABEL                 EG-24a (unintended preg) Main reason didn't use contraception
+VARIABLE TYPE         raw
+UNIVERSE              Appicable if R reported more than one reason why didnt use a method before unintended pregnancy
+                      began (2 or more of EG-24 WHYNOUSE1 through WHYNOUSE4 contain a valid response)
+LENGTH                8
+VARNUM                35
+
+MAINOUSE: Distribution                                   Value              n
+I did not expect to have sex                               1                1
+I did not think I could get pregnant                       2               14
+I didn't really mind if I got pregnant                     3                6
+I was worried about the side effects of birth control      4               10
+My male partner did not want me to use a birth control     5                2
+method
+My male partner himself did not want to use a birth         6               2
+control method
+I could not get a method                                    8               2
+I was not taking, or using, my method consistently          9               6
+Refused                                                    98               1
+Inapplicable                                                .            8203
+                                                                         8247
+Section R
+Section R
+
+
+OUTCOME
+LABEL            Pregnancy outcome
+VARIABLE TYPE    pregnancy recode
+UNIVERSE         Applicable for all pregnancies
+LENGTH           8
+VARNUM           1
+
+OUTCOME: Distribution                                  Value               n
+Live birth                                               1              5755
+Abortion                                                 2               728
+Stillbirth                                               3                88
+Miscarriage                                              4              1405
+Ectopic pregnancy                                        5                99
+Current pregnancy                                        6               172
+                                                                        8247
+
+BIRTHORD
+LABEL            Birth order
+VARIABLE TYPE    pregnancy recode
+UNIVERSE         Applicable if pregnancy resulted in live birth (OUTCOME = 1)
+LENGTH           8
+VARNUM           2
+
+BIRTHORD: Distribution                                 Value               n
+1                                                        1              2753
+2                                                        2              1796
+3                                                        3               760
+4                                                        4               286
+5                                                        5                97
+6                                                        6                39
+7                                                        7                14
+8                                                        8                 5
+9                                                        9                 3
+10                                                      10                 1
+11                                                      11                 1
+Inapplicable                                             .              2492
+                                                                        8247
+
+DATEND
+LABEL            Year when pregnancy ended
+VARIABLE TYPE    pregnancy recode
+UNIVERSE         Applicable if pregnancy is a completed pregnancy (OUTCOME NE 6)
+NOTES            The year of this event is available for public use, and the original century-month variable is accessible
+                 by application to the NCHS Research Data Center.
+LENGTH           8
+VARNUM           3
+
+DATEND: Distribution                                     Value                  n
+1972-2023                                              1972-2023             8072
+Not ascertained                                          9997                   3
+Inapplicable                                               .                  172
+                                                                             8247
+
+agepreg
+LABEL            R's age in years when pregnancy ended
+VARIABLE TYPE    computed in post-processing
+UNIVERSE         Applicable if pregnancy is a completed pregnancy (OUTCOME NE 6)
+LENGTH           8
+VARNUM           4
+Section R
+agepreg: Distribution                                    Value               n
+Under 20 years                                            0-19            1154
+20-24 years                                              20-24            2178
+25-29 years                                              25-29            2107
+30-34 years                                              30-34            1657
+35-39 years                                              35-39             813
+40-49 years                                              40-49             163
+Not ascertained                                            97                3
+Inapplicable                                                .              172
+                                                                          8247
+
+GEST_LB
+LABEL               Gestational length, categorical (if live birth)
+VARIABLE TYPE       computed in post-processing
+UNIVERSE            Applicable if pregnancy resulted in live birth (OUTCOME = 1)
+NOTES               This variable has been created for public use, and the original source variables are accessible by
+                    application to the NCHS Research Data Center.
+LENGTH              8
+VARNUM              5
+
+GEST_LB: Distribution                                    Value               n
+Early preterm (<34 weeks)                                  1               226
+Preterm (34-36 weeks)                                      2               387
+Term (37-40 weeks)                                         3              4267
+Post-term (>40 weeks)                                      4               875
+Inapplicable                                               .              2492
+                                                                          8247
+
+GEST_OTHR
+LABEL               Gestational length, categorical (if not live birth or if a current pregnancy)
+VARIABLE TYPE       computed in post-processing
+UNIVERSE            Applicable if pregnancy is current or ended in an outcome other than live birth (OUTCOME NE 1) and
+                    either a 1st or 2nd pregnancy (PREGORDR = 1 or 2) or a recent pregnancy (DATEND GE cmjan5yr)
+NOTES               This variable has been created for public use, and the original source variables are accessible by
+                    application to the NCHS Research Data Center.
+LENGTH              8
+VARNUM              6
+
+GEST_OTHR: Distribution                                  Value               n
+1st trimester (0-13 weeks)                                 1              1572
+2nd trimester (14-26 weeks)                                2               251
+3rd trimester (27+ weeks)                                  3               124
+Inapplicable                                               .              6300
+                                                                          8247
+
+GestImp
+LABEL               GEST_LB or GEST_OTHR variable based on imputed gestational length
+VARIABLE TYPE       computed in post-processing
+UNIVERSE            Applicable for all pregnancies
+NOTES               This variable has been created for public use, and the original source variables are accessible by
+                    application to the NCHS Research Data Center.
+LENGTH              8
+VARNUM              7
+
+GestImp: Distribution                                    Value               n
+Yes                                                        1                85
+No                                                         2              8162
+                                                                          8247
+Section R
+DATECON
+LABEL              Year when pregnancy began
+VARIABLE TYPE      pregnancy recode
+UNIVERSE           Applicable if pregnancy resulted in live birth or is current (OUTCOME = 1 or 6), or pregnancy is 1st or
+                   2nd order (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                   (DATEND GE cmjan5yr)
+NOTES              The year of this event is available for public use, and the original century-month variable is accessible
+                   by application to the NCHS Research Data Center.
+LENGTH             8
+VARNUM             8
+
+DATECON: Distribution                                      Value                  n
+1972-2023                                                1972-2023             7699
+Not ascertained                                            9997                   3
+Inapplicable                                                 .                  545
+                                                                               8247
+
+agecon
+LABEL              R's age in years when pregnancy began
+VARIABLE TYPE      computed in post-processing
+UNIVERSE           Applicable if pregnancy resulted in live birth or is current (OUTCOME = 1 or 6), or pregnancy is 1st or
+                   2nd order (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                   (DATEND GE cmjan5yr)
+LENGTH             8
+VARNUM             9
+
+agecon: Distribution                                     Value               n
+Under 20 years                                            0-19            1376
+20-24 years                                              20-24            2049
+25-29 years                                              25-29            1960
+30-34 years                                              30-34            1532
+35-39 years                                              35-39             664
+40-49 years                                              40-49             118
+Not ascertained                                            97                3
+Inapplicable                                                .              545
+                                                                          8247
+
+pmarpreg
+LABEL              Whether pregnancy ended before R's first marriage (premarital)
+VARIABLE TYPE      computed in post-processing
+UNIVERSE           Applicable if pregnancy is a completed pregnancy (OUTCOME NE 6)
+LENGTH             8
+VARNUM             10
+
+pmarpreg: Distribution                                   Value               n
+Yes                                                        1              3775
+No                                                         2              4300
+Inapplicable                                               .               172
+                                                                          8247
+
+BFEEDWKS
+LABEL              Duration of breastfeeding in weeks (categorical)
+VARIABLE TYPE      pregnancy recode
+UNIVERSE           Applicable if pregnancy resulted in a single live birth (OUTCOME = 1 and bornaliv = 1) where the child
+                   is age 5 or younger (DATEND GE cmjan5yr) and lived with R for at least 1 year (BC-18 AGEDIED NE
+                   1 or BC-20 AGELEFT NE 1)
+NOTES              This variable has been modified for public use, and the original variable is accessible by application to
+                   the NCHS Research Data Center.
+LENGTH             8
+VARNUM             11
+
+BFEEDWKS: Distribution                                   Value               n
+Never breastfed this child                                 0               310
+Breastfed less than 1 week                                 1                44
+Breastfed 1-13 weeks (LE 3 mos)                            2               229
+Breastfed 14-26 weeks (>3/LE 6 mos)                        3               231
+Breastfed 27-52 weeks (>6/LE 12 mos)                       4               282
+Section R
+BFEEDWKS: Distribution                                    Value              n
+Breastfed 53-104 weeks (>1/LE 2 yrs)                        5              210
+Breastfed 105+ weeks (>2 yrs)                               6               60
+Still breastfeeding this child                              7              252
+Inapplicable                                                .             6629
+                                                                          8247
+
+RMAROUT3
+LABEL               Informal marital status when pregnancy ended - 3 categories
+VARIABLE TYPE       pregnancy recode
+UNIVERSE            Applicable if pregnancy resulted in live birth (OUTCOME = 1), or pregnancy is 1st or 2nd order
+                    (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview (DATEND GE
+                    cmjan5yr)
+LENGTH              8
+VARNUM              12
+
+RMAROUT3: Distribution                                    Value              n
+Married to father of pregnancy                              1             3766
+Living with father of pregnancy, but not married            2             1762
+Neither married nor cohabiting with father of pregnancy     3             2002
+Inapplicable                                                .              717
+                                                                          8247
+
+RMARCON3
+LABEL               Informal marital status at pregnancy conception - 3 categories
+VARIABLE TYPE       pregnancy recode
+UNIVERSE            Applicable if pregnancy resulted in live birth or is current (OUTCOME = 1 or 6), or pregnancy is 1st or
+                    2nd order (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (DATEND GE cmjan5yr)
+LENGTH              8
+VARNUM              13
+
+RMARCON3: Distribution                                    Value              n
+Married to father of pregnancy                              1             3706
+Living with father of pregnancy, but not married            2             1864
+Neither married nor cohabiting with father of pregnancy     3             2132
+Inapplicable                                                .              545
+                                                                          8247
+
+NEWWANTR
+LABEL               Detailed Wantedness of Pregnancy - Respondent
+VARIABLE TYPE       pregnancy recode
+UNIVERSE            Applicable if pregnancy resulted in live birth or is current (OUTCOME = 1 or 6), or pregnancy is 1st or
+                    2nd order (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (DATEND GE cmjan5yr)
+LENGTH              8
+VARNUM              14
+
+NEWWANTR: Distribution                                    Value              n
+Later, overdue                                              1              596
+Right time                                                  2             4135
+Too soon: by less than 2 years                              3              417
+Too soon: by 2 years or more                                4              957
+Didn't care, indifferent                                    5               55
+Unwanted                                                    6             1531
+Don't know, not sure                                        7               11
+Inapplicable                                                .              545
+                                                                          8247
+
+wantresp
+LABEL               Wantedness of pregnancy - Respondent (based on NEWWANTR)
+VARIABLE TYPE       computed in post-processing
+UNIVERSE            Applicable if pregnancy resulted in live birth or is current (OUTCOME = 1 or 6), or pregnancy is 1st or
+                    2nd order (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (DATEND GE cmjan5yr)
+LENGTH              8
+VARNUM              15
+Section R
+wantresp: Distribution                                    Value              n
+Later, overdue                                              1              596
+Right time                                                  2             4135
+Too soon                                                    3             1374
+Didn't care, indifferent                                    4               55
+Unwanted                                                    5             1531
+Don't know, not sure                                        6               11
+Inapplicable                                                .              545
+                                                                          8247
+
+WANTPART
+LABEL               Wantedness of pregnancy -- Respondent's Partner (father of pregnancy)
+VARIABLE TYPE       pregnancy recode
+UNIVERSE            Applicable if pregnancy resulted in live birth or is current (OUTCOME = 1 or 6), or pregnancy is 1st or
+                    2nd order (PREGORDR = 1 or 2), or pregnancy ended since January of 5 years prior to interview
+                    (DATEND GE cmjan5yr)
+LENGTH              8
+VARNUM              16
+
+WANTPART: Distribution                                    Value              n
+Later, overdue                                              1              477
+Right time                                                  2             4048
+Too soon, mistimed                                          3              893
+Didn't care, indifferent                                    4               30
+Unwanted                                                    5             2009
+Don't know, not sure                                        6              245
+Inapplicable                                                .              545
+                                                                          8247
+
+AGESCRN
+LABEL               R's age at screener
+VARIABLE TYPE       computed
+UNIVERSE            Applicable for all pregnancies (respondent-level variable)
+LENGTH              8
+VARNUM              18
+
+AGESCRN: Distribution                                     Value              n
+16                                                         16                3
+17                                                         17                7
+18                                                         18                4
+19                                                         19               19
+20                                                         20               33
+21                                                         21               35
+22                                                         22               51
+23                                                         23               73
+24                                                         24              100
+25                                                         25              140
+26                                                         26              154
+27                                                         27              183
+28                                                         28              173
+29                                                         29              236
+30                                                         30              317
+31                                                         31              271
+32                                                         32              363
+33                                                         33              390
+34                                                         34              339
+35                                                         35              371
+36                                                         36              400
+37                                                         37              430
+38                                                         38              414
+39                                                         39              387
+40                                                         40              351
+41                                                         41              393
+42                                                         42              360
+43                                                         43              365
+44                                                         44              273
+Section R
+AGESCRN: Distribution                                       Value              n
+45                                                           45              300
+46                                                           46              319
+47                                                           47              345
+48                                                           48              321
+49                                                           49              327
+                                                                            8247
+
+FMARITAL
+LABEL                Formal (legal) marital status relative to opposite-sex spouses
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               19
+
+FMARITAL: Distribution                                      Value              n
+Married to a person of the opposite sex                       1             4455
+Widowed                                                       2               63
+Divorced or annulled                                          3              879
+Separated                                                     4              325
+Never married                                                 5             2525
+                                                                            8247
+
+RMARITAL
+LABEL                Informal marital status relative to opposite-sex spouses
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               20
+
+RMARITAL: Distribution                                      Value              n
+Currently married to a person of the opposite sex             1             4455
+Not married but living with a partner of the opposite sex     2             1018
+Widowed                                                       3               56
+Divorced or annulled                                          4              652
+Separated (for reasons of marital discord)                    5              261
+Never been married to, nor currently cohabiting with a        6             1805
+person of the opposite-sex
+                                                                            8247
+
+HIEDUC
+LABEL                Highest completed year of school or highest degree received
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+NOTES                This variable has been modified for public use, and the original variable is accessible by application to
+                     the NCHS Research Data Center.
+LENGTH               8
+VARNUM               21
+
+HIEDUC: Distribution                                        Value              n
+Less than high school completion                              1              686
+12th grade, no diploma                                        2              298
+GED or equivalent                                             3              373
+High school graduate                                          4             1191
+Some college, no degree                                       5             1595
+Associate degree: occup, tech, or voc                         6              695
+Associate degree: academic                                    7              461
+Bachelor's degree                                             8             1656
+Master's degree                                               9              960
+Professional degree                                          10              193
+Doctoral degree                                              11              139
+                                                                            8247
+Section R
+HISPANIC
+LABEL                Hispanic origin of respondent
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               22
+
+HISPANIC: Distribution                                     Value              n
+Hispanic                                                     1             1927
+Non-Hispanic                                                 2             6320
+                                                                           8247
+
+HISPRACE2
+LABEL                Race and Hispanic origin - based on 1997 OMB guidelines
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               23
+
+HISPRACE2: Distribution                                    Value              n
+Hispanic (regardless of race reporting)                      1             1927
+Non-Hispanic White, Single Race                              2             3922
+Non-Hispanic Black, Single Race                              3             1524
+Non-Hispanic Other or Multiple Race                          4              874
+                                                                           8247
+
+BRNOUT
+LABEL                IB-4 R was born outside of US
+VARIABLE TYPE        raw
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               24
+
+BRNOUT: Distribution                                       Value              n
+Yes                                                          1             1431
+No                                                           5             6746
+Refused                                                      8               61
+Don't know                                                   9                8
+Inapplicable                                                 .                1
+                                                                           8247
+
+PREGNUM
+LABEL                Total number of pregnancies (including current)
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               25
+
+PREGNUM: Distribution                                      Value              n
+1                                                            1              774
+2                                                            2             1844
+3                                                            3             1959
+4                                                            4             1412
+5                                                            5              845
+6                                                            6              678
+7                                                            7              350
+8                                                            8              192
+9                                                            9               72
+10                                                          10               20
+11                                                          11               22
+12                                                          12               24
+13                                                          13               39
+16                                                          16               16
+                                                                           8247
+Section R
+PARITY
+LABEL                Number of live births
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               26
+
+PARITY: Distribution                                       Value              n
+0                                                            0              526
+1                                                            1             1559
+2                                                            2             2690
+3                                                            3             1770
+4                                                            4              928
+5                                                            5              374
+6                                                            6              199
+7                                                            7               81
+8                                                            8               41
+9                                                            9               46
+11                                                          11               19
+12                                                          12               14
+                                                                           8247
+
+CURR_INS
+LABEL                Current health insurance coverage status
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               27
+
+CURR_INS: Distribution                                     Value              n
+Currently covered by private health insurance or             1             4340
+Medi-Gap
+Currently covered by Medicaid, CHIP, or a                    2             2396
+state-sponsored health plan
+Currently covered by Medicare, Military health care, or      3              522
+other government health care
+Currently covered only by a single-service plan, only by     4              989
+the Indian Health Service, or currently not covered by
+health insurance
+                                                                           8247
+
+POVERTY
+LABEL                Family income as percentage of federal poverty threshold (top- and bottom-coded)
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               28
+
+POVERTY: Distribution                                       Value               n
+50% or less                                                   50             1139
+51-99%                                                      51-99            1083
+100-199%                                                   100-199           1759
+200-299%                                                   200-299           1142
+300-399%                                                   300-399            923
+400-499%                                                   400-499           1169
+500-599%                                                   500-599            549
+600-699%                                                   600-699            434
+700% or more                                                 700               49
+                                                                             8247
+
+LABORFOR
+LABEL                Labor force status
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               29
+Section R
+LABORFOR: Distribution                                     Value              n
+Working full-time                                            1             3533
+Working part-time                                            2             1213
+Temporarily not at work but still employed                   3              356
+Not working but looking for work                             4              559
+Going to school, taking classes, or on school vacation       5              146
+Taking care of house or family                               6             2140
+Other                                                        7              300
+                                                                           8247
+
+RELIGION
+LABEL                Current religious affiliation
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               30
+
+RELIGION: Distribution                                     Value              n
+No religion                                                  1             2370
+Catholic                                                     2             1444
+Protestant                                                   3             3656
+Other religion                                               4              777
+                                                                           8247
+
+METRO
+LABEL                Place of residence (metropolitan-nonmetropolitan)
+VARIABLE TYPE        respondent recode
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               31
+
+METRO: Distribution                                        Value              n
+Principal City of MSA                                        1             3116
+Other MSA                                                    2             3750
+Not MSA                                                      3             1381
+                                                                           8247
+
+OUTCOME_I
+LABEL                OUTCOME imputation flag
+VARIABLE TYPE        imputation flag
+UNIVERSE             Applicable for all pregnancies
+LENGTH               8
+VARNUM               32
+
+OUTCOME_I: Distribution                                    Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                             0             8222
+LOGICAL IMPUTATION                                           2               25
+                                                                           8247
+
+DATEND_I
+LABEL                DATEND imputation flag
+VARIABLE TYPE        imputation flag
+UNIVERSE             Applicable for all pregnancies
+LENGTH               8
+VARNUM               33
+
+DATEND_I: Distribution                                     Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                             0             8210
+MODEL-BASED IMPUTATION                                       1               37
+                                                                           8247
+
+PRGLNGTH_I
+LABEL                PRGLNGTH imputation flag
+VARIABLE TYPE        imputation flag
+UNIVERSE             Applicable for all pregnancies
+Section R
+PRGLNGTH_I
+LENGTH          8
+VARNUM          34
+
+PRGLNGTH_I: Distribution                         Value      n
+QUESTIONNAIRE DATA (NOT IMPUTED)                   0     8162
+MODEL-BASED IMPUTATION                             1       84
+LOGICAL IMPUTATION                                 2        1
+                                                         8247
+
+DATECON_I
+LABEL           DATECON imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies
+LENGTH          8
+VARNUM          35
+
+DATECON_I: Distribution                          Value      n
+QUESTIONNAIRE DATA (NOT IMPUTED)                   0     8166
+MODEL-BASED IMPUTATION                             1       81
+                                                         8247
+
+BFEEDWKS_I
+LABEL           BFEEDWKS imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies
+LENGTH          8
+VARNUM          36
+
+BFEEDWKS_I: Distribution                         Value      n
+QUESTIONNAIRE DATA (NOT IMPUTED)                   0     8218
+MODEL-BASED IMPUTATION                             1       26
+LOGICAL IMPUTATION                                 2        3
+                                                         8247
+
+RMAROUT3_I
+LABEL           RMAROUT3 imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies
+LENGTH          8
+VARNUM          37
+
+RMAROUT3_I: Distribution                         Value      n
+QUESTIONNAIRE DATA (NOT IMPUTED)                   0     7940
+MODEL-BASED IMPUTATION                             1      291
+LOGICAL IMPUTATION                                 2       16
+                                                         8247
+
+RMARCON3_I
+LABEL           RMARCON3 imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies
+LENGTH          8
+VARNUM          38
+
+RMARCON3_I: Distribution                         Value      n
+QUESTIONNAIRE DATA (NOT IMPUTED)                   0     7938
+MODEL-BASED IMPUTATION                             1      290
+LOGICAL IMPUTATION                                 2       19
+                                                         8247
+
+NEWWANTR_I
+LABEL           NEWWANTR imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies
+Section R
+NEWWANTR_I
+LENGTH          8
+VARNUM          39
+
+NEWWANTR_I: Distribution                              Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             7991
+MODEL-BASED IMPUTATION                                  1              252
+LOGICAL IMPUTATION                                      2                4
+                                                                      8247
+
+WANTPART_I
+LABEL           WANTPART imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies
+LENGTH          8
+VARNUM          40
+
+WANTPART_I: Distribution                              Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8009
+MODEL-BASED IMPUTATION                                  1              238
+                                                                      8247
+
+HIEDUC_I
+LABEL           HIEDUC imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          41
+
+HIEDUC_I: Distribution                                Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8225
+LOGICAL IMPUTATION                                      2               22
+                                                                      8247
+
+HISPANIC_I
+LABEL           HISPANIC imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          42
+
+HISPANIC_I: Distribution                              Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8231
+LOGICAL IMPUTATION                                      2               16
+                                                                      8247
+
+HISPRACE2_I
+LABEL           HISPRACE2 imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          43
+
+HISPRACE2_I: Distribution                             Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8228
+LOGICAL IMPUTATION                                      2               19
+                                                                      8247
+
+PREGNUM_I
+LABEL           PREGNUM imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          44
+Section R
+PREGNUM_I: Distribution                               Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8247
+                                                                      8247
+
+CURR_INS_I
+LABEL           CURR_INS imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          45
+
+CURR_INS_I: Distribution                              Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8158
+MODEL-BASED IMPUTATION                                  1               89
+                                                                      8247
+
+POVERTY_I
+LABEL           POVERTY imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          46
+
+POVERTY_I: Distribution                               Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             7360
+MODEL-BASED IMPUTATION                                  1              855
+LOGICAL IMPUTATION                                      2               32
+                                                                      8247
+
+LABORFOR_I
+LABEL           LABORFOR imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          47
+
+LABORFOR_I: Distribution                              Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8122
+MODEL-BASED IMPUTATION                                  1               96
+LOGICAL IMPUTATION                                      2               29
+                                                                      8247
+
+RELIGION_I
+LABEL           RELIGION imputation flag
+VARIABLE TYPE   imputation flag
+UNIVERSE        Applicable for all pregnancies (respondent-level variable)
+LENGTH          8
+VARNUM          48
+
+RELIGION_I: Distribution                              Value              n
+QUESTIONNAIRE DATA (NOT IMPUTED)                        0             8041
+MODEL-BASED IMPUTATION                                  1              206
+                                                                      8247
+Section W
+Section W
+
+
+WGT2022_2023
+LABEL                Final weight for the 2022-2023 NSFG
+VARIABLE TYPE        weight-related
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+NOTES                The range of weight values is shown here with 2 decimal places, but individual weight values in the data
+                     file have more decimal places
+LENGTH               8
+VARNUM               1
+
+WGT2022_2023: Distribution                                      Value                       n
+1562.54-68951.22                                           1562.54-68951.22              8247
+                                                                                         8247
+
+VEST
+LABEL                Randomized version of the Variance Estimation Stratum
+VARIABLE TYPE        weight-related
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               2
+
+VEST: Distribution                                         Value              n
+1-20                                                       1-20            8247
+                                                                           8247
+
+VECL
+LABEL                Randomized version of the Variance Estimation Cluster
+VARIABLE TYPE        weight-related
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               3
+
+VECL: Distribution                                         Value              n
+1                                                            1             2446
+2                                                            2             1646
+3                                                            3             2038
+4                                                            4             2117
+                                                                           8247
+
+CMINTVW
+LABEL                Century month for date of interview (Computed in FC A-1)
+VARIABLE TYPE        computed
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               4
+VARNUM               4
+
+CMINTVW: Distribution                                        Value                   n
+2022                                                       1465-1476              2317
+2023                                                       1477-1488              5930
+                                                                                  8247
+
+CMLSTYR
+LABEL                Century month for 1 year prior to interview (Computed in FC A-1)
+VARIABLE TYPE        computed
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               4
+VARNUM               5
+
+CMLSTYR: Distribution                                        Value                   n
+2021                                                       1453-1464              2317
+2022                                                       1465-1476              5930
+                                                                                  8247
+Section W
+CMJAN3YR
+LABEL                Century month of January of year 3 years prior to interview (Computed in FC A-1)
+VARIABLE TYPE        computed
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               4
+VARNUM               6
+
+CMJAN3YR: Distribution                                     Value              n
+January 2019                                               1429            2317
+January 2020                                               1441            5930
+                                                                           8247
+
+CMJAN4YR
+LABEL                Century month of January of year 4 years prior to interview (Computed in FC A-1)
+VARIABLE TYPE        computed
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               4
+VARNUM               7
+
+CMJAN4YR: Distribution                                     Value              n
+January 2018                                               1417            2317
+January 2019                                               1429            5930
+                                                                           8247
+
+CMJAN5YR
+LABEL                Century month of January of year 5 years prior to interview (Computed in FC A-1)
+VARIABLE TYPE        computed
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               4
+VARNUM               8
+
+CMJAN5YR: Distribution                                     Value              n
+January 2017                                               1405            2317
+January 2018                                               1417            5930
+                                                                           8247
+
+YEAR
+LABEL                Year when interview occurred
+VARIABLE TYPE        raw
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               9
+
+YEAR: Distribution                                         Value              n
+Year 1 (2022)                                                1             2317
+Year 2 (2023)                                                2             5930
+                                                                           8247
+
+QUARTER
+LABEL                Quarter when case was sampled
+VARIABLE TYPE        raw
+UNIVERSE             Applicable for all pregnancies (respondent-level variable)
+LENGTH               8
+VARNUM               10
+
+QUARTER: Distribution                                      Value              n
+1                                                            1             1785
+2                                                            2             1941
+3                                                            3             2441
+4                                                            4             2080
+                                                                           8247
+
