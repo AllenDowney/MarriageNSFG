@@ -9,7 +9,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 1:** Reorganize the repo — **done** (`b6ab4cf`); data verified identical before and after.
 - **Task 2:** Rebuild the conda environment — not started. Design in `planning/environment.md`.
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
-- **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **done locally** (`a055387`), `.git` 496 MB → 22 MB. **Not yet pushed.**
+- **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **pushed** (`8c77151`). One item left: ask GitHub to purge the orphaned LFS objects.
 - **Task 5:** Write the data download script — not started.
 - **Task 6:** Update the analysis for cycle 12 — **partly done**: HDFs regenerated, four of six notebooks re-run and figures refreshed. `fertility` and `intent` blocked on Task 15.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
@@ -194,7 +194,13 @@ Once no data is tracked, **LFS has no remaining purpose** and `.gitattributes` c
 - [ ] Force-push
 - [ ] Delete `.gitattributes`; drop LFS
 - [ ] Write a real `.gitignore`: `data/`, `*.hdf`, generated `*.ipynb`, `.ipynb_checkpoints/`, `__pycache__/`, `.vscode/`, shelve files
-- [ ] Request that GitHub purge the orphaned LFS objects — **the rewrite alone does not remove them from the remote**
+- [x] Force-push (`8c77151`, 2026-09-20). Verified by cloning fresh: 32 MB,
+      93 files, zero data files, package imports and paths resolve
+- [ ] **Request that GitHub purge the orphaned LFS objects.** The rewrite does
+      not remove them from the remote — they are unreferenced but still stored,
+      and may remain retrievable until GitHub Support clears them. This is the
+      last piece of the redistribution exposure. Open a support request naming
+      the repository and asking for orphaned LFS objects to be purged
 
 ### Out of scope
 
