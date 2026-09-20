@@ -65,8 +65,7 @@ def check_counts(df, year, expected):
         raise ValidationError(f"{year}: {len(df)} rows, expected {n_rows}")
     got = int(df.evrmarry.sum())
     if got != n_married:
-        raise ValidationError(
-            f"{year}: {got} ever married, expected {n_married}")
+        raise ValidationError(f"{year}: {got} ever married, expected {n_married}")
     return cycle
 
 
@@ -114,8 +113,9 @@ def check_reconstructed_age(df, year, cycle):
     return mean
 
 
-def check_cross_cycle(df, columns=None, threshold=4.0, cycle_col="cycle",
-                      weight_col="finalwgt"):
+def check_cross_cycle(
+    df, columns=None, threshold=4.0, cycle_col="cycle", weight_col="finalwgt"
+):
     """Flag derived variables that jump at a cycle boundary.
 
     Compares each step against the typical step over the other boundaries. A
@@ -126,9 +126,11 @@ def check_cross_cycle(df, columns=None, threshold=4.0, cycle_col="cycle",
     Returns a DataFrame of the flagged boundaries; empty means nothing stood out.
     """
     if columns is None:
-        columns = [c for c in df.columns
-                   if df[c].dtype.kind in "bif"
-                   and c not in (cycle_col, weight_col, "caseid")]
+        columns = [
+            c
+            for c in df.columns
+            if df[c].dtype.kind in "bif" and c not in (cycle_col, weight_col, "caseid")
+        ]
 
     cycles = sorted(df[cycle_col].dropna().unique())
     rows = []
@@ -136,8 +138,9 @@ def check_cross_cycle(df, columns=None, threshold=4.0, cycle_col="cycle",
         means = []
         for cy in cycles:
             g = df[df[cycle_col] == cy].dropna(subset=[col, weight_col])
-            means.append(np.average(g[col], weights=g[weight_col])
-                         if len(g) else np.nan)
+            means.append(
+                np.average(g[col], weights=g[weight_col]) if len(g) else np.nan
+            )
         means = pd.Series(means, index=cycles, dtype=float)
         steps = means.diff().abs()
         typical = steps.median()
@@ -145,9 +148,15 @@ def check_cross_cycle(df, columns=None, threshold=4.0, cycle_col="cycle",
             continue
         for cy, step in steps.items():
             if np.isfinite(step) and step / typical > threshold:
-                rows.append({"column": col, "boundary": f"{cy - 1}->{cy}",
-                             "step": step, "typical": typical,
-                             "ratio": step / typical})
+                rows.append(
+                    {
+                        "column": col,
+                        "boundary": f"{cy - 1}->{cy}",
+                        "step": step,
+                        "typical": typical,
+                        "ratio": step / typical,
+                    }
+                )
     out = pd.DataFrame(rows)
     return out.sort_values("ratio", ascending=False) if len(out) else out
 
@@ -169,6 +178,7 @@ def main():
             print(f"    {year} (cycle {cycle:2d})  ok{note}")
 
     from nsfg.paths import interim
+
     path = interim("FemMarriageData.parquet")
     if path.exists():
         print("\nCross-cycle continuity, female extract\n")

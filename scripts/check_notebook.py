@@ -10,7 +10,8 @@ import sys
 from collections import Counter
 
 for path in sys.argv[1:]:
-    nb = json.load(open(path))
+    with open(path, encoding="utf-8") as fp:
+        nb = json.load(fp)
     code = [c for c in nb["cells"] if c["cell_type"] == "code"]
     errors = Counter(
         o["ename"]

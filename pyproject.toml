@@ -32,3 +32,27 @@ exclude = ["archive", "notebooks/archive"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.black]
+# match the interpreter in environment.yml; without this black targets a newer
+# Python and emits syntax this one cannot parse
+target-version = ["py313"]
+line-length = 88
+
+[tool.pylint.main]
+# pandas attributes are resolved at runtime, so pylint reports false no-member
+# errors on things like pd.DatetimeIndex(...).year
+extension-pkg-allow-list = ["pandas", "numpy"]
+ignored-modules = ["pandas", "numpy", "scipy", "matplotlib", "seaborn", "lifelines"]
+
+[tool.pylint."messages control"]
+disable = [
+    "missing-function-docstring",   # the readers are self-describing and repetitive
+    "import-outside-toplevel",      # deliberate, to keep module import cheap
+    "duplicate-code",               # the per-cycle readers are meant to parallel
+    "too-many-lines",
+    "too-many-locals",
+]
+
+[tool.pylint.format]
+max-line-length = 100

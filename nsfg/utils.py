@@ -1,3 +1,5 @@
+"""Plotting and estimation helpers for the NSFG analyses."""
+
 from lifelines import KaplanMeierFitter
 from pathlib import Path
 
@@ -68,30 +70,30 @@ def resample_rows_weighted(df, column="finalwgt"):
 
 def resample_by_cycle(unweighted):
     """Resample a DataFrame, grouped by cycle.
-    
+
     unweighted: DataFrame
 
     returns: DataFrame
     """
     dfs = []
 
-    for name, group in unweighted.groupby('cycle'):
-        df = resample_rows_weighted(group, 'finalwgt')
+    for _name, group in unweighted.groupby("cycle"):
+        df = resample_rows_weighted(group, "finalwgt")
         dfs.append(df)
 
     return pd.concat(dfs).reset_index(drop=True)
 
 
-def normalize_weights_by_cycle(unweighted, weight_col='finalwgt'):
+def normalize_weights_by_cycle(unweighted, weight_col="finalwgt"):
     """Normalize finalwgt within each cycle group so the average is 1.
-    
+
     unweighted: DataFrame
 
     returns: DataFrame with normalized weights
     """
     dfs = []
 
-    for name, group in unweighted.groupby('cycle'):
+    for _name, group in unweighted.groupby("cycle"):
         group = group.copy()
         mean_weight = group[weight_col].mean()
         group[weight_col] = group[weight_col] / mean_weight
@@ -179,28 +181,28 @@ def adjust_legend(**options):
 
     options: keyword arguments passed to line.set
     """
-    legend = plt.gca().get_legend()
-    for line in legend.get_lines():
+    current = plt.gca().get_legend()
+    for line in current.get_lines():
         line.set(**options)
 
 
 def set_palette(*args, **kwds):
     """Set the matplotlib color cycler.
-    
+
     args, kwds: same as for sns.color_palette
-    
+
     Also takes a boolean kwd, `reverse`, to indicate
     whether the order of the palette should be reversed.
-    
+
     returns: list of colors
     """
-    reverse = kwds.pop('reverse', False)
+    reverse = kwds.pop("reverse", False)
     palette = sns.color_palette(*args, **kwds)
-    
+
     palette = list(palette)
     if reverse:
         palette.reverse()
-        
+
     cycler = plt.cycler(color=palette)
     plt.gca().set_prop_cycle(cycler)
     return palette
@@ -223,7 +225,7 @@ def estimate_proportion(success_series, weights_series, confidence_level=0.95):
 
     weighted_successes = (success_series * weights_series).sum()
     total_weight = weights_series.sum()
-    weighted_proportion = p = weighted_successes / total_weight
+    p = weighted_successes / total_weight
 
     # Estimate effective sample size
     n_eff = total_weight**2 / (weights_series**2).sum()
@@ -239,7 +241,6 @@ def estimate_proportion(success_series, weights_series, confidence_level=0.95):
     upper = center + margin
 
     return p, lower, upper
-
 
 
 def percentile_rows(row_seq, percentiles):
@@ -264,8 +265,8 @@ def make_kmf_map(grouped, min_at_risk=10):
     a few years and almost nobody has married yet.
 
     Curves are therefore truncated at the last time with at least `min_at_risk`
-    people still at risk. This is the same idea as the `cutoffs` argument to
-    marriage.estimate_survival_by_cohort, which the legacy code applied by hand.
+    people still at risk. The vendored Think Stats code had the same idea, as a
+    `cutoffs` argument applied by hand; that code has since been deleted.
 
     grouped: GroupBy object
     min_at_risk: smallest risk set to trust; None disables truncation.
@@ -279,8 +280,8 @@ def make_kmf_map(grouped, min_at_risk=10):
 
     for cohort, group in grouped:
         kmf = KaplanMeierFitter()
-        kmf.fit(group['duration'], group['observed'])
-        series = (1 - kmf.survival_function_['KM_estimate']) * 100
+        kmf.fit(group["duration"], group["observed"])
+        series = (1 - kmf.survival_function_["KM_estimate"]) * 100
 
         if min_at_risk:
             reliable = kmf.event_table.index[kmf.event_table.at_risk >= min_at_risk]
@@ -318,10 +319,10 @@ def remove_spines():
     ax = plt.gca()
     for spine in ax.spines.values():
         spine.set_visible(False)
-    
+
     # Ensure ticks stay visible
-    ax.xaxis.set_ticks_position('bottom')
-    ax.yaxis.set_ticks_position('left')
+    ax.xaxis.set_ticks_position("bottom")
+    ax.yaxis.set_ticks_position("left")
 
 
 def add_logo(filename="probably_logo.png", location=(1.0, -0.3), size=(0.45, 0.45)):
@@ -381,6 +382,7 @@ def add_aibm_logo(filename="logo-hq-small.png", location=(1.0, -0.3), size=(0.6,
 
     return ax_inset
 
+
 def add_subtext(text, x=0, y=-0.3):
     """Add a text label below the current plot.
 
@@ -402,9 +404,10 @@ def add_title(title, subtitle, pad=25):
         pad (int): Padding between the title and subtitle
     """
     plt.title(title, loc="left", pad=pad)
-    add_text(0, 1.05, subtitle) 
+    add_text(0, 1.05, subtitle)
 
-def savefig(prefix, fig_number, extra_artists=[]):
+
+def savefig(prefix, fig_number, extra_artists=None):
     """Save the current figure into the figures/ directory.
 
     The path is resolved against FIGURES rather than the working directory, so
@@ -418,11 +421,12 @@ def savefig(prefix, fig_number, extra_artists=[]):
     """
     from nsfg.paths import FIGURES
 
+    if extra_artists is None:
+        extra_artists = []
+
     stem = f"{prefix}{fig_number:02d}"
     path = Path(stem)
     if not path.is_absolute():
         path = FIGURES / path
     path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(
-        path, dpi=150, bbox_inches="tight", bbox_extra_artists=extra_artists
-    )
+    plt.savefig(path, dpi=150, bbox_inches="tight", bbox_extra_artists=extra_artists)

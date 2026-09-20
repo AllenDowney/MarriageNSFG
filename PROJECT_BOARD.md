@@ -18,7 +18,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 10:** Consolidated codebook metadata — not started.
 - **Task 11:** Validation coverage — **done**; `nsfg/validate.py` + 15 unit tests. The feasibility check reproduces the Task 14 catch.
 - **Task 12:** Write `CLAUDE.md` — not started.
-- **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
+- **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — **resolved by deletion**; the code it would have ported was unreachable.
 - **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed**; HDFs regenerated, figures refreshed.
 - **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
@@ -635,7 +635,28 @@ Write this **after** Task 1, so it documents the layout that exists rather than 
 
 ## Task 13: Excise `thinkstats2` in favor of `empiricaldist`
 
-**Status:** Not started. Do after Tasks 1 and 2.
+**Status:** Resolved 2026-09-20 by deleting the code, not porting it.
+
+**Why the plan changed.** The task assumed `nsfg/survival.py` was on the live
+path. It was not. A reachability analysis from the live entry points found that
+nothing calls `estimate_survival`, `estimate_survival_by_cohort`,
+`make_predictions`, `make_survival_ci`, `plot_survival_functions`,
+`propensity_match`, `add_errors`, `fill_missing_column`, `jitter`,
+`resample_resps`, or either Canada stub — not the active notebooks, not the
+archived ones. Active analysis has used `lifelines` through
+`utils.make_kmf_map` all along.
+
+So `nsfg/survival.py` existed to support functions nobody called. Porting it to
+`empiricaldist` would have been polishing dead code. All 12 functions and the
+module are deleted — 253 lines plus the port — and the extracts come back with
+identical frame hashes.
+
+`archive/` keeps the vendored Think Stats modules as reference material.
+
+One methodological note: the first reachability pass reported only 5 dead
+functions, because it matched names in docstrings. `estimate_survival_by_cohort`
+looked reachable purely because `utils.make_kmf_map` mentions it in prose.
+Stripping docstrings and comments before the search took the count from 5 to 12.
 
 **Context:** Task 1 archives the four vendored Think Stats modules but ports `EstimateHazardFunction`, `HazardFunction` and `SurvivalFunction` into `nsfg/survival.py` **verbatim** — about 150 lines, minus the `MakeCdf`/`MakePmf`/`RemainingLifetime` methods, which are the only part that actually needs `thinkstats2`. That port is deliberately mechanical so it cannot change a number, which is what makes Task 1's verification meaningful.
 

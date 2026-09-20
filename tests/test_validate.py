@@ -20,15 +20,19 @@ def make_resp(n=100, ager=30, offset_months=-6):
     """A minimal respondent frame with a reconstructed cmbirth."""
     cmintvw = np.full(n, 1400.0)
     ages = np.full(n, float(ager))
-    return pd.DataFrame({
-        "cmintvw": cmintvw,
-        "ager": ages,
-        "cmbirth": cmintvw - ages * 12 + offset_months,
-        "evrmarry": np.zeros(n, dtype=bool),
-    })
+    return pd.DataFrame(
+        {
+            "cmintvw": cmintvw,
+            "ager": ages,
+            "cmbirth": cmintvw - ages * 12 + offset_months,
+            "evrmarry": np.zeros(n, dtype=bool),
+        }
+    )
 
 
 class TestCounts:
+    """Per-cycle row and marriage counts."""
+
     def test_accepts_matching_counts(self):
         df = pd.DataFrame({"evrmarry": [True] * 4651 + [False] * (7969 - 4651)})
         assert check_counts(df, 1982, FEM_COUNTS) == 3
@@ -49,6 +53,8 @@ class TestCounts:
 
 
 class TestReconstructedAge:
+    """Feasibility of cmbirth reconstructed from an integer age."""
+
     def test_midpoint_offset_passes(self):
         # -6 puts birth in the middle of the year the reported age allows
         assert check_reconstructed_age(make_resp(offset_months=-6), 2023, 12) == 0.5
@@ -71,6 +77,8 @@ class TestReconstructedAge:
 
 
 class TestCrossCycle:
+    """Detection of discontinuities at cycle boundaries."""
+
     def _frame(self, values):
         rows = []
         for cycle, val in enumerate(values, start=3):

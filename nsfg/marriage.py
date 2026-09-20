@@ -8,16 +8,13 @@ License: GNU GPLv3 http://www.gnu.org/licenses/gpl.html
 import re
 import numpy as np
 import pandas as pd
-import scipy.stats
 
 import matplotlib.pyplot as plt
 
-from collections import defaultdict
-
-from nsfg import survival
-from nsfg.paths import raw, interim
 
 import pyreadstat
+
+from nsfg.paths import raw
 
 
 def value_counts(series, **options):
@@ -31,7 +28,7 @@ def value_counts(series, **options):
     return series.value_counts(**options).sort_index()
 
 
-class FixedWidthVariables(object):
+class FixedWidthVariables:
     """Represents a set of variables in a fixed width file."""
 
     def __init__(self, variables, index_base=0):
@@ -53,7 +50,7 @@ class FixedWidthVariables(object):
         self.colspecs = self.colspecs.astype(int).values.tolist()
         self.names = variables["name"]
 
-    def ReadFixedWidth(self, filename, **options):
+    def read_fixed_width(self, filename, **options):
         """Reads a fixed width ASCII file.
 
         filename: string filename
@@ -72,9 +69,18 @@ def read_stata_dct(dct_file, **options):
 
     returns: FixedWidthVariables object
     """
-    type_map = dict(
-        byte=int, int=int, long=int, float=float, double=float, numeric=float
-    )
+    type_map = {
+        "byte": int,
+        "int": int,
+        "long": int,
+        "float": float,
+        "double": float,
+        "numeric": float,
+    }
+
+    # NSFG dictionary files are latin-1; without this the encoding falls back
+    # to the locale default, which differs between machines
+    options.setdefault("encoding", "iso-8859-1")
 
     var_info = []
     with open(dct_file, **options) as f:
@@ -113,7 +119,7 @@ def read_resp(dct_file, dat_file, **options):
     returns: DataFrame
     """
     dct = read_stata_dct(dct_file, encoding="iso-8859-1")
-    df = dct.ReadFixedWidth(dat_file, compression="gzip", **options)
+    df = dct.read_fixed_width(dat_file, compression="gzip", **options)
     return df
 
 
@@ -160,8 +166,6 @@ def legend(**options):
     handles, labels = ax.get_legend_handles_labels()
     if handles:
         ax.legend(handles, labels, **options)
-
-
 
 
 def clean_resp(resp):
@@ -224,32 +228,6 @@ def digitize_resp(df):
     df.birth_index += year_min - year_step
 
 
-def resample_resps(resps, remove_missing=False, jitter=0):
-    """Resamples each dataframe and then concats them.
-
-    resps: list of DataFrame
-
-    returns: DataFrame
-    """
-    # we have to resample the data from each cycle separately
-    samples = [resample_rows_weighted(resp) for resp in resps]
-
-    # then join the cycles into one big sample
-    sample = pd.concat(samples, ignore_index=True, sort=False)
-
-    # remove married people with unknown marriage dates
-    if remove_missing:
-        sample = sample[~sample.missing]
-
-    # jittering the ages reflects the idea that the resampled people
-    # are not identical to the actual respondents
-    if jitter:
-        jitter(sample, "ager", jitter=jitter)
-        jitter(sample, "agemarry", jitter=jitter)
-
-    return sample
-
-
 def resample_rows_weighted(df, column="finalwgt"):
     """Resamples the rows in df in accordance with a weight column.
 
@@ -260,213 +238,6 @@ def resample_rows_weighted(df, column="finalwgt"):
     weights = df[column]
     sample = df.sample(n=len(df), replace=True, weights=weights)
     return sample
-
-
-def jitter(df, column, jitter=1):
-    """Adds random noise to a column.
-
-    df: DataFrame
-    column: string column name
-    jitter: standard deviation of noise
-    """
-    df[column] += np.random.uniform(-jitter, jitter, size=len(df))
-
-
-def estimate_survival(resp, cutoff=None):
-    """Estimates the survival curve.
-
-    resp: DataFrame of respondents
-    cutoff: where to truncate the estimated functions
-
-    returns: pair of HazardFunction, SurvivalFunction
-    """
-    complete = resp.loc[resp.complete, "complete_var"].dropna()
-    ongoing = resp.loc[~resp.complete, "ongoing_var"].dropna()
-
-    hf = survival.EstimateHazardFunction(complete, ongoing)
-    if cutoff:
-        hf.Truncate(cutoff)
-    sf = hf.MakeSurvival()
-
-    return hf, sf
-
-
-def propensity_match(target, group, colname="agemarry"):
-    """Choose a random subset of `group` to matches propensity with `target`.
-
-    target: DataFrame
-    group: DataFrame
-    colname: string name of column with propensity scores
-
-    returns: DataFrame with sample of rows from `group`
-    """
-    rv = scipy.stats.norm(scale=1)
-    values = group[colname].fillna(100)
-
-    def ChooseIndex(value):
-        weights = rv.pdf(values - value)
-        weights /= sum(weights)
-        return np.random.choice(group.index, 1, p=weights)[0]
-
-    indices = [ChooseIndex(value) for value in target[colname]]
-    return group.loc[indices]
-
-
-def estimate_survival_by_cohort(
-    resps, iters=101, cutoffs=None, predict_flag=False, prop_match=None, error_rate=0
-):
-    """Makes survival curves for resampled data.
-
-    resps: list of DataFrames
-    iters: number of resamples to plot
-    predict_flag: whether to also plot predictions
-    cutoffs: map from cohort to the first unreliable age_index
-
-    returns: map from group name to list of survival functions
-    """
-    if cutoffs == None:
-        cutoffs = {}
-
-    sf_map = defaultdict(list)
-
-    # iters is the number of resampling runs to make
-    for i in range(iters):
-        sample = resample_resps(resps)
-
-        # group by decade
-        grouped = sample.groupby("birth_index")
-        if prop_match:
-            last = grouped.get_group(prop_match)
-
-        # and estimate (hf, sf) for each group
-        hf_map = {}
-        for name, group in iter(grouped):
-            if prop_match:
-                group = propensity_match(last, group)
-
-            if error_rate:
-                add_errors(group, "complete_missing", error_rate)
-                add_errors(group, "ongoing_missing", error_rate)
-
-            # the amount of missing data is small; I think it is better
-            # to drop it than to fill with random data
-            # fill_missing_column(group, 'complete_var', 'complete_missing')
-            # fill_missing_column(group, 'ongoing_var', 'ongoing_missing')
-            cutoff = cutoffs.get(name, 100)
-            hf_map[name] = estimate_survival(group, cutoff)
-
-        # make predictions if desired
-        if predict_flag:
-            make_predictions(hf_map)
-
-        # extract the sf from each pair and accumulate the results
-        for name, (hf, sf) in hf_map.items():
-            sf_map[name].append(sf)
-
-    return sf_map
-
-
-def add_errors(group, colname, error_rate):
-    """
-
-    NOTE: This will not work if there are actual missing values!
-    """
-    group[colname] = np.random.random(len(group)) < error_rate
-
-
-def fill_missing_column(group, colname, missing_colname):
-    """Fills missing values of the given column.
-
-    group: DataFrame
-    colname: string
-    """
-    null = group[group[missing_colname]]
-    if len(null) == 0:
-        return
-
-    # print(len(null), len(group))
-
-    valid = group[colname].dropna()
-    fill = valid.sample(len(null), replace=True)
-    fill.index = null.index
-
-    group[colname].fillna(fill, inplace=True)
-
-
-def plot_survival_functions(sf_map, predict_flag=False, colormap=None):
-    """Plot estimated survival functions.
-
-    sf_map: map from group name to sequence of survival functions
-    predict_flag: whether the lines are predicted or actual
-    colormap: map from group name to color
-    """
-    for name, sf_seq in sorted(sf_map.items(), reverse=True):
-        if len(sf_seq) == 0:
-            continue
-
-        sf = sf_seq[0]
-        if len(sf) == 0:
-            continue
-
-        ts, rows = make_survival_ci(sf_seq, [10, 50, 90])
-        plt.fill_between(ts, rows[0], rows[2], lw=0, color="gray", alpha=0.2)
-
-        if not predict_flag:
-            if colormap:
-                color = colormap[name]
-                plt.plot(ts, rows[1], label="19%ds" % name, color=color, alpha=0.8)
-            else:
-                plt.plot(ts, rows[1], label="19%ds" % name, alpha=0.8)
-
-
-def make_predictions(hf_map):
-    """Extends a set of hazard functions and recomputes survival functions.
-
-    For each group in hf_map, we extend hf and recompute sf.
-
-    hf_map: map from group name to (HazardFunction, SurvivalFunction)
-    """
-    names = list(hf_map.keys())
-    names.sort()
-    hfs = [hf_map[name][0] for name in names]
-
-    # extend each hazard function using data from the previous cohort,
-    # and update the survival function
-    for i, name in enumerate(names):
-        hf, sf = hf_map[name]
-        if i > 0:
-            hf.Extend(hfs[i - 1])
-        sf = hf.MakeSurvival()
-        hf_map[name] = hf, sf
-
-
-def make_survival_ci(sf_seq, percents, flip=False):
-    """Makes confidence intervals from a list of survival functions.
-
-    sf_seq: list of SurvivalFunction
-    percents: list of percentiles to select, like [5, 95]
-
-    returns: (ts, rows) where ts is a sequence of times and
-             rows contains one row of values for each percent
-    """
-    # find the union of all ts where the sfs are evaluated
-    ts = set()
-    for sf in sf_seq:
-        ts |= set(sf.ts)
-
-    ts = list(ts)
-    ts.sort()
-
-    # evaluate each sf at all times
-    if flip:
-        ys = 1 - sf.Probs(ts)
-    else:
-        ys = sf.Probs(ts)
-    ss_seq = [100 * ys for sf in sf_seq if len(sf) > 0]
-
-    # return the requested percentiles from each column
-    rows = percentile_rows(ss_seq, percents)
-    return ts, rows
 
 
 def percentile_rows(row_seq, percentiles):
@@ -506,7 +277,7 @@ def read_fem_resp_1982():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation
-        "wantkid2", # Want another kid
+        "wantkid2",  # Want another kid
         "educat",  # Years of education
     ]
 
@@ -562,11 +333,11 @@ def read_fem_resp_1982():
     df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
 
     # Recode years of educaction
-    df['anycoll'] = (df['educat'] >= 13).where(df['educat'].notna())
+    df["anycoll"] = (df["educat"] >= 13).where(df["educat"].notna())
 
     # Since we don't have hidegree in this cycle, we have to guess
-    df['bdegree'] = (df['educat'] >= 16).where(df['educat'].notna())
-    
+    df["bdegree"] = (df["educat"] >= 16).where(df["educat"].notna())
+
     # CM values above 9000 indicate month unknown
     df.loc[df.cmintvw > 9000, "cmintvw"] -= 9000
     df.loc[df.cmbirth > 9000, "cmbirth"] -= 9000
@@ -614,10 +385,10 @@ def read_fem_resp_1988():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
-        "strloper", # Type of sterilization operation
-        "wantkid2", # Want another kid
+        "strloper",  # Type of sterilization operation
+        "wantkid2",  # Want another kid
         "educat",  # Years of education
-        "fmarital", # Formal marital status
+        "fmarital",  # Formal marital status
     ]
 
     colspecs = [
@@ -674,10 +445,10 @@ def read_fem_resp_1988():
     df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
 
     # Recode years of educaction
-    df['anycoll'] = df['educat'] >= 13
+    df["anycoll"] = df["educat"] >= 13
 
     # Since we don't have hidegree in this cycle, we have to guess
-    df['bdegree'] = (df['educat'] >= 16).where(df['educat'].notna())
+    df["bdegree"] = (df["educat"] >= 16).where(df["educat"].notna())
 
     # combine current and first marriage
     df["cmmarrhx"] = df["firstcm"].fillna(df["currentcm"])
@@ -747,7 +518,7 @@ def read_fem_resp_1995():
         (10892 - 1, 10893),  # hieduc
         (10886 - 1, 10886),  # fmarital
         (10891 - 1, 10891),  # hidegree
-        ]
+    ]
 
     df = pd.read_fwf(dat_file, compression="gzip", colspecs=colspecs, names=names)
 
@@ -764,9 +535,10 @@ def read_fem_resp_1995():
     # fill in educational variables
     df["bdegree"] = (df["hidegree"] >= 3).where(df["hidegree"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(1, 16),
-                                        [1,1,1,1,1,1,1,2,4,5,7,8,9,10,11])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(1, 16), [1, 1, 1, 1, 1, 1, 1, 2, 4, 5, 7, 8, 9, 10, 11]
+    )
+
     # make codes consistent with most recent cycles
     df["fmarital"] = df["fmarital"].replace([3, 4, 5, 6], [2, 3, 4, 5])
 
@@ -811,7 +583,7 @@ def read_fem_resp_2002():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
@@ -834,7 +606,9 @@ def read_fem_resp_2002():
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
 
     df["addexp"] /= 10
 
@@ -875,7 +649,7 @@ def read_fem_resp_2010():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
@@ -883,7 +657,9 @@ def read_fem_resp_2010():
     ]
 
     df = read_resp(
-        raw("2006_2010_FemRespSetup.dct"), raw("2006_2010_FemResp.dat.gz"), usecols=usecols
+        raw("2006_2010_FemRespSetup.dct"),
+        raw("2006_2010_FemResp.dat.gz"),
+        usecols=usecols,
     )
 
     invalid = [9997, 9998, 9999]
@@ -895,12 +671,14 @@ def read_fem_resp_2010():
     df["tubs"] = df["tubs"].replace([1, 2], [1, 5])
     df["hyst"] = df["hyst"].replace([1, 2], [1, 5])
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["addexp"] /= 10
 
     invalid = df["cmdivorcx"] < df["cmmarrhx"]
@@ -944,14 +722,16 @@ def read_fem_resp_2013():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
     ]
 
     df = read_resp(
-        raw("2011_2013_FemRespSetup.dct"), raw("2011_2013_FemRespData.dat.gz"), usecols=usecols
+        raw("2011_2013_FemRespSetup.dct"),
+        raw("2011_2013_FemRespData.dat.gz"),
+        usecols=usecols,
     )
 
     invalid = [9997, 9998, 9999]
@@ -961,12 +741,14 @@ def read_fem_resp_2013():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1007,14 +789,16 @@ def read_fem_resp_2015():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
     ]
 
     df = read_resp(
-        raw("2013_2015_FemRespSetup.dct"), raw("2013_2015_FemRespData.dat.gz"), usecols=usecols
+        raw("2013_2015_FemRespSetup.dct"),
+        raw("2013_2015_FemRespData.dat.gz"),
+        usecols=usecols,
     )
 
     invalid = [9997, 9998, 9999]
@@ -1024,12 +808,14 @@ def read_fem_resp_2015():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1068,25 +854,29 @@ def read_fem_resp_2017():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
     ]
 
     df = read_resp(
-        raw("2015_2017_FemRespSetup.dct"), raw("2015_2017_FemRespData.dat.gz"), usecols=usecols
+        raw("2015_2017_FemRespSetup.dct"),
+        raw("2015_2017_FemRespData.dat.gz"),
+        usecols=usecols,
     )
 
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1144,24 +934,28 @@ def read_fem_resp_2019():
         "addexp",  # Central number of additional births expected
         "agebaby1",  # Age at first live birth
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
     ]
 
     df = read_resp(
-        raw("2017_2019_FemRespSetup.dct"), raw("2017_2019_FemRespData.dat.gz"), usecols=usecols
+        raw("2017_2019_FemRespSetup.dct"),
+        raw("2017_2019_FemRespData.dat.gz"),
+        usecols=usecols,
     )
 
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = (df["hieduc"] >= 10).where(df["hieduc"].notna())
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
@@ -1217,7 +1011,7 @@ def read_fem_resp_2023():
         "intent",  # Intentions for additional births
         "addexp",  # Central number of additional births expected
         "strloper",  # Type of sterilization operation in effect
-        "tubs",  # R is surgically sterile at interview due to tubal sterilization 
+        "tubs",  # R is surgically sterile at interview due to tubal sterilization
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
@@ -1227,17 +1021,17 @@ def read_fem_resp_2023():
     usecols_upper = [col.upper() for col in usecols] + ["agebaby1"]
 
     file_path = raw("NSFG-2022-2023-FemRespPUFData.sas7bdat")
-    df, meta = pyreadstat.read_sas7bdat(str(file_path), usecols=usecols_upper)
+    df, _meta = pyreadstat.read_sas7bdat(str(file_path), usecols=usecols_upper)
     df.columns = df.columns.str.lower()
 
     df["agebaby1"] = df["agebaby1"].replace(97, np.nan)
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables (note change of codes)
     df["bdegree"] = (df["hieduc"] >= 8).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 5
-    
+
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1268,26 +1062,6 @@ def read_fem_resp_2023():
 
     digitize_resp(df)
     return df
-
-
-def read_canada_cycle_5():
-    """ """
-    # age at first marriage: CC232
-    # age of respondent at interview: C3
-    # final weight: C1
-    # marital status: C5
-    # Respondent every married: CC227
-    pass
-
-
-def read_canada_cycle_6():
-    """ """
-    # age at first marriage: CC232
-    # age of respondent at interview: C3
-    # final weight: C1
-    # marital status: C5
-    # Respondent every married: CC227
-    pass
 
 
 def read_male_resp_2002():
@@ -1321,12 +1095,14 @@ def read_male_resp_2002():
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["addexp"] /= 10
     df["cmintvw"] = df["cmintvw"].replace([9797, 9898, 9999], np.nan)
     df["marrend4"] = df["marrend4"].replace([8, 9], np.nan)
@@ -1376,17 +1152,21 @@ def read_male_resp_2010():
         "hieduc",  # Highest level of education
     ]
 
-    df = read_resp(raw("2006_2010_MaleSetup.dct"), raw("2006_2010_Male.dat.gz"), usecols=usecols)
+    df = read_resp(
+        raw("2006_2010_MaleSetup.dct"), raw("2006_2010_Male.dat.gz"), usecols=usecols
+    )
 
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
 
@@ -1431,18 +1211,22 @@ def read_male_resp_2013():
     ]
 
     df = read_resp(
-        raw("2011_2013_MaleSetup.dct"), raw("2011_2013_MaleData.dat.gz"), usecols=usecols
+        raw("2011_2013_MaleSetup.dct"),
+        raw("2011_2013_MaleData.dat.gz"),
+        usecols=usecols,
     )
 
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1487,18 +1271,22 @@ def read_male_resp_2015():
     ]
 
     df = read_resp(
-        raw("2013_2015_MaleSetup.dct"), raw("2013_2015_MaleData.dat.gz"), usecols=usecols
+        raw("2013_2015_MaleSetup.dct"),
+        raw("2013_2015_MaleData.dat.gz"),
+        usecols=usecols,
     )
 
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
@@ -1541,7 +1329,9 @@ def read_male_resp_2017():
     ]
 
     df = read_resp(
-        raw("2015_2017_MaleSetup.dct"), raw("2015_2017_MaleData.dat.gz"), usecols=usecols
+        raw("2015_2017_MaleSetup.dct"),
+        raw("2015_2017_MaleData.dat.gz"),
+        usecols=usecols,
     )
 
     # since cmbirth and cmmarrhx are no longer included, we reconstruct them.
@@ -1554,12 +1344,14 @@ def read_male_resp_2017():
     df["cmbirth"] = df.cmintvw - df.ager * 12 - 6
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12 + 6
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["addexp"] /= 10
@@ -1617,7 +1409,9 @@ def read_male_resp_2019():
     ]
 
     df = read_resp(
-        raw("2017_2019_MaleSetup.dct"), raw("2017_2019_MaleData.dat.gz"), usecols=usecols
+        raw("2017_2019_MaleSetup.dct"),
+        raw("2017_2019_MaleData.dat.gz"),
+        usecols=usecols,
     )
 
     # since cmbirth and cmmarrhx are no longer included, we reconstruct them.
@@ -1629,12 +1423,14 @@ def read_male_resp_2019():
     # for the +6 this replaced. See Task 14 on the project board.
     df["cmbirth"] = df.cmintvw - df.ager * 12 - 6
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables
     df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
-    df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
-    
+    df["hieduc"] = df["hieduc"].replace(
+        range(5, 16), [1, 1, 1, 2, 4, 5, 7, 8, 9, 11, 10]
+    )
+
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12 + 6
 
     df["addexp"] /= 10
@@ -1695,16 +1491,16 @@ def read_male_resp_2023():
     usecols_upper = [col.upper() for col in usecols]
 
     file_path = raw("NSFG-2022-2023-MaleRespPUFData.sas7bdat")
-    df, meta = pyreadstat.read_sas7bdat(str(file_path), usecols=usecols_upper)
+    df, _meta = pyreadstat.read_sas7bdat(str(file_path), usecols=usecols_upper)
     df.columns = df.columns.str.lower()
 
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    
+
     # Fill in educational variables (note change of codes)
     df["bdegree"] = (df["hieduc"] >= 8).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 5
-    
+
     df["addexp"] /= 10
 
     # since cmbirth and cmmarrhx are no longer included, we reconstruct them.

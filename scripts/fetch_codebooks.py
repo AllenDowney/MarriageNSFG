@@ -65,10 +65,12 @@ def fetch_one(name, url, scratch):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--refresh", action="store_true",
-                        help="re-fetch documents already cached")
-    parser.add_argument("--list", action="store_true",
-                        help="list cached documents and exit")
+    parser.add_argument(
+        "--refresh", action="store_true", help="re-fetch documents already cached"
+    )
+    parser.add_argument(
+        "--list", action="store_true", help="list cached documents and exit"
+    )
     args = parser.parse_args()
 
     CODEBOOKS.mkdir(exist_ok=True)

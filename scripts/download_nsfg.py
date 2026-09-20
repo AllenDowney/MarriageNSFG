@@ -54,22 +54,52 @@ CYCLES = {
     "1982": ([], ["1982NSFGData.dat"], []),
     "1988": ([], ["1988FemRespData.dat"], []),
     "1995": ([], ["1995FemRespData.dat"], []),
-    "2002": ([], ["2002FemResp.dat", "2002Male.dat"],
-             ["2002FemResp.dct", "2002Male.dct"]),
-    "2006-2010": ([], ["2006_2010_FemResp.dat", "2006_2010_Male.dat"],
-                  ["2006_2010_FemRespSetup.dct", "2006_2010_MaleSetup.dct"]),
-    "2011-2013": ([], ["2011_2013_FemRespData.dat", "2011_2013_MaleData.dat"],
-                  ["2011_2013_FemRespSetup.dct", "2011_2013_MaleSetup.dct"]),
-    "2013-2015": ([], ["2013_2015_FemRespData.dat", "2013_2015_MaleData.dat"],
-                  ["2013_2015_FemRespSetup.dct", "2013_2015_MaleSetup.dct"]),
-    "2015-2017": ([], ["2015_2017_FemRespData.dat", "2015_2017_MaleData.dat",
-                       "2015_2017_FemPregData.dat"],
-                  ["2015_2017_FemRespSetup.dct", "2015_2017_MaleSetup.dct",
-                   "2015_2017_FemPregSetup.dct"]),
-    "2017-2019": ([], ["2017_2019_FemRespData.dat", "2017_2019_MaleData.dat"],
-                  ["2017_2019_FemRespSetup.dct", "2017_2019_MaleSetup.dct"]),
-    "2022-2023": (["NSFG-2022-2023-FemRespPUFData.sas7bdat",
-                   "NSFG-2022-2023-MaleRespPUFData.sas7bdat"], [], []),
+    "2002": (
+        [],
+        ["2002FemResp.dat", "2002Male.dat"],
+        ["2002FemResp.dct", "2002Male.dct"],
+    ),
+    "2006-2010": (
+        [],
+        ["2006_2010_FemResp.dat", "2006_2010_Male.dat"],
+        ["2006_2010_FemRespSetup.dct", "2006_2010_MaleSetup.dct"],
+    ),
+    "2011-2013": (
+        [],
+        ["2011_2013_FemRespData.dat", "2011_2013_MaleData.dat"],
+        ["2011_2013_FemRespSetup.dct", "2011_2013_MaleSetup.dct"],
+    ),
+    "2013-2015": (
+        [],
+        ["2013_2015_FemRespData.dat", "2013_2015_MaleData.dat"],
+        ["2013_2015_FemRespSetup.dct", "2013_2015_MaleSetup.dct"],
+    ),
+    "2015-2017": (
+        [],
+        [
+            "2015_2017_FemRespData.dat",
+            "2015_2017_MaleData.dat",
+            "2015_2017_FemPregData.dat",
+        ],
+        [
+            "2015_2017_FemRespSetup.dct",
+            "2015_2017_MaleSetup.dct",
+            "2015_2017_FemPregSetup.dct",
+        ],
+    ),
+    "2017-2019": (
+        [],
+        ["2017_2019_FemRespData.dat", "2017_2019_MaleData.dat"],
+        ["2017_2019_FemRespSetup.dct", "2017_2019_MaleSetup.dct"],
+    ),
+    "2022-2023": (
+        [
+            "NSFG-2022-2023-FemRespPUFData.sas7bdat",
+            "NSFG-2022-2023-MaleRespPUFData.sas7bdat",
+        ],
+        [],
+        [],
+    ),
 }
 
 # 1988 is stored as one unbroken run of fixed-width records
@@ -118,11 +148,13 @@ def derive_1988_lines():
         raw = f.read()
     n, rem = divmod(len(raw), RECORD_LEN_1988)
     if rem:
-        print(f"  WARNING: 1988 file is not a whole number of "
-              f"{RECORD_LEN_1988}-byte records ({rem} bytes over)")
+        print(
+            f"  WARNING: 1988 file is not a whole number of "
+            f"{RECORD_LEN_1988}-byte records ({rem} bytes over)"
+        )
     with gzip.open(dest, "wb") as out:
         for i in range(n):
-            out.write(raw[i * RECORD_LEN_1988:(i + 1) * RECORD_LEN_1988] + b"\n")
+            out.write(raw[i * RECORD_LEN_1988 : (i + 1) * RECORD_LEN_1988] + b"\n")
     print(f"  1988FemRespDataLines.dat.gz  derived ({n} records)")
 
 
@@ -148,14 +180,23 @@ def do_check(cycle_filter):
 
 
 def main():
-    p = argparse.ArgumentParser(description=__doc__,
-                                formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--i-accept-nchs-terms", action="store_true",
-                   help="confirm you have read and accepted the NCHS data user agreement")
+    p = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    p.add_argument(
+        "--i-accept-nchs-terms",
+        action="store_true",
+        help="confirm you have read and accepted the NCHS data user agreement",
+    )
     p.add_argument("--cycle", choices=sorted(CYCLES), help="fetch one cycle only")
-    p.add_argument("--check", action="store_true",
-                   help="report which files are present; no network access")
-    p.add_argument("--force", action="store_true", help="re-download files already present")
+    p.add_argument(
+        "--check",
+        action="store_true",
+        help="report which files are present; no network access",
+    )
+    p.add_argument(
+        "--force", action="store_true", help="re-download files already present"
+    )
     args = p.parse_args()
 
     if args.check:
