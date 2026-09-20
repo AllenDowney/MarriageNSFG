@@ -1,16 +1,15 @@
 """Plotting and estimation helpers for the NSFG analyses."""
 
-from lifelines import KaplanMeierFitter
 from pathlib import Path
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy.stats import norm
-
 import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from lifelines import KaplanMeierFitter
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from scipy.stats import norm
 
 
 def value_counts(seq, **options):
