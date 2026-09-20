@@ -49,8 +49,8 @@ plt.rcParams["figure.figsize"] = [6, 3.5]
 Note: Early cycles of the NSFG oversampled married women, so it's pretty important to correct for stratified sampling!
 
 ```{code-cell} ipython3
-resp3 = marriage.ReadFemResp1982()
-marriage.Validate1982(resp3)
+resp3 = marriage.read_fem_resp_1982()
+marriage.validate_1982(resp3)
 resp3.shape
 ```
 
@@ -144,8 +144,8 @@ sum(~resp3.cmdivorcx.isnull())
 Validating the 1988 data:
 
 ```{code-cell} ipython3
-resp4 = marriage.ReadFemResp1988()
-marriage.Validate1988(resp4)
+resp4 = marriage.read_fem_resp_1988()
+marriage.validate_1988(resp4)
 resp4.shape
 ```
 
@@ -247,8 +247,8 @@ sum(~resp4.cmdivorcx.isnull())
 Validating the 1995 data:
 
 ```{code-cell} ipython3
-resp5 = marriage.ReadFemResp1995()
-marriage.Validate1995(resp5)
+resp5 = marriage.read_fem_resp_1995()
+marriage.validate_1995(resp5)
 resp5.shape
 ```
 
@@ -361,8 +361,8 @@ sum((resp5.marstat == 4) & (~resp5.divorced) & (~resp5.cmstphsbx.isnull()))
 Validating the 2002 data:
 
 ```{code-cell} ipython3
-resp6 = marriage.ReadFemResp2002()
-marriage.Validate2002(resp6)
+resp6 = marriage.read_fem_resp_2002()
+marriage.validate_2002(resp6)
 resp6.shape
 ```
 
@@ -439,8 +439,8 @@ sum(resp6.evrmarry), 1232 + 260 + 58 + 2576
 Validating the 2010 data:
 
 ```{code-cell} ipython3
-resp7 = marriage.ReadFemResp2010()
-marriage.Validate2010(resp7)
+resp7 = marriage.read_fem_resp_2010()
+marriage.validate_2010(resp7)
 resp7.shape
 ```
 
@@ -517,8 +517,8 @@ sum(resp7.evrmarry), 1574 + 405 + 68 + 3487
 Validating the 2013 data
 
 ```{code-cell} ipython3
-resp8 = marriage.ReadFemResp2013()
-marriage.Validate2013(resp8)
+resp8 = marriage.read_fem_resp_2013()
+marriage.validate_2013(resp8)
 resp8.shape
 ```
 
@@ -591,10 +591,10 @@ sum(resp8.evrmarry), 755 + 214 + 26 + 1457
 Validating the 2015 data
 
 ```{code-cell} ipython3
-from nsfg.marriage import ReadFemResp2015
+from nsfg.marriage import read_fem_resp_2015
 
-resp9 = ReadFemResp2015()
-marriage.Validate2015(resp9)
+resp9 = read_fem_resp_2015()
+marriage.validate_2015(resp9)
 resp9.shape
 ```
 
@@ -675,8 +675,8 @@ sum(resp9.evrmarry), 756 + 169 + 28 + 1448
 Validating 2017 data
 
 ```{code-cell} ipython3
-resp10 = marriage.ReadFemResp2017()
-marriage.Validate2017(resp10)
+resp10 = marriage.read_fem_resp_2017()
+marriage.validate_2017(resp10)
 ```
 
 ```{code-cell} ipython3
@@ -747,10 +747,10 @@ decorate(xlabel="Sampling weight", ylabel="CDF")
 Validating 2019 data
 
 ```{code-cell} ipython3
-from nsfg.marriage import ReadFemResp2019
+from nsfg.marriage import read_fem_resp_2019
 
-resp11 = ReadFemResp2019()
-marriage.Validate2019(resp11)
+resp11 = read_fem_resp_2019()
+marriage.validate_2019(resp11)
 resp11.shape
 ```
 
@@ -826,9 +826,9 @@ value_counts(resp11["addexp"])
 Validating 2023 data
 
 ```{code-cell} ipython3
-from nsfg.marriage import ReadFemResp2023
+from nsfg.marriage import read_fem_resp_2023
 
-resp12 = ReadFemResp2023()
+resp12 = read_fem_resp_2023()
 resp12.shape
 ```
 
@@ -1122,7 +1122,7 @@ df.to_csv(interim("marriage_nsfg_female.csv.gz"), index=False, compression="gzip
 ### Male 2002
 
 ```{code-cell} ipython3
-male2002 = marriage.ReadMaleResp2002()
+male2002 = marriage.read_male_resp_2002()
 male2002.columns
 ```
 
@@ -1141,7 +1141,7 @@ value_counts(male2002["rwant"])
 ### Male 2010
 
 ```{code-cell} ipython3
-male2010 = marriage.ReadMaleResp2010()
+male2010 = marriage.read_male_resp_2010()
 male2010.columns
 ```
 
@@ -1160,7 +1160,7 @@ value_counts(male2010["rwant"])
 ### Male 2013
 
 ```{code-cell} ipython3
-male2013 = marriage.ReadMaleResp2013()
+male2013 = marriage.read_male_resp_2013()
 male2013.columns
 ```
 
@@ -1179,7 +1179,7 @@ value_counts(male2013["rwant"])
 ### Male 2015
 
 ```{code-cell} ipython3
-male2015 = marriage.ReadMaleResp2015()
+male2015 = marriage.read_male_resp_2015()
 male2015.columns
 ```
 
@@ -1198,7 +1198,7 @@ value_counts(male2015["rwant"])
 ### Male 2017
 
 ```{code-cell} ipython3
-male2017 = marriage.ReadMaleResp2017()
+male2017 = marriage.read_male_resp_2017()
 male2017.columns
 ```
 
@@ -1217,7 +1217,7 @@ value_counts(male2017["rwant"])
 ### Male 2019
 
 ```{code-cell} ipython3
-male2019 = marriage.ReadMaleResp2019()
+male2019 = marriage.read_male_resp_2019()
 male2019.columns
 ```
 
@@ -1236,7 +1236,7 @@ value_counts(male2019["rwant"])
 ### Male 2023
 
 ```{code-cell} ipython3
-male2023 = marriage.ReadMaleResp2023()
+male2023 = marriage.read_male_resp_2023()
 male2023.columns
 ```
 

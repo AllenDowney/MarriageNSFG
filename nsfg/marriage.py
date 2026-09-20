@@ -17,7 +17,6 @@ from collections import defaultdict
 from nsfg import survival
 from nsfg.paths import raw, interim
 
-from statadict import parse_stata_dict
 import pyreadstat
 
 
@@ -65,7 +64,7 @@ class FixedWidthVariables(object):
         return df
 
 
-def ReadStataDct(dct_file, **options):
+def read_stata_dct(dct_file, **options):
     """Reads a Stata dictionary file.
 
     dct_file: string filename
@@ -105,7 +104,7 @@ def ReadStataDct(dct_file, **options):
     return dct
 
 
-def ReadResp(dct_file, dat_file, **options):
+def read_resp(dct_file, dat_file, **options):
     """Reads the NSFG respondent data.
 
     dct_file: string file name
@@ -113,7 +112,7 @@ def ReadResp(dct_file, dat_file, **options):
 
     returns: DataFrame
     """
-    dct = ReadStataDct(dct_file, encoding="iso-8859-1")
+    dct = read_stata_dct(dct_file, encoding="iso-8859-1")
     df = dct.ReadFixedWidth(dat_file, compression="gzip", **options)
     return df
 
@@ -163,37 +162,6 @@ def legend(**options):
         ax.legend(handles, labels, **options)
 
 
-def read_stata(dct_file, dat_file, **options):
-    """Read data from a stata file.
-
-    dct_file: string file name
-    dat_file: string file name
-
-    returns: DataFrame
-    """
-    stata_dict = parse_stata_dict(dct_file)
-
-    underride(options, compression="gzip")
-    resp = pd.read_fwf(
-        dat_file,
-        names=stata_dict.names,
-        colspecs=stata_dict.colspecs,
-        **options,
-    )
-    return resp
-
-
-def read_fem_resp(dct_file, dat_file, **options):
-    """Read an NSFG respondent file.
-
-    dct_file: string file name
-    dat_file: string file name
-
-    returns: DataFrame
-    """
-    resp = read_stata(dct_file, dat_file, **options)
-    clean_resp(resp)
-    return resp
 
 
 def clean_resp(resp):
@@ -276,8 +244,8 @@ def resample_resps(resps, remove_missing=False, jitter=0):
     # jittering the ages reflects the idea that the resampled people
     # are not identical to the actual respondents
     if jitter:
-        Jitter(sample, "ager", jitter=jitter)
-        Jitter(sample, "agemarry", jitter=jitter)
+        jitter(sample, "ager", jitter=jitter)
+        jitter(sample, "agemarry", jitter=jitter)
 
     return sample
 
@@ -294,7 +262,7 @@ def resample_rows_weighted(df, column="finalwgt"):
     return sample
 
 
-def Jitter(df, column, jitter=1):
+def jitter(df, column, jitter=1):
     """Adds random noise to a column.
 
     df: DataFrame
@@ -304,7 +272,7 @@ def Jitter(df, column, jitter=1):
     df[column] += np.random.uniform(-jitter, jitter, size=len(df))
 
 
-def EstimateSurvival(resp, cutoff=None):
+def estimate_survival(resp, cutoff=None):
     """Estimates the survival curve.
 
     resp: DataFrame of respondents
@@ -323,7 +291,7 @@ def EstimateSurvival(resp, cutoff=None):
     return hf, sf
 
 
-def PropensityMatch(target, group, colname="agemarry"):
+def propensity_match(target, group, colname="agemarry"):
     """Choose a random subset of `group` to matches propensity with `target`.
 
     target: DataFrame
@@ -344,7 +312,7 @@ def PropensityMatch(target, group, colname="agemarry"):
     return group.loc[indices]
 
 
-def EstimateSurvivalByCohort(
+def estimate_survival_by_cohort(
     resps, iters=101, cutoffs=None, predict_flag=False, prop_match=None, error_rate=0
 ):
     """Makes survival curves for resampled data.
@@ -374,22 +342,22 @@ def EstimateSurvivalByCohort(
         hf_map = {}
         for name, group in iter(grouped):
             if prop_match:
-                group = PropensityMatch(last, group)
+                group = propensity_match(last, group)
 
             if error_rate:
-                AddErrors(group, "complete_missing", error_rate)
-                AddErrors(group, "ongoing_missing", error_rate)
+                add_errors(group, "complete_missing", error_rate)
+                add_errors(group, "ongoing_missing", error_rate)
 
             # the amount of missing data is small; I think it is better
             # to drop it than to fill with random data
-            # FillMissingColumn(group, 'complete_var', 'complete_missing')
-            # FillMissingColumn(group, 'ongoing_var', 'ongoing_missing')
+            # fill_missing_column(group, 'complete_var', 'complete_missing')
+            # fill_missing_column(group, 'ongoing_var', 'ongoing_missing')
             cutoff = cutoffs.get(name, 100)
-            hf_map[name] = EstimateSurvival(group, cutoff)
+            hf_map[name] = estimate_survival(group, cutoff)
 
         # make predictions if desired
         if predict_flag:
-            MakePredictions(hf_map)
+            make_predictions(hf_map)
 
         # extract the sf from each pair and accumulate the results
         for name, (hf, sf) in hf_map.items():
@@ -398,7 +366,7 @@ def EstimateSurvivalByCohort(
     return sf_map
 
 
-def AddErrors(group, colname, error_rate):
+def add_errors(group, colname, error_rate):
     """
 
     NOTE: This will not work if there are actual missing values!
@@ -406,7 +374,7 @@ def AddErrors(group, colname, error_rate):
     group[colname] = np.random.random(len(group)) < error_rate
 
 
-def FillMissingColumn(group, colname, missing_colname):
+def fill_missing_column(group, colname, missing_colname):
     """Fills missing values of the given column.
 
     group: DataFrame
@@ -425,7 +393,7 @@ def FillMissingColumn(group, colname, missing_colname):
     group[colname].fillna(fill, inplace=True)
 
 
-def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
+def plot_survival_functions(sf_map, predict_flag=False, colormap=None):
     """Plot estimated survival functions.
 
     sf_map: map from group name to sequence of survival functions
@@ -440,7 +408,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
         if len(sf) == 0:
             continue
 
-        ts, rows = MakeSurvivalCI(sf_seq, [10, 50, 90])
+        ts, rows = make_survival_ci(sf_seq, [10, 50, 90])
         plt.fill_between(ts, rows[0], rows[2], lw=0, color="gray", alpha=0.2)
 
         if not predict_flag:
@@ -451,7 +419,7 @@ def PlotSurvivalFunctions(sf_map, predict_flag=False, colormap=None):
                 plt.plot(ts, rows[1], label="19%ds" % name, alpha=0.8)
 
 
-def MakePredictions(hf_map):
+def make_predictions(hf_map):
     """Extends a set of hazard functions and recomputes survival functions.
 
     For each group in hf_map, we extend hf and recompute sf.
@@ -472,7 +440,7 @@ def MakePredictions(hf_map):
         hf_map[name] = hf, sf
 
 
-def MakeSurvivalCI(sf_seq, percents, flip=False):
+def make_survival_ci(sf_seq, percents, flip=False):
     """Makes confidence intervals from a list of survival functions.
 
     sf_seq: list of SurvivalFunction
@@ -513,7 +481,7 @@ def percentile_rows(row_seq, percentiles):
     return np.percentile(array, percentiles, axis=0)
 
 
-def ReadFemResp1982():
+def read_fem_resp_1982():
     """Reads respondent data from NSFG Cycle 3.
 
     returns: DataFrame
@@ -623,7 +591,7 @@ def ReadFemResp1982():
     return df
 
 
-def ReadFemResp1988():
+def read_fem_resp_1988():
     """Reads respondent data from NSFG Cycle 4.
     Read as if were a standard ascii file
     returns: DataFrame
@@ -728,7 +696,7 @@ def ReadFemResp1988():
     return df
 
 
-def ReadFemResp1995():
+def read_fem_resp_1995():
     """Reads respondent data from NSFG Cycle 5.
 
     returns: DataFrame
@@ -817,7 +785,7 @@ def ReadFemResp1995():
     return df
 
 
-def ReadFemResp2002():
+def read_fem_resp_2002():
     """Reads respondent data from NSFG Cycle 6.
 
     returns: DataFrame
@@ -851,7 +819,7 @@ def ReadFemResp2002():
         "degrees",  # Highest degree obtained
     ]
 
-    df = ReadResp(raw("2002FemResp.dct"), raw("2002FemResp.dat.gz"), usecols=usecols)
+    df = read_resp(raw("2002FemResp.dct"), raw("2002FemResp.dat.gz"), usecols=usecols)
 
     invalid = [9997, 9998, 9999]
     df["agebaby1"] = df["agebaby1"].replace(invalid, np.nan) / 100.0
@@ -881,7 +849,7 @@ def ReadFemResp2002():
     return df
 
 
-def ReadFemResp2010():
+def read_fem_resp_2010():
     """Reads respondent data from NSFG Cycle 7.
 
     returns: DataFrame
@@ -914,7 +882,7 @@ def ReadFemResp2010():
         "degrees",  # Highest degree obtained
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2006_2010_FemRespSetup.dct"), raw("2006_2010_FemResp.dat.gz"), usecols=usecols
     )
 
@@ -950,7 +918,7 @@ def ReadFemResp2010():
     return df
 
 
-def ReadFemResp2013():
+def read_fem_resp_2013():
     """Reads respondent data from NSFG Cycle 8.
 
     returns: DataFrame
@@ -982,7 +950,7 @@ def ReadFemResp2013():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2011_2013_FemRespSetup.dct"), raw("2011_2013_FemRespData.dat.gz"), usecols=usecols
     )
 
@@ -1013,7 +981,7 @@ def ReadFemResp2013():
     return df
 
 
-def ReadFemResp2015():
+def read_fem_resp_2015():
     """Reads respondent data from NSFG Cycle 9.
 
     returns: DataFrame
@@ -1045,7 +1013,7 @@ def ReadFemResp2015():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2013_2015_FemRespSetup.dct"), raw("2013_2015_FemRespData.dat.gz"), usecols=usecols
     )
 
@@ -1076,7 +1044,7 @@ def ReadFemResp2015():
     return df
 
 
-def ReadFemResp2017():
+def read_fem_resp_2017():
     """Reads respondent data from NSFG Cycle 10.
 
     returns: DataFrame
@@ -1106,7 +1074,7 @@ def ReadFemResp2017():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2015_2017_FemRespSetup.dct"), raw("2015_2017_FemRespData.dat.gz"), usecols=usecols
     )
 
@@ -1152,7 +1120,7 @@ def ReadFemResp2017():
     return df
 
 
-def ReadFemResp2019():
+def read_fem_resp_2019():
     """Reads respondent data from NSFG Cycle 11.
 
     returns: DataFrame
@@ -1182,7 +1150,7 @@ def ReadFemResp2019():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2017_2019_FemRespSetup.dct"), raw("2017_2019_FemRespData.dat.gz"), usecols=usecols
     )
 
@@ -1226,7 +1194,7 @@ def ReadFemResp2019():
     return df
 
 
-def ReadFemResp2023():
+def read_fem_resp_2023():
     """Reads respondent data from NSFG Cycle 12.
 
     returns: DataFrame
@@ -1302,7 +1270,7 @@ def ReadFemResp2023():
     return df
 
 
-def ReadCanadaCycle5():
+def read_canada_cycle_5():
     """ """
     # age at first marriage: CC232
     # age of respondent at interview: C3
@@ -1312,7 +1280,7 @@ def ReadCanadaCycle5():
     pass
 
 
-def ReadCanadaCycle6():
+def read_canada_cycle_6():
     """ """
     # age at first marriage: CC232
     # age of respondent at interview: C3
@@ -1322,7 +1290,7 @@ def ReadCanadaCycle6():
     pass
 
 
-def ReadMaleResp2002():
+def read_male_resp_2002():
     """Reads respondent data from NSFG Cycle 6.
 
     returns: DataFrame
@@ -1348,7 +1316,7 @@ def ReadMaleResp2002():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(raw("2002Male.dct"), raw("2002Male.dat.gz"), usecols=usecols)
+    df = read_resp(raw("2002Male.dct"), raw("2002Male.dat.gz"), usecols=usecols)
 
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
@@ -1381,7 +1349,7 @@ def ReadMaleResp2002():
     return df
 
 
-def ReadMaleResp2010():
+def read_male_resp_2010():
     """Reads respondent data from NSFG Cycle 7.
 
     returns: DataFrame
@@ -1408,7 +1376,7 @@ def ReadMaleResp2010():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(raw("2006_2010_MaleSetup.dct"), raw("2006_2010_Male.dat.gz"), usecols=usecols)
+    df = read_resp(raw("2006_2010_MaleSetup.dct"), raw("2006_2010_Male.dat.gz"), usecols=usecols)
 
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
@@ -1435,7 +1403,7 @@ def ReadMaleResp2010():
     return df
 
 
-def ReadMaleResp2013():
+def read_male_resp_2013():
     """Reads respondent data from NSFG Cycle 8.
 
     returns: DataFrame
@@ -1462,7 +1430,7 @@ def ReadMaleResp2013():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2011_2013_MaleSetup.dct"), raw("2011_2013_MaleData.dat.gz"), usecols=usecols
     )
 
@@ -1491,7 +1459,7 @@ def ReadMaleResp2013():
     return df
 
 
-def ReadMaleResp2015():
+def read_male_resp_2015():
     """Reads respondent data from NSFG Cycle 9.
 
     returns: DataFrame
@@ -1518,7 +1486,7 @@ def ReadMaleResp2015():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2013_2015_MaleSetup.dct"), raw("2013_2015_MaleData.dat.gz"), usecols=usecols
     )
 
@@ -1546,7 +1514,7 @@ def ReadMaleResp2015():
     return df
 
 
-def ReadMaleResp2017():
+def read_male_resp_2017():
     """Reads respondent data from NSFG Cycle 10.
 
     returns: DataFrame
@@ -1572,7 +1540,7 @@ def ReadMaleResp2017():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2015_2017_MaleSetup.dct"), raw("2015_2017_MaleData.dat.gz"), usecols=usecols
     )
 
@@ -1622,7 +1590,7 @@ def ReadMaleResp2017():
     return df
 
 
-def ReadMaleResp2019():
+def read_male_resp_2019():
     """Reads respondent data from NSFG Cycle 11.
 
     returns: DataFrame
@@ -1648,7 +1616,7 @@ def ReadMaleResp2019():
         "hieduc",  # Highest level of education
     ]
 
-    df = ReadResp(
+    df = read_resp(
         raw("2017_2019_MaleSetup.dct"), raw("2017_2019_MaleData.dat.gz"), usecols=usecols
     )
 
@@ -1698,7 +1666,7 @@ def ReadMaleResp2019():
     return df
 
 
-def ReadMaleResp2023():
+def read_male_resp_2023():
     """Reads respondent data from NSFG Cycle 12.
 
     returns: DataFrame
@@ -1777,55 +1745,104 @@ def ReadMaleResp2023():
     return df
 
 
-def Validate1982(df):
+# Survey cycle numbers are NSFG's own. The year is the end of the field period,
+# which is how the readers are named.
+CYCLES = {
+    1982: 3,
+    1988: 4,
+    1995: 5,
+    2002: 6,
+    2010: 7,
+    2013: 8,
+    2015: 9,
+    2017: 10,
+    2019: 11,
+    2023: 12,
+}
+
+# Male respondents were first interviewed in cycle 6 (2002).
+MALE_YEARS = [y for y in CYCLES if y >= 2002]
+
+
+def _readers(prefix, years):
+    return {y: globals()[f"{prefix}_{y}"] for y in years}
+
+
+def read_fem_resp(year):
+    """Read the female respondent file for one survey cycle.
+
+    year: end year of the field period, e.g. 2023 for the 2022-2023 cycle
+
+    returns: DataFrame
+    """
+    readers = _readers("read_fem_resp", CYCLES)
+    if year not in readers:
+        raise ValueError(f"No female reader for {year}; have {sorted(readers)}")
+    return readers[year]()
+
+
+def read_male_resp(year):
+    """Read the male respondent file for one survey cycle.
+
+    year: end year of the field period, e.g. 2023 for the 2022-2023 cycle
+
+    returns: DataFrame
+    """
+    readers = _readers("read_male_resp", MALE_YEARS)
+    if year not in readers:
+        raise ValueError(f"No male reader for {year}; have {sorted(readers)}")
+    return readers[year]()
+
+
+def validate_1982(df):
     assert len(df) == 7969
     assert len(df[df.evrmarry]) == 4651
     assert df.agemarry.value_counts().max() == 71
 
 
-def Validate1988(df):
+def validate_1988(df):
     assert len(df) == 8450
     assert len(df[df.evrmarry]) == 5290
     assert df.agemarry.value_counts().max() == 73
 
 
-def Validate1995(df):
+def validate_1995(df):
     assert len(df) == 10847
     assert len(df[df.evrmarry]) == 6841
     assert df.agemarry.value_counts().max() == 79
 
 
-def Validate2002(df):
+def validate_2002(df):
     assert len(df) == 7643
     assert sum(df.evrmarry) == 4126
     assert df.agemarry.value_counts().max() == 45
 
 
-def Validate2010(df):
+def validate_2010(df):
     assert len(df) == 12279
     assert sum(df.evrmarry) == 5534
     assert df.agemarry.value_counts().max() == 64
 
 
-def Validate2013(df):
+def validate_2013(df):
     assert len(df) == 5601
     assert sum(df.evrmarry) == 2452
     assert df.agemarry.value_counts().max() == 33
 
 
-def Validate2015(df):
+def validate_2015(df):
     assert len(df) == 5699
     assert sum(df.evrmarry) == 2401
     assert df.agemarry.value_counts().max() == 25
 
 
-def Validate2017(df):
+def validate_2017(df):
     assert len(df) == 5554
     assert sum(df.evrmarry) == 2582
     assert df.agemarry.value_counts().max() == 29
 
 
-def Validate2019(df):
+def validate_2019(df):
     assert len(df) == 6141
     assert sum(df.evrmarry) == 2722
     assert df.agemarry.value_counts().max() == 29
@@ -1833,36 +1850,36 @@ def Validate2019(df):
 
 def main():
     print("Cycle 10")
-    resp10 = ReadFemResp2017()
-    Validate2017(resp10)
+    resp10 = read_fem_resp_2017()
+    validate_2017(resp10)
 
     print("Cycle 9")
-    resp9 = ReadFemResp2015()
-    Validate2015(resp9)
+    resp9 = read_fem_resp_2015()
+    validate_2015(resp9)
 
     print("Cycle 8")
-    resp8 = ReadFemResp2013()
-    Validate2013(resp8)
+    resp8 = read_fem_resp_2013()
+    validate_2013(resp8)
 
     print("Cycle 7")
-    resp7 = ReadFemResp2010()
-    Validate2010(resp7)
+    resp7 = read_fem_resp_2010()
+    validate_2010(resp7)
 
     print("Cycle 6")
-    resp6 = ReadFemResp2002()
-    Validate2002(resp6)
+    resp6 = read_fem_resp_2002()
+    validate_2002(resp6)
 
     print("Cycle 5")
-    resp5 = ReadFemResp1995()
-    Validate1995(resp5)
+    resp5 = read_fem_resp_1995()
+    validate_1995(resp5)
 
     print("Cycle 4")
-    resp4 = ReadFemResp1988()
-    Validate1988(resp4)
+    resp4 = read_fem_resp_1988()
+    validate_1988(resp4)
 
     print("Cycle 3")
-    resp3 = ReadFemResp1982()
-    Validate1982(resp3)
+    resp3 = read_fem_resp_1982()
+    validate_1982(resp3)
 
 
 if __name__ == "__main__":

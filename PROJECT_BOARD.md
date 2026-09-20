@@ -7,13 +7,13 @@ Numbered tasks for tracking work. Each task has a permanent number; add new task
 The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already runs on it — both HDF files in the working tree contain cycle 12. What remains is to refresh the downstream analysis, and to get the repo into a state where the next cycle is straightforward.
 
 - **Task 1:** Reorganize the repo — **done** (`b6ab4cf`); data verified identical before and after.
-- **Task 2:** Rebuild the conda environment — **built** as `MarriageNSFG-py313` (Python 3.13.15, numpy 2.5.3, no `tables`); not yet switched to.
+- **Task 2:** Rebuild the conda environment — **done**; `MarriageNSFG` is now Python 3.13.15. Old env kept as `MarriageNSFG-py310`.
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
 - **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **pushed** (`8c77151`). One item left: ask GitHub to purge the orphaned LFS objects.
 - **Task 5:** Write the data download script — **written** (`scripts/download_nsfg.py`), covers all 29 NSFG files.
 - **Task 6:** Update the analysis for cycle 12 — **done**: data regenerated, 7 of 8 notebooks run clean, figures refreshed. `fertility` has 3 known errors, tracked under Task 17.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
-- **Task 8:** PEP-8 rename — not started.
+- **Task 8:** PEP-8 rename + dispatch wrapper — **done**; 39 functions renamed, verified byte-identical output.
 - **Task 9:** Fix the pandas landmines — **downgraded**: the one "live" site is dead code. Verified identical output under pandas 3.0.6 / numpy 2.5.
 - **Task 10:** Consolidated codebook metadata — not started.
 - **Task 11:** Validation coverage — not started.
@@ -390,9 +390,64 @@ boundary, which is the argument for the consolidated variable table.
 
 ## Task 8: PEP-8 rename
 
-**Status:** Not started.
+**Status:** Done 2026-09-20.
 
-**Context:** `marriage.py` uses CamelCase throughout (`ReadFemResp1982`, `EstimateSurvivalByCohort`, `Validate2017`). `utils.py` is already fully snake_case, as is every notebook that uses only `utils`.
+**Verified:** re-ran the full ETL after the rename, after the deletions, and
+after adding the dispatchers. The extracts came back with identical shapes,
+columns and frame hashes each time. The rename changed nothing, which is the
+only acceptable outcome for a mechanical rename.
+
+### What was renamed, and what was not
+
+39 module-level functions in `marriage.py` — 78 replacements there and 44 across
+the active notebooks. Left alone deliberately:
+
+- `FixedWidthVariables` is a **class**; CapWords is correct PEP-8.
+- `nsfg/survival.py` keeps its CamelCase methods. It was ported verbatim and
+  Task 13 replaces it with `empiricaldist`, so renaming would be churn.
+- `notebooks/archive/` was reverted. The first pass rewrote it too, which broke
+  calls into the legacy modules that *keep* CamelCase — `thinkstats2.ReadStataDct`
+  became `thinkstats2.read_stata_dct`, which does not exist. Caught by grepping
+  for snake_case calls on legacy module names.
+
+### Two dead functions removed, and a dependency with them
+
+`read_fem_resp(dct_file, dat_file)` and `read_stata(dct_file, dat_file)` were a
+parallel, never-called implementation of what `read_resp` does. Nothing in the
+package called them, and `validate_sex_ratio`'s eight calls to `read_fem_resp`
+sit inside functions that are never invoked — which is why that notebook runs
+clean despite referencing an undefined name.
+
+Deleting them freed the name for the dispatcher, and made
+`from statadict import parse_stata_dict` dead. **`statadict` is dropped from the
+dependencies** — its only use was the function that was removed.
+
+### The dispatcher
+
+```python
+CYCLES = {1982: 3, 1988: 4, 1995: 5, 2002: 6, 2010: 7,
+          2013: 8, 2015: 9, 2017: 10, 2019: 11, 2023: 12}
+MALE_YEARS = [y for y in CYCLES if y >= 2002]   # men first interviewed in 2002
+
+read_fem_resp(2023)    # -> read_fem_resp_2023()
+read_male_resp(1982)   # -> ValueError, listing the years that exist
+```
+
+### `clean_nsfg` was deliberately not converted to a loop
+
+The original plan said the dispatcher would let `clean_nsfg` "become a loop over
+cycles instead of 17 hand-written calls". On inspection that is the wrong change.
+Each cycle is not just a call — it is a call, its `validate_*` assertions, and a
+handful of per-cycle checks (`value_counts` on `bdegree`, `fmarital`, `rwant`, a
+plot of `want_yes` by age). The notebook is titled "Validate NSFG data"; the
+hand-written sections exist *because* each cycle gets inspected on its own.
+
+A loop would collapse ten deliberate inspections into one opaque `pd.concat`.
+The dispatcher is still worth having — for tests, for the validation suite in
+Task 11, and for new code that wants a cycle by year — but the ETL notebook keeps
+its per-cycle structure.
+
+**Context:** `marriage.py` used CamelCase throughout (`ReadFemResp1982`, `EstimateSurvivalByCohort`, `Validate2017`). `utils.py` is already fully snake_case, as is every notebook that uses only `utils`.
 
 The rename looks large and is not. There are 184 CamelCase functions in the repo, but 145 of them are in the four legacy Think Stats modules, which Task 1 archives. What is left:
 

@@ -195,7 +195,7 @@ def read_fem_resp_10():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp1982():
+def read_fem_resp_1982():
     """Reads respondent data from NSFG Cycle 3.
 
     returns: DataFrame
@@ -251,7 +251,7 @@ def ReadFemResp1982():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp1988():
+def read_fem_resp_1988():
     """Reads respondent data from NSFG Cycle 4.
     Read as if were a standard ascii file
     returns: DataFrame
@@ -313,7 +313,7 @@ def ReadFemResp1988():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp1995():
+def read_fem_resp_1995():
     """Reads respondent data from NSFG Cycle 5.
 
     returns: DataFrame
@@ -358,7 +358,7 @@ def ReadFemResp1995():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2002():
+def read_fem_resp_2002():
     """Reads respondent data from NSFG Cycle 6.
 
     returns: DataFrame
@@ -387,7 +387,7 @@ def ReadFemResp2002():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2010():
+def read_fem_resp_2010():
     """Reads respondent data from NSFG Cycle 7.
 
     returns: DataFrame
@@ -419,7 +419,7 @@ def ReadFemResp2010():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2010():
+def read_fem_resp_2010():
     """Reads respondent data from NSFG Cycle 7.
 
     returns: DataFrame
@@ -451,7 +451,7 @@ def ReadFemResp2010():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2013():
+def read_fem_resp_2013():
     """Reads respondent data from NSFG Cycle 8.
 
     returns: DataFrame
@@ -483,7 +483,7 @@ def ReadFemResp2013():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2015():
+def read_fem_resp_2015():
     """Reads respondent data from NSFG Cycle 9.
 
     returns: DataFrame
@@ -515,7 +515,7 @@ def ReadFemResp2015():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2017():
+def read_fem_resp_2017():
     """Reads respondent data from NSFG Cycle 10.
 
     returns: DataFrame
@@ -572,7 +572,7 @@ def ReadFemResp2017():
 ```
 
 ```{code-cell} ipython3
-def ReadFemResp2017():
+def read_fem_resp_2017():
     """Reads respondent data from NSFG Cycle 10.
 
     returns: DataFrame
@@ -692,7 +692,7 @@ def digitize_resp(df):
 ```
 
 ```{code-cell} ipython3
-def ReadMaleResp2002():
+def read_male_resp_2002():
     """Reads respondent data from NSFG Cycle 6.
 
     returns: DataFrame
@@ -731,7 +731,7 @@ def ReadMaleResp2002():
 ```
 
 ```{code-cell} ipython3
-def ReadMaleResp2010():
+def read_male_resp_2010():
     """Reads respondent data from NSFG Cycle 7.
 
     returns: DataFrame
@@ -760,7 +760,7 @@ def ReadMaleResp2010():
 ```
 
 ```{code-cell} ipython3
-def ReadMaleResp2013():
+def read_male_resp_2013():
     """Reads respondent data from NSFG Cycle 8.
 
     returns: DataFrame
@@ -789,7 +789,7 @@ def ReadMaleResp2013():
 ```
 
 ```{code-cell} ipython3
-def ReadMaleResp2015():
+def read_male_resp_2015():
     """Reads respondent data from NSFG Cycle 9.
 
     returns: DataFrame
@@ -817,7 +817,7 @@ def ReadMaleResp2015():
 ```
 
 ```{code-cell} ipython3
-def ReadMaleResp2017():
+def read_male_resp_2017():
     """Reads respondent data from NSFG Cycle 10.
 
     returns: DataFrame

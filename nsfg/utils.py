@@ -265,7 +265,7 @@ def make_kmf_map(grouped, min_at_risk=10):
 
     Curves are therefore truncated at the last time with at least `min_at_risk`
     people still at risk. This is the same idea as the `cutoffs` argument to
-    marriage.EstimateSurvivalByCohort, which the legacy code applied by hand.
+    marriage.estimate_survival_by_cohort, which the legacy code applied by hand.
 
     grouped: GroupBy object
     min_at_risk: smallest risk set to trust; None disables truncation.

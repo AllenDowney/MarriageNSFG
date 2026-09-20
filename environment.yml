@@ -34,7 +34,6 @@ dependencies:
     # pure-python or wheel-only
     - lifelines
     - pyreadstat
-    - statadict
     - empiricaldist
     # the project itself, plus dev tooling from pyproject.toml
     - -e ".[dev]"
