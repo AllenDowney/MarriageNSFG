@@ -23,7 +23,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
 - **Task 17:** Clean up `stop` cells and dead code so every notebook executes end to end — not started.
-- **Task 18:** Censoring times pile up on integer ages in cycles 10–12, spiking the survival tails — **diagnosed**, not fixed.
+- **Task 18:** Age at marriage is interval-censored from cycle 10, not exactly observed — **reframed**; `nsfg/intervals.py` written, estimator choice open.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -945,7 +945,122 @@ workaround, not the goal.
 
 ---
 
-## Task 18: Censoring times pile up on integer ages, spiking the survival tails
+## Task 18: Age at marriage is interval-censored from cycle 10, not exactly observed
+
+**Status:** Reframed 2026-09-20 after looking at the data structure. The tail
+spiking is a symptom; the cause is that the pipeline asserts precision the data
+does not have.
+
+### What the files actually contain
+
+From cycle 10 the public-use files stopped publishing century-month dates. What
+survives is the **year** of first marriage (`mardat01`) and the **integer** age
+at interview (`ager`). The readers rebuild century months by taking midpoints:
+`cmbirth = cmintvw - ager*12 - 6` and `cmmarrhx = (mardat01 - 1900)*12 + 6`.
+
+The midpoint is the right point estimate. Treating the result as an exactly
+observed time is not. Measured on the extract:
+
+| | cycles 3–9 | cycles 10–12 |
+|---|---|---|
+| distinct `cmmarrhx` values | 334–371 | **34–38** |
+| interval width, married | 1 month | **2 years** |
+| interval width, censored | 1 month | **1 year** |
+
+Both endpoints are year-resolution, so age at first marriage is known only to
+within about two years. The pipeline currently reports it to the month.
+
+### Why that produces the spiking tails
+
+Every censored respondent in a coarse cycle lands on one of a dozen integer
+ages. For the 1990s cohort, **97 people are censored at age 32.000000 exactly**
+and the risk set falls from 131 to 34; each later marriage then moves the curve
+~1.3 points instead of ~0.1. `min_at_risk` hides this, it does not fix it.
+
+### The defensible approach
+
+`nsfg/intervals.py` computes what is actually known — `[t_lo, t_hi)` per
+respondent — and supports two estimators that respect it:
+
+- **Multiple imputation.** Draw a time uniformly inside each interval, refit,
+  repeat. The discretization uncertainty shows up as spread across replicates
+  instead of being hidden by the midpoint. This is Allen's jitter suggestion,
+  generalized: it applies to the event times as well as the censoring times, and
+  the replicate spread is a usable uncertainty estimate.
+- **Turnbull's NPMLE** (`lifelines.KaplanMeierFitter.fit_interval_censoring`),
+  the textbook estimator for interval-censored data. No imputation, no
+  arbitrary draw.
+
+Cycles 3–9 have month-wide intervals, so both reduce to ordinary Kaplan-Meier
+there — the change is confined to the cycles that lost their dates.
+
+Validated: 100% of the current `agemarry` and `ager` point estimates fall inside
+the derived intervals, so the bounds are consistent with the existing convention
+while being honest about its precision.
+
+### On the tail specifically
+
+No estimator invents data. For the youngest cohorts there is genuinely nothing
+beyond the oldest age observed, and the honest presentation is to stop the curve
+where the data stops and to widen the interval as the risk set thins. What the
+interval-aware estimators add is that the *reported uncertainty* reflects the
+coarse dates, rather than a curve that looks precise and steps in blocks.
+
+### What the comparison showed
+
+**Turnbull is not the answer, for two reasons.**
+
+It does not fix the tail. On the 2000s cohort it reads 12.88% at age 23.2 and
+then jumps to **100%** — the same degeneracy as Kaplan-Meier. When the risk set
+empties, the NPMLE puts all remaining mass in the last interval. Being the
+correct estimator for interval-censored data does not make it robust at an
+exhausted tail.
+
+It does not scale. 1.1s on the 2000s cohort (n=2,140), but it ran over five
+minutes on the 1980s (n=16,169) without finishing. That rules it out inside a
+bootstrap.
+
+**Multiple imputation is better, and not because it smooths.** Individual
+replicates still spike. What matters is the spread *across* replicates. Five
+draws on the 2000s cohort gave final estimates of 100.00%, 16.86%, 13.16%,
+11.54% and 10.58% — a 90-point spread, because at that age the answer turns on
+whether one person's imputed marriage date falls before or after their imputed
+censoring date. A single midpoint draw would have reported one of those numbers
+with no warning.
+
+### The rule that came out of it
+
+`survival_curve()` fits a curve to each of N draws and reports the mean,
+truncated at the last age where the across-draw standard deviation is below a
+stated threshold. That replaces the arbitrary `min_at_risk` floor with a
+criterion that states itself: report the curve where repeated imputations agree.
+
+Imputation uncertainty turns out to be negligible wherever there is data:
+
+| cohort | n | married | stable to | estimate | max sd |
+|---|---|---|---|---|---|
+| 1930s | 325 | 310 | 45.0 | 95.4 | 0.5 |
+| 1950s | 10,613 | 8,649 | 45.5 | 88.6 | 0.1 |
+| 1970s | 17,403 | 9,827 | 45.8 | 77.5 | 0.1 |
+| 1980s | 16,169 | 6,494 | 43.8 | 72.5 | 1.1 |
+| 1990s | 10,232 | 1,473 | 33.8 | 56.8 | 1.5 |
+| **2000s** | 2,140 | **26** | **23.2** | **8.9** | **8.6** |
+
+The rule barely touches the well-observed cohorts and bites only where it should.
+
+### Scope
+
+- [x] Compare current / imputed / Turnbull on the affected cohorts
+- [x] Implement `survival_curve()` with the spread-based stopping rule
+- [ ] Decide whether it becomes the published estimator
+- [ ] Nest imputation inside the bootstrap so sampling and discretization
+      uncertainty are combined, not confused
+- [ ] Replace `min_at_risk` truncation with a rule tied to the reported interval
+- [ ] Re-examine the male readers, which overwrite `ager` with `int + 0.5` and so
+      lump at a different offset
+- [ ] State the change wherever a recent-cohort estimate is published
+
+### Superseded framing
 
 **Status:** Diagnosed 2026-09-20, not fixed. Affects published figures.
 
