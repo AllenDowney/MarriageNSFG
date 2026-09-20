@@ -6,7 +6,7 @@ help:
 	@echo "  make build        build for GitHub Pages (sets BASE_URL)"
 	@echo "  make build-local  build for local viewing"
 	@echo "  make serve        build locally and serve on :8000"
-	@echo "  make deploy       build and push to gh-pages"
+	@echo "  make deploy       build and FORCE-PUSH to the gh-pages branch"
 	@echo "  make clean        remove _build"
 
 build:
@@ -19,6 +19,9 @@ build-local:
 clean:
 	rm -rf _build
 
+## Force-pushes _build/html to the gh-pages branch of origin, replacing
+## whatever is there. The first run creates the branch; after that, enable
+## GitHub Pages for the repo and point it at gh-pages.
 deploy: build
 	ghp-import -n -p -f _build/html
 

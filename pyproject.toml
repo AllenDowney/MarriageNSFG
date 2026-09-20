@@ -21,7 +21,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["jupytext", "nbconvert", "jupyterlab", "pytest", "ruff", "black"]
+dev = [
+    "jupytext",
+    "nbconvert",
+    "jupyterlab",
+    "pytest",
+    "ruff",
+    "black",
+    "pylint",
+    # building and publishing the posts in jb/
+    "jupyter-book>=2",
+    "ghp-import",
+]
 
 [tool.setuptools]
 packages = ["nsfg"]
