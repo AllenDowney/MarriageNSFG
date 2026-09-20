@@ -137,7 +137,7 @@ value_counts(df22['married'])
 ### 2024 data
 
 ```{code-cell} ipython3
-df24_all = pd.read_csv('jun24pub.csv')
+df24_all = pd.read_csv(raw("jun24pub.csv"))
 ```
 
 ```{code-cell} ipython3

@@ -952,7 +952,7 @@ import pandas as pd
 import zipfile
 
 # Define the zip file name
-zip_filename = "period-total-fertility-rate.filtered.zip"
+zip_filename = raw("period-total-fertility-rate.filtered.zip")
 
 # Open the zip file and extract the CSV
 with zipfile.ZipFile(zip_filename, "r") as z:

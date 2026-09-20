@@ -7,11 +7,11 @@ Numbered tasks for tracking work. Each task has a permanent number; add new task
 The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already runs on it — both HDF files in the working tree contain cycle 12. What remains is to refresh the downstream analysis, and to get the repo into a state where the next cycle is straightforward.
 
 - **Task 1:** Reorganize the repo — **done** (`b6ab4cf`); data verified identical before and after.
-- **Task 2:** Rebuild the conda environment — not started. Design in `planning/environment.md`.
+- **Task 2:** Rebuild the conda environment — **built** as `MarriageNSFG-py313` (Python 3.13.15, numpy 2.5.3, no `tables`); not yet switched to.
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
 - **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **pushed** (`8c77151`). One item left: ask GitHub to purge the orphaned LFS objects.
 - **Task 5:** Write the data download script — not started.
-- **Task 6:** Update the analysis for cycle 12 — **partly done**: HDFs regenerated, four of six notebooks re-run and figures refreshed. `fertility` and `intent` blocked on Task 15.
+- **Task 6:** Update the analysis for cycle 12 — **done**: data regenerated, 7 of 8 notebooks run clean, figures refreshed. `fertility` has 3 known errors, tracked under Task 17.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
 - **Task 8:** PEP-8 rename — not started.
 - **Task 9:** Fix the pandas landmines — not started.
@@ -118,7 +118,23 @@ tested afterwards. Commit everything before rewriting history.
 
 ## Task 2: Rebuild the conda environment
 
-**Status:** Not started. Full design in `planning/environment.md`.
+**Status:** Environment built 2026-09-20 as `MarriageNSFG-py313`, alongside the
+current one. Not yet switched to. Design in `planning/environment.md`.
+
+Python 3.13.15, numpy 1.26.4 → 2.5.3, scipy 1.18.1, matplotlib 3.11.2,
+statsmodels 0.15.0, pyarrow 25.0.0, lifelines 0.30.3, pyreadstat 1.3.6.
+`tables` is gone. Built with **mamba**, which resolved it in well under the time
+conda was still spending on the same solve.
+
+**One expectation did not hold.** pandas resolved to **2.3.3**, not 3.0 — that is
+what conda-forge builds for 3.13. So the Copy-on-Write default that would make
+`marriage.py:424`'s chained `fillna` behave differently is *not* in play, and
+Task 9 stays a live issue rather than being forced by the upgrade. Getting
+pandas 3.0 would mean taking it from pip instead, which is worth deciding
+deliberately.
+
+Smoke-tested: the package imports, the survival port works, `ReadFemResp2023`
+returns the expected shape, and no warnings are raised.
 
 **Context:** Three files disagree about what this project needs. `environment.yml` is from 2020, names an env (`NSFG`) that does not exist on this machine, and omits `lifelines`, `pyreadstat`, `statadict` and `seaborn` — all of which the code imports. `requirements.txt` is from 2025 and is roughly right. The `Makefile` bypasses `environment.yml` entirely and pip-installs `requirements-dev.txt` into a conda env called `MarriageNSFG`.
 
