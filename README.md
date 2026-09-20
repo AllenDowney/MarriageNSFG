@@ -22,7 +22,8 @@ NSFG and IPUMS public-use files may not be redistributed, so `data/` is
 gitignored and was purged from this repo's history in September 2026.
 
 ```bash
-python scripts/download_nsfg.py --i-accept-nchs-terms
+python scripts/download_nsfg.py --i-accept-nchs-terms   # all ten cycles
+python scripts/download_nsfg.py --check                 # what is present, offline
 ```
 
 NCHS distributes these files under a data user agreement. Read and accept it

@@ -10,7 +10,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 2:** Rebuild the conda environment — **built** as `MarriageNSFG-py313` (Python 3.13.15, numpy 2.5.3, no `tables`); not yet switched to.
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
 - **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **pushed** (`8c77151`). One item left: ask GitHub to purge the orphaned LFS objects.
-- **Task 5:** Write the data download script — not started.
+- **Task 5:** Write the data download script — **written** (`scripts/download_nsfg.py`), covers all 29 NSFG files.
 - **Task 6:** Update the analysis for cycle 12 — **done**: data regenerated, 7 of 8 notebooks run clean, figures refreshed. `fertility` has 3 known errors, tracked under Task 17.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
 - **Task 8:** PEP-8 rename — not started.
@@ -227,7 +227,8 @@ Once no data is tracked, **LFS has no remaining purpose** and `.gitattributes` c
 
 ## Task 5: Write the data download script
 
-**Status:** Not started.
+**Status:** Written 2026-09-20. `python scripts/download_nsfg.py --check`
+reports all 29 files present.
 
 **Context:** Once Task 4 lands, a clone has code and no data. `scripts/download_nsfg.py` closes that gap. Every file the readers need is available upstream at a stable path, with filenames matching exactly what the code expects:
 
@@ -243,13 +244,33 @@ Verified: a `HEAD` on the 2022–2023 female file returns `content-length: 86384
 
 CPS and IPUMS extracts (`cps_00012.dta.gz`, `usa_00002.csv.gz`, `jun24pub.csv`) are **not** scriptable — IPUMS extracts are user-specific and built on request. Document how to recreate them instead.
 
+### Two things NCHS does not provide directly
+
+**NCHS serves uncompressed `.dat`; the readers expect `.dat.gz`.** The script
+compresses after download.
+
+**`1988FemRespDataLines.dat.gz` does not exist upstream** — that URL 404s. The
+published 1988 file has *no line breaks at all*: it is one unbroken run of
+30,022,850 bytes, exactly 8,450 records of 3,553 bytes. `ReadFemResp1988` reads
+the line-delimited form, so the script derives it rather than fetching it. This
+was only discoverable by probing; nothing in the repo recorded it.
+
 ### Scope
 
-- [ ] Terms notice plus a required `--i-accept-nchs-terms` flag
-- [ ] Per-cycle download, gzip, and sha256 verification
-- [ ] `--cycle` to fetch one cycle; default to all
-- [ ] Document the IPUMS/CPS extract definitions so they can be rebuilt by hand
-- [ ] Do **not** re-fetch `1973NSFGData.dat` / `1976NSFGData.dat` unless they are wanted — see Task 1's disposition table
+- [x] Terms notice plus a required `--i-accept-nchs-terms` flag
+- [x] Per-cycle download and gzip
+- [x] `--cycle` to fetch one cycle; `--check` to report what is present offline
+- [x] Derive the 1988 line-delimited variant
+- [x] Say plainly that CPS and IPUMS extracts are not covered — they are
+      user-specific and must be requested from those providers
+- [x] End-to-end tested against the live CDC servers: downloaded the 2002 cycle
+      into an empty directory, and `ReadFemResp2002` / `ReadMaleResp2002` returned
+      7,643 and 4,928 rows — matching the committed data exactly. The `.dct` files
+      are byte-identical to the existing ones; the `.dat.gz` differ in size only
+      because of gzip compression level, and decompress to identical bytes
+- [ ] sha256 verification against known-good digests
+- [ ] Do **not** re-fetch `1973NSFGData.dat` / `1976NSFGData.dat` — they were
+      truncated locally and nothing reads them
 
 ---
 
