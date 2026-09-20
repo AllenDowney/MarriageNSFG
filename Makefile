@@ -14,6 +14,7 @@ help:
 	@echo "make markdown    .ipynb -> .md (after editing in Jupyter)"
 	@echo "make execute     run every notebook in place"
 	@echo "make codebooks   fetch the NSFG codebooks"
+	@echo "make validate    check the readers against data/raw"
 	@echo "make lint / format / tests / clean"
 
 ## mamba, not conda -- the conda solver takes minutes on this environment
@@ -67,11 +68,17 @@ format:
 	ruff format nsfg/ scripts/ tests/
 	jupytext --pipe black $(NB_DIR)/*.md
 
+## Unit tests. These need no survey data.
 tests:
-	pytest -v
+	pytest -q
+
+## Per-cycle counts, reconstructed-age feasibility, cross-cycle continuity.
+## Needs data/raw.
+validate:
+	python -m nsfg.validate
 
 clean:
 	rm -f $(NB_DIR)/*.ipynb $(NB_DIR)/archive/*.ipynb
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: help env env-update env-remove install notebooks markdown execute data codebooks lint format tests clean
+.PHONY: help env env-update env-remove install validate notebooks markdown execute data codebooks lint format tests clean

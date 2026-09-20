@@ -16,7 +16,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 8:** PEP-8 rename + dispatch wrapper — **done**; 39 functions renamed, verified byte-identical output.
 - **Task 9:** Fix the pandas landmines — **downgraded**: the one "live" site is dead code. Verified identical output under pandas 3.0.6 / numpy 2.5.
 - **Task 10:** Consolidated codebook metadata — not started.
-- **Task 11:** Validation coverage — not started.
+- **Task 11:** Validation coverage — **done**; `nsfg/validate.py` + 15 unit tests. The feasibility check reproduces the Task 14 catch.
 - **Task 12:** Write `CLAUDE.md` — not started.
 - **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
 - **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed**; HDFs regenerated, figures refreshed.
@@ -562,9 +562,39 @@ Still to do: the older cycles, and the distillation into a real table.
 
 ## Task 11: Validation coverage
 
-**Status:** Not started.
+**Status:** Done 2026-09-20. `make validate` (needs data) and `make tests` (does not).
 
-**Context:** There are three layers of testing and all three have holes.
+`nsfg/validate.py` has three checks:
+
+**Per-cycle counts** for all 17 readers, measured rather than assumed. The
+existing `validate_*` functions asserted row counts only from 2002 on, and
+covered no male reader; the table now carries rows and ever-married counts for
+every cycle.
+
+**Reconstructed-age feasibility.** For cycles 10+, `cmbirth` is derived from the
+integer age at interview, so the implied age must fall in `[ager, ager+1)`.
+Verified against the real bug: the pre-Task-14 `+6` offset raises, and the old
+male `0` offset passes but warns, because it is biased half a year low without
+ever being impossible. All 17 readers now report an offset of exactly +0.500.
+
+**Cross-cycle continuity**, flagging variables that jump at a boundary by more
+than a multiple of the typical step. On the current data it surfaces `mardat01`
+and `mardis01` at 9→10 (where the year-based variables replaced the
+century-month ones) and `ager` at 9→10 — the meaning change that caused Task 14.
+
+15 unit tests in `tests/`, none needing survey data. `archive/marriage_test.py`
+and `archive/survival_test.py` are deleted; the former tested two functions that
+never existed.
+
+### A bug in the checker, not the readers
+
+The first run failed male 2017 with offsets swinging ±0.5. That was the check's
+fault: the male readers *overwrite* `ager` with the implied fractional age, so it
+arrives as `int + 0.5` there and as a raw integer on the female side, and
+`round()` sends 30.5 down but 31.5 up. `floor()` recovers the reported integer
+age under both conventions.
+
+**Context:** There were three layers of testing and all three had holes.
 
 `marriage.py` has `Validate1982` through `Validate2019` driven by `main()` — real assertions against known row counts and value distributions. But `main()` only exercises cycles 3–10. **There is no `Validate2023`**, none for 2019, and **none for any male reader** — so 9 of the 17 readers have no validation at all, including both readers for the new cycle.
 
