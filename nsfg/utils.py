@@ -254,10 +254,24 @@ def percentile_rows(row_seq, percentiles):
     return np.percentile(array, percentiles, axis=0)
 
 
-def make_kmf_map(grouped):
+def make_kmf_map(grouped, min_at_risk=10):
     """Dictionary that maps from cohort name to survival function
 
+    The tail of a Kaplan-Meier estimate is unreliable once the risk set is
+    nearly exhausted: a single event when two people remain moves the curve by
+    50 points, and a single event when one remains sends it to 100%. The
+    youngest cohort is always the worst case, because it is observed over only
+    a few years and almost nobody has married yet.
+
+    Curves are therefore truncated at the last time with at least `min_at_risk`
+    people still at risk. This is the same idea as the `cutoffs` argument to
+    marriage.EstimateSurvivalByCohort, which the legacy code applied by hand.
+
     grouped: GroupBy object
+    min_at_risk: smallest risk set to trust; None disables truncation.
+        The default of 10 removes the pathological tail on the youngest
+        cohort while leaving every other cohort essentially unchanged;
+        25 would clip the small 1930s cohort back by a decade.
 
     returns: dictionary that maps from cohort name to survival Series
     """
@@ -267,9 +281,15 @@ def make_kmf_map(grouped):
         kmf = KaplanMeierFitter()
         kmf.fit(group['duration'], group['observed'])
         series = (1 - kmf.survival_function_['KM_estimate']) * 100
+
+        if min_at_risk:
+            reliable = kmf.event_table.index[kmf.event_table.at_risk >= min_at_risk]
+            if len(reliable):
+                series = series[series.index <= reliable.max()]
+
         series.name = cohort
         kmf_map[cohort] = series
-        
+
     return kmf_map
 
 

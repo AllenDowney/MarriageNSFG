@@ -14,7 +14,7 @@ kernelspec:
 ```{code-cell} ipython3
 import pandas as pd
 
-from nsfg.paths import raw, interim
+from nsfg.paths import raw, interim, FIGURES
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -115,16 +115,17 @@ plt.rcParams["font.family"] = "PT Sans"  # Use PT Sans as the default font
 ```{code-cell} ipython3
 # Read the Census data
 
-from os.path import basename, exists
+from os.path import basename
 
 
 def download(url):
-    filename = basename(url)
-    if not exists(filename):
+    """Fetch a URL into data/raw, unless it is already there."""
+    path = raw(basename(url))
+    if not path.exists():
         from urllib.request import urlretrieve
 
-        local, _ = urlretrieve(url, filename)
-        print("Downloaded " + local)
+        local, _ = urlretrieve(url, path)
+        print("Downloaded " + str(local))
 
 
 download(
@@ -193,7 +194,7 @@ decorate(ylabel="Completed Cohort Fertility Rate (CFR)")
 ## Female Data
 
 ```{code-cell} ipython3
-df = pd.read_hdf(interim("FemMarriageData.hdf"), "FemMarriageData")
+df = pd.read_parquet(interim("FemMarriageData.parquet"))
 df.shape
 ```
 
@@ -342,7 +343,9 @@ def summarize_age_group(tables, age_group):
 
 ```{code-cell} ipython3
 def savefig(fig_number, extra_artist):
-    filename = f"nsfg_fertility{fig_number:02d}"
+    # resolve against FIGURES, not the CWD -- nbconvert runs a notebook with
+    # the notebook's own directory as the working directory
+    filename = FIGURES / f"nsfg_fertility{fig_number:02d}"
     plt.savefig(
         filename, dpi=150, bbox_inches="tight", bbox_extra_artists=[extra_artist]
     )
@@ -520,7 +523,7 @@ decorate(xlabel="Age")
 ## Male data
 
 ```{code-cell} ipython3
-df2 = pd.read_hdf(interim("MaleMarriageData.hdf"), "MaleMarriageData")
+df2 = pd.read_parquet(interim("MaleMarriageData.parquet"))
 df2.shape
 ```
 

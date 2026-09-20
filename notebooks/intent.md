@@ -114,7 +114,7 @@ plt.rcParams["font.family"] = "PT Sans"
 ## Female Data
 
 ```{code-cell} ipython3
-df = pd.read_hdf(interim("FemMarriageData.hdf"), "FemMarriageData")
+df = pd.read_parquet(interim("FemMarriageData.parquet"))
 df.shape
 ```
 
@@ -518,7 +518,7 @@ decorate(xlabel="Age")
 ## Male data
 
 ```{code-cell} ipython3
-df2 = pd.read_hdf(interim("MaleMarriageData.hdf"), "MaleMarriageData")
+df2 = pd.read_parquet(interim("MaleMarriageData.parquet"))
 df2.shape
 ```
 

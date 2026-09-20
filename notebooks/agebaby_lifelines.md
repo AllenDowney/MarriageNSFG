@@ -54,7 +54,7 @@ plt.rcParams["figure.figsize"] = [5, 3.7]
 Load the data cleaned in `clean_nsfg.ipynb` and run the analysis with `lifelines`
 
 ```{code-cell} ipython3
-%time unweighted = pd.read_hdf(interim('FemMarriageData.hdf'), 'FemMarriageData')
+%time unweighted = pd.read_parquet(interim("FemMarriageData.parquet"))
 unweighted.shape
 ```
 

@@ -41,15 +41,18 @@ make execute      # run the notebooks
 
 ## Editing a notebook
 
-The markdown under `notebooks/` is the source of truth. The `.ipynb` is
-generated from it and is gitignored.
+The markdown under `notebooks/` is the source of truth; edit the `.md`, not the
+`.ipynb`. Both are committed: the `.md` gives readable diffs, and the `.ipynb`
+carries the executed outputs so the analyses render on GitHub. Since the data is
+not in the repo, those stored outputs are the only way a reader sees results.
 
 ```bash
-make notebooks    # .md -> .ipynb, then edit or run in Jupyter
-make markdown     # .ipynb -> .md, to capture changes made in Jupyter
+make notebooks    # .md -> .ipynb
+make execute      # run them in place, populating outputs
+make markdown     # .ipynb -> .md, to capture edits made in Jupyter
 ```
 
-Edit the `.md`, not the `.ipynb`.
+Commit the `.md` and the `.ipynb` together, or the two will drift.
 
 ## The pipeline
 

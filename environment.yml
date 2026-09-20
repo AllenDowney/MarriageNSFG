@@ -1,18 +1,36 @@
-name: NSFG
+# The one environment definition for this project. Replaces the 2020
+# environment.yml (which named a nonexistent env and omitted half the
+# dependencies), requirements.txt and requirements-dev.txt.
+#
+# Runtime dependencies are declared in pyproject.toml; this file creates the
+# interpreter and the compiled packages, then installs the project itself in
+# editable mode with its dev extras.
+
+name: MarriageNSFG
+
+channels:
+  - conda-forge
 
 dependencies:
-  - python>=3.6
-  - jupyter
+  - python=3.13
+
+  # compiled, so preferred from conda-forge
   - numpy
-  - matplotlib
-  - pandas
-  - statsmodels
   - scipy
-  - pytables
+  - pandas
+  - pyarrow
+  - matplotlib
+  - statsmodels
+  - seaborn
+
+  - jupyterlab
   - pip
+
   - pip:
+    # pure-python or wheel-only
+    - lifelines
+    - pyreadstat
+    - statadict
     - empiricaldist
-
-
-
-
+    # the project itself, plus dev tooling from pyproject.toml
+    - -e ".[dev]"

@@ -17,7 +17,7 @@ dependencies = [
     "lifelines",
     "pyreadstat",
     "statadict",
-    "tables",
+    "pyarrow",
     "empiricaldist",
 ]
 

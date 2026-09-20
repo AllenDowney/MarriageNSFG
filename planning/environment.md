@@ -89,11 +89,33 @@ format:
 	jupytext --pipe black notebooks/*.md
 ```
 
+## Dropping PyTables for parquet
+
+`tables` was the single blocker on the Python version: it has **no PyPI wheel past 3.11**, for any recent release. conda-forge builds it through 3.15, so a conda environment would have worked, but it constrained any pip-based install.
+
+It supported exactly two files — `FemMarriageData` and `MaleMarriageData`, both our own extracts. No raw data format needs it; those go through `read_fwf`, `read_sas7bdat`, `read_stata`, `read_csv` and `read_excel`.
+
+Measured on the actual data:
+
+| | HDF | parquet (zstd) |
+|---|---|---|
+| FemMarriageData | 29.7 MB | **2.0 MB** |
+| MaleMarriageData | 28.7 MB | **1.1 MB** |
+| read | 0.100 s | **0.028 s** |
+
+Three further reasons beyond size and speed:
+
+- PyTables **pickles** the `want_yes` column, warning on every write that it cannot map the dtype to a C type. Pickled objects inside HDF are Python-version-dependent, which is a poor property for a file regenerated rarely and kept for years.
+- HDF5 does not reclaim space on rewrite, which is why `FemMarriageData.hdf` had grown to 153 MB on disk. Parquet replaces the file atomically, so the delete-before-write workaround added earlier is no longer needed.
+- `pyarrow` ships pure wheels for every current Python.
+
+Verified: regenerated both files as parquet and compared against the HDF versions — identical shapes, columns, dtypes and frame hashes.
+
 ## Python version
 
-Python 3.13 is the default choice. Every dependency supports it, and `pyreadstat` — historically the one most likely to lag, since it ships compiled extensions — publishes wheels for it.
+**3.13**, chosen from what is actually available rather than by default. Every dependency has a manylinux wheel at both 3.13 and 3.14 — pandas 3.0.6, numpy 2.5.3, scipy 1.18.1, matplotlib 3.11.2, statsmodels 0.15.0, pyarrow 25.0.1, pyreadstat 1.3.6 — and lifelines, statadict and empiricaldist are pure Python. 3.14 would also work; 3.13 is the conservative pick of the two.
 
-Two things to confirm at build time rather than assume: that `pyreadstat` and `tables` both have wheels for the chosen version on this platform, and that `lifelines` is current against the installed pandas. If either is a problem, 3.12 is the fallback; nothing in this project needs a 3.13 feature.
+Note the jump this represents from the current environment: pandas 2.2.3 → 3.0.x and numpy 1.26.4 → 2.5.x. Both are major-version changes, which is what the "Expected breakage" section below is about.
 
 ## Expected breakage
 

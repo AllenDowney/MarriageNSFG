@@ -22,6 +22,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed**; HDFs regenerated, figures refreshed.
 - **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
+- **Task 17:** Clean up `stop` cells and dead code so every notebook executes end to end — not started.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -732,3 +733,49 @@ The resampling is not wrong — it is the conservative choice and it handles the
 complex design honestly. The argument for changing it is that a dozen 101-fold
 resamples per notebook makes the analysis slow enough to discourage re-running it,
 and re-running it is exactly what caught Task 14.
+
+---
+
+## Task 17: Clean up `stop` cells and dead code so every notebook executes end to end
+
+**Status:** Not started.
+
+**Context:** `notebooks/fertility.md` contains a bare `stop` statement, which
+raises `NameError` and halts execution. It sits immediately after the last
+published figure (`savefig(11, inset)`) and is followed by a markdown heading,
+"## Modeling attempts". So it marks the boundary between the published analysis
+and exploratory work.
+
+A `stop` is used here for two different reasons, and they need different fixes:
+
+1. **The code below is slow** and should not be re-run every time.
+2. **The code below is broken or obsolete** and no longer belongs.
+
+Only fertility has one today, but the same ambiguity is what left it looking
+broken: of its original 36 errors, 33 were real gaps that have been fixed, and
+the last few are cells past the `stop` that were never meant to run. Nothing in
+the notebook distinguishes "parked because slow" from "parked because dead", so
+the whole tail reads as failure.
+
+**Goal:** every notebook executes the code it should, and contains no dead code.
+
+### Scope
+
+- [ ] Go through everything after the `stop` in `fertility.md` and classify each
+      cell as slow-but-wanted, or obsolete
+- [ ] Delete the obsolete cells outright
+- [ ] For slow-but-wanted work, replace `stop` with something honest — a
+      parameter that skips the section, a cached intermediate, or moving it to
+      its own notebook — rather than an exception
+- [ ] Resolve the last real failure in `fertility.md`: `KeyError: 37` at the
+      "Percent who have received surgical sterilization" figure, which is before
+      the `stop` and so genuinely broken
+- [ ] Sweep the other notebooks for dead code, not just `stop` cells
+- [ ] Once nothing is parked behind an exception, make `make execute` strict
+      again so a real failure is loud
+
+### Interim
+
+`make execute` tolerates failures and prints a per-notebook summary, so one
+parked notebook no longer prevents the others from running. That is a
+workaround, not the goal.

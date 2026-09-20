@@ -31,10 +31,15 @@ markdown:
 	  jupytext --to md:myst -o $(NB_DIR)/$$nb.md $(NB_DIR)/$$nb.ipynb || exit 1; \
 	done
 
+## Execute every notebook. Failures are tolerated so that one parked notebook
+## does not stop the rest; the summary says which ran clean. See Task 17.
 execute: notebooks
 	@for nb in $(NOTEBOOKS); do \
-	  echo "  executing $$nb"; \
-	  jupyter nbconvert --execute --inplace $(NB_DIR)/$$nb.ipynb || exit 1; \
+	  printf '  %-26s ' $$nb; \
+	  jupyter nbconvert --execute --inplace --allow-errors \
+	      $(NB_DIR)/$$nb.ipynb >/dev/null 2>&1 \
+	    && python scripts/check_notebook.py $(NB_DIR)/$$nb.ipynb \
+	    || echo "FAILED TO RUN"; \
 	done
 
 ## clean_nsfg is the hub: it reads data/raw and writes data/interim

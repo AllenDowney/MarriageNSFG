@@ -25,6 +25,8 @@ if IN_COLAB:
 ```{code-cell} ipython3
 import numpy as np
 import pandas as pd
+
+from nsfg.paths import raw
 import matplotlib.pyplot as plt
 
 from empiricaldist import Pmf, Cdf
@@ -95,6 +97,8 @@ def read_stata(dct_file, dat_file, **options):
     colspecs = variables[['start', 'end']]
     names = variables['name']
     
+    # read_fwf does not infer gzip from the filename, so it is explicit here
+    options.setdefault("compression", "gzip")
     df = pd.read_fwf(dat_file,
                      colspecs=colspecs.values.tolist(),
                      names=names,
@@ -119,8 +123,8 @@ def read_fem_preg_10():
                'wgt2015_2017',
                ]
 
-    df = read_stata('2015_2017_FemPregSetup.dct',
-                    '2015_2017_FemPregData.dat.gz',
+    df = read_stata(raw("2015_2017_FemPregSetup.dct"),
+                    raw("2015_2017_FemPregData.dat.gz"),
                     usecols=usecols) 
     
     df['finalwgt'] = df['wgt2015_2017']
@@ -180,8 +184,8 @@ def read_fem_resp_10():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_stata('2015_2017_FemRespSetup.dct',
-                    '2015_2017_FemRespData.dat.gz',
+    df = read_stata(raw("2015_2017_FemRespSetup.dct"),
+                    raw("2015_2017_FemRespData.dat.gz"),
                     usecols=usecols) 
     
     df['finalwgt'] = df['wgt2015_2017']
@@ -196,7 +200,7 @@ def ReadFemResp1982():
 
     returns: DataFrame
     """
-    dat_file = '1982NSFGData.dat.gz'
+    dat_file = raw("1982NSFGData.dat.gz")
     names = ['finalwgt', 'ageint', 'mar2p', 'cmmarrhx', 'fmarital',
              'cmintvw', 'cmbirth', 'f18m1', 'cmdivorcx', 'cmstphsbx', 'fmarno']
     colspecs = [(976-1, 982),
@@ -252,7 +256,7 @@ def ReadFemResp1988():
     Read as if were a standard ascii file
     returns: DataFrame
     """
-    filename = '1988FemRespDataLines.dat.gz'
+    filename = raw("1988FemRespDataLines.dat.gz")
     names = ['finalwgt', 'ageint', 'currentcm',
              'firstcm', 'cmintvw', 'cmbirth',
              'f23m1', 'cmdivorcx', 'cmstphsbx', 'fmarno']
@@ -314,7 +318,7 @@ def ReadFemResp1995():
 
     returns: DataFrame
     """
-    dat_file = '1995FemRespData.dat.gz'
+    dat_file = raw("1995FemRespData.dat.gz")
     names = ['cmintvw', 'timesmar', 'cmmarrhx', 'cmbirth', 'finalwgt',
              'marend01', 'cmdivorcx', 'cmstphsbx', 'marstat']
 
@@ -364,7 +368,7 @@ def ReadFemResp2002():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2002FemResp.dct', '2002FemResp.dat.gz', usecols=usecols)
+    df = read_fem_resp(raw("2002FemResp.dct"), raw("2002FemResp.dat.gz"), usecols=usecols)
 
     invalid = [9997, 9998, 9999]
     df.cmintvw.replace(invalid, np.nan, inplace=True)
@@ -393,8 +397,8 @@ def ReadFemResp2010():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2006_2010_FemRespSetup.dct',
-                  '2006_2010_FemResp.dat.gz',
+    df = read_fem_resp(raw("2006_2010_FemRespSetup.dct"),
+                  raw("2006_2010_FemResp.dat.gz"),
                   usecols=usecols)
 
     invalid = [9997, 9998, 9999]
@@ -425,8 +429,8 @@ def ReadFemResp2010():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2006_2010_FemRespSetup.dct',
-                  '2006_2010_FemResp.dat.gz',
+    df = read_fem_resp(raw("2006_2010_FemRespSetup.dct"),
+                  raw("2006_2010_FemResp.dat.gz"),
                   usecols=usecols)
 
     invalid = [9997, 9998, 9999]
@@ -457,8 +461,8 @@ def ReadFemResp2013():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2011_2013_FemRespSetup.dct',
-                  '2011_2013_FemRespData.dat.gz',
+    df = read_fem_resp(raw("2011_2013_FemRespSetup.dct"),
+                  raw("2011_2013_FemRespData.dat.gz"),
                   usecols=usecols)
 
     invalid = [9997, 9998, 9999]
@@ -489,8 +493,8 @@ def ReadFemResp2015():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2013_2015_FemRespSetup.dct',
-                  '2013_2015_FemRespData.dat.gz',
+    df = read_fem_resp(raw("2013_2015_FemRespSetup.dct"),
+                  raw("2013_2015_FemRespData.dat.gz"),
                   usecols=usecols)
 
     invalid = [9997, 9998, 9999]
@@ -522,8 +526,8 @@ def ReadFemResp2017():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2015_2017_FemRespSetup.dct',
-                  '2015_2017_FemRespData.dat.gz',
+    df = read_fem_resp(raw("2015_2017_FemRespSetup.dct"),
+                  raw("2015_2017_FemRespData.dat.gz"),
                   usecols=usecols)
 
     invalid = [9997, 9998, 9999]
@@ -579,8 +583,8 @@ def ReadFemResp2017():
                'mardat01', 'marend01', 'mardis01', 'rmarital',
                'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2015_2017_FemRespSetup.dct',
-                  '2015_2017_FemRespData.dat.gz',
+    df = read_fem_resp(raw("2015_2017_FemRespSetup.dct"),
+                  raw("2015_2017_FemRespData.dat.gz"),
                   usecols=usecols)
 
     invalid = [9997, 9998, 9999]
@@ -698,7 +702,7 @@ def ReadMaleResp2002():
                #'marrend', 'marrend2', 'marrend3', marrend5', 'marrend6',
                ]
 
-    df = read_fem_resp('2002Male.dct', '2002Male.dat.gz', usecols=usecols)
+    df = read_fem_resp(raw("2002Male.dct"), raw("2002Male.dat.gz"), usecols=usecols)
 
     #df.marrend.replace([8,9], np.nan, inplace=True)
     #df.marrend2.replace([8,9], np.nan, inplace=True)
@@ -736,8 +740,8 @@ def ReadMaleResp2010():
                'evrmarry', 'wgtq1q16',
                'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2006_2010_MaleSetup.dct',
-                  '2006_2010_Male.dat.gz',
+    df = read_fem_resp(raw("2006_2010_MaleSetup.dct"),
+                  raw("2006_2010_Male.dat.gz"),
                   usecols=usecols)
 
     df['cmmarrhx'] = df.mardat01
@@ -765,8 +769,8 @@ def ReadMaleResp2013():
                'evrmarry', 'wgt2011_2013',
                'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2011_2013_MaleSetup.dct',
-                  '2011_2013_MaleData.dat.gz',
+    df = read_fem_resp(raw("2011_2013_MaleSetup.dct"),
+                  raw("2011_2013_MaleData.dat.gz"),
                   usecols=usecols)
 
     df['cmmarrhx'] = df.mardat01
@@ -794,8 +798,8 @@ def ReadMaleResp2015():
                'evrmarry', 'wgt2013_2015',
                'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2013_2015_MaleSetup.dct',
-                  '2013_2015_MaleData.dat.gz',
+    df = read_fem_resp(raw("2013_2015_MaleSetup.dct"),
+                  raw("2013_2015_MaleData.dat.gz"),
                   usecols=usecols)
 
     df['cmmarrhx'] = df.mardat01
@@ -822,8 +826,8 @@ def ReadMaleResp2017():
                'evrmarry', 'wgt2015_2017',
                'marend01', 'rmarital', 'fmarno', 'mar1diss']
 
-    df = read_fem_resp('2015_2017_MaleSetup.dct',
-                      '2015_2017_MaleData.dat.gz',
+    df = read_fem_resp(raw("2015_2017_MaleSetup.dct"),
+                      raw("2015_2017_MaleData.dat.gz"),
                       usecols=usecols)
 
     # since cmbirth and cmmarrhx are no longer included,

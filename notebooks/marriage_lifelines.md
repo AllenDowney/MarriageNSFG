@@ -58,7 +58,7 @@ from nsfg.utils import set_palette, resample_by_cycle
 Load the data cleaned in `clean_nsfg.ipynb` and run the analysis with `lifelines`
 
 ```{code-cell} ipython3
-%time resp = pd.read_hdf(interim('FemMarriageData.hdf'), 'FemMarriageData')
+%time resp = pd.read_parquet(interim("FemMarriageData.parquet"))
 resp.shape
 ```
 
@@ -254,7 +254,7 @@ plt.savefig(FIGURES / "marriage_female23.png", dpi=300)
 Load the data cleaned in `clean_nsfg.ipynb` and run the analysis with `lifelines`
 
 ```{code-cell} ipython3
-%time resp2 = pd.read_hdf(interim('MaleMarriageData.hdf'), 'MaleMarriageData')
+%time resp2 = pd.read_parquet(interim("MaleMarriageData.parquet"))
 resp.shape
 ```
 

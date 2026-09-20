@@ -95,7 +95,7 @@ plt.rcParams["font.family"] = "PT Sans"
 Load the data cleaned in `clean_nsfg.ipynb`
 
 ```{code-cell} ipython3
-resp = pd.read_hdf(interim("FemMarriageData.hdf"), "FemMarriageData")
+resp = pd.read_parquet(interim("FemMarriageData.parquet"))
 resp.shape
 ```
 
@@ -379,7 +379,7 @@ Doctoral degree 11 89
 ```
 
 ```{code-cell} ipython3
-resp2 = pd.read_hdf(interim("MaleMarriageData.hdf"), "MaleMarriageData")
+resp2 = pd.read_parquet(interim("MaleMarriageData.parquet"))
 resp2.shape
 ```
 

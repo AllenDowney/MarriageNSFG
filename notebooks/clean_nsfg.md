@@ -1100,17 +1100,11 @@ for name, group in iter(grouped):
 ## Generate extracts
 
 ```{code-cell} ipython3
-# HDF5 does not reclaim space when a file is rewritten, so repeated
-# runs of this notebook accumulate dead blocks. Delete first so each
-# run starts from an empty file.
-from pathlib import Path
-
-Path(interim("FemMarriageData.hdf")).unlink(missing_ok=True)
-df.to_hdf(interim("FemMarriageData.hdf"), key="FemMarriageData")
+df.to_parquet(interim("FemMarriageData.parquet"), compression="zstd")
 ```
 
 ```{code-cell} ipython3
-%time nsfg_female = pd.read_hdf(interim('FemMarriageData.hdf'), 'FemMarriageData')
+%time nsfg_female = pd.read_parquet(interim("FemMarriageData.parquet"))
 ```
 
 ```{code-cell} ipython3
@@ -1337,17 +1331,11 @@ print(sum(df2.complete_missing), sum(df2.ongoing_missing))
 ```
 
 ```{code-cell} ipython3
-# HDF5 does not reclaim space when a file is rewritten, so repeated
-# runs of this notebook accumulate dead blocks. Delete first so each
-# run starts from an empty file.
-from pathlib import Path
-
-Path(interim("MaleMarriageData.hdf")).unlink(missing_ok=True)
-df2.to_hdf(interim("MaleMarriageData.hdf"), key="MaleMarriageData")
+df2.to_parquet(interim("MaleMarriageData.parquet"), compression="zstd")
 ```
 
 ```{code-cell} ipython3
-%time nsfg_male = pd.read_hdf(interim('MaleMarriageData.hdf'), 'MaleMarriageData')
+%time nsfg_male = pd.read_parquet(interim("MaleMarriageData.parquet"))
 ```
 
 ```{code-cell} ipython3
