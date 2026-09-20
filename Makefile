@@ -6,7 +6,8 @@ NB_DIR = notebooks
 NOTEBOOKS = $(basename $(notdir $(wildcard $(NB_DIR)/*.md)))
 
 help:
-	@echo "make env         create the conda environment"
+	@echo "make env         create the environment (mamba)"
+	@echo "make env-update  update it from environment.yml"
 	@echo "make install     install the nsfg package in editable mode"
 	@echo "make data        rebuild the harmonized data from data/raw"
 	@echo "make notebooks   .md -> .ipynb"
@@ -15,8 +16,17 @@ help:
 	@echo "make codebooks   fetch the NSFG codebooks"
 	@echo "make lint / format / tests / clean"
 
+## mamba, not conda -- the conda solver takes minutes on this environment
+CONDA = mamba
+
 env:
-	conda env create -f environment.yml
+	$(CONDA) env create -f environment.yml
+
+env-update:
+	$(CONDA) env update -f environment.yml --prune
+
+env-remove:
+	$(CONDA) env remove -n MarriageNSFG
 
 install:
 	python -m pip install -e ".[dev]"
@@ -64,4 +74,4 @@ clean:
 	rm -f $(NB_DIR)/*.ipynb $(NB_DIR)/archive/*.ipynb
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: help env install notebooks markdown execute data codebooks lint format tests clean
+.PHONY: help env env-update env-remove install notebooks markdown execute data codebooks lint format tests clean

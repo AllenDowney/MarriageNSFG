@@ -1,0 +1,5 @@
+lifelines
+pyreadstat
+statadict
+empiricaldist
+-e ".[dev]"

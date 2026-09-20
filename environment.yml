@@ -5,6 +5,10 @@
 # Runtime dependencies are declared in pyproject.toml; this file creates the
 # interpreter and the compiled packages, then installs the project itself in
 # editable mode with its dev extras.
+#
+# Build it with mamba, not conda -- the conda solver takes minutes here:
+#     make env          (or: mamba env create -f environment.yml)
+#     make env-update   (or: mamba env update -f environment.yml --prune)
 
 name: MarriageNSFG
 

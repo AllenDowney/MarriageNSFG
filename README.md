@@ -32,7 +32,7 @@ requested from those providers directly.
 ## Getting started
 
 ```bash
-make env          # conda environment from environment.yml
+make env          # creates the environment with mamba
 conda activate MarriageNSFG
 make install      # pip install -e ".[dev]"
 make data         # rebuild data/interim from data/raw

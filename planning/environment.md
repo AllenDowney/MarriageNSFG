@@ -132,6 +132,19 @@ Two known issues will surface on the upgrade. Both are already identified, and o
 
 Run the first upgraded test pass with `-W error::FutureWarning` so the next one of these surfaces before it becomes a silent no-op.
 
+## Use mamba, not conda
+
+`mamba` (2.5.0) is installed and is the tool for this project going forward.
+The conda solver was still working on this environment after several minutes;
+mamba resolves it in a fraction of that. `make env` and `make env-update` both
+use it, via a `CONDA = mamba` variable at the top of the Makefile so it can be
+overridden if needed.
+
+```bash
+make env          # mamba env create -f environment.yml
+make env-update   # mamba env update -f environment.yml --prune
+```
+
 ## Order
 
 1. **Do not touch the current env** until Task 1 stage 9 passes on it.
