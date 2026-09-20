@@ -57,6 +57,30 @@ def decorate_axes(ax, **options):
         ax.set(**options)
 
 
+BRAND = "allendowney.com/blog"
+BRAND_COLOR = "0.4"
+BRAND_FONTSIZE = 8
+
+
+def add_branding(ax, text=BRAND):
+    """Put the site URL under the lower-right corner of the plot.
+
+    Below the axes rather than inside them, following the CultureWar social
+    figures -- inside would collide with the legend.
+    """
+    return ax.text(
+        1.0,
+        -0.16,
+        text,
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=BRAND_FONTSIZE,
+        color=BRAND_COLOR,
+        clip_on=False,
+    )
+
+
 def cohort_colors(cohorts, cmap=COHORT_CMAP):
     """Map cohort -> colour, fixed across figures.
 

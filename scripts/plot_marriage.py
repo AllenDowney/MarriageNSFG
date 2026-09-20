@@ -17,7 +17,12 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 
 from nsfg.paths import FIGURES, interim  # noqa: E402
-from nsfg.style import apply_style, cohort_colors, decorate_axes  # noqa: E402
+from nsfg.style import (  # noqa: E402
+    add_branding,
+    apply_style,
+    cohort_colors,
+    decorate_axes,
+)
 
 import pandas as pd  # noqa: E402
 
@@ -37,7 +42,7 @@ def load(sex):
 
 def plot_curves(df, colors, title, subtitle, outfile):
     """One line per birth cohort, with a shaded bootstrap interval."""
-    fig, ax = plt.subplots(figsize=(7.5, 5))
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
     for cohort in sorted(df.cohort.unique()):
         g = df[df.cohort == cohort]
         color = colors[cohort]
@@ -50,7 +55,7 @@ def plot_curves(df, colors, title, subtitle, outfile):
     ax.set_title(title, pad=26)
     ax.text(
         0,
-        1.015,
+        1.035,
         subtitle,
         transform=ax.transAxes,
         fontsize=8.5,
@@ -58,6 +63,7 @@ def plot_curves(df, colors, title, subtitle, outfile):
         va="bottom",
     )
     ax.legend(loc="lower right", ncol=1)
+    add_branding(ax)
     fig.savefig(FIGURES / outfile)
     plt.close(fig)
     print(f"  wrote {outfile}")
@@ -65,7 +71,7 @@ def plot_curves(df, colors, title, subtitle, outfile):
 
 def plot_stopping(data, colors, outfile):
     """Where each curve stops, and why."""
-    fig, ax = plt.subplots(figsize=(7.5, 5))
+    fig, ax = plt.subplots(figsize=(6.0, 4.0))
     for sex, style in (("female", "-"), ("male", "--")):
         df = data[sex]
         for cohort in sorted(df.cohort.unique()):
@@ -89,7 +95,7 @@ def plot_stopping(data, colors, outfile):
     ax.set_title("Where each estimate stops being reportable", pad=26)
     ax.text(
         0,
-        1.015,
+        1.035,
         "National Survey of Family Growth, 1982-2023",
         transform=ax.transAxes,
         fontsize=8.5,
@@ -104,6 +110,7 @@ def plot_stopping(data, colors, outfile):
     ]
     labels += ["women", "men"]
     ax.legend(handles, labels, loc="upper right", ncol=1)
+    add_branding(ax)
     fig.savefig(FIGURES / outfile)
     plt.close(fig)
     print(f"  wrote {outfile}")
