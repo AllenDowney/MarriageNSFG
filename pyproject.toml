@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nsfg"
+version = "0.1.0"
+description = "Harmonized NSFG data across survey cycles, and analyses of US marriage patterns"
+requires-python = ">=3.10"
+dependencies = [
+    "pandas",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "seaborn",
+    "statsmodels",
+    "lifelines",
+    "pyreadstat",
+    "statadict",
+    "tables",
+    "empiricaldist",
+]
+
+[project.optional-dependencies]
+dev = ["jupytext", "nbconvert", "jupyterlab", "pytest", "ruff", "black"]
+
+[tool.setuptools]
+packages = ["nsfg"]
+
+[tool.ruff]
+line-length = 100
+exclude = ["archive", "notebooks/archive"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

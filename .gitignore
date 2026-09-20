@@ -49,3 +49,4 @@ dist/
 htmlcov/
 .coverage
 coverage.xml
+nsfg.egg-info
