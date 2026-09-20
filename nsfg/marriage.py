@@ -1335,9 +1335,14 @@ def read_male_resp_2017():
     )
 
     # since cmbirth and cmmarrhx are no longer included, we reconstruct them.
-    # ager is the integer age at interview, so the birth date falls somewhere
-    # in the year before cmintvw - ager*12; -6 takes the midpoint of that
-    # window. mardat01 is a year only, so +6 likewise takes mid-year.
+    # `ager` is the integer age at interview, so the true age lies in
+    # [ager, ager + 1) and the best single guess is ager + 0.5 -- half a year
+    # OLDER than reported. Turning that into a birth date means going back
+    # ager years and six further months, which is why the term is -6: it moves
+    # the birth date earlier, making the person older, not younger.
+    #
+    # mardat01 is a year with no month, so mid-year is the best guess there;
+    # that one is +6 because it moves the marriage date later within its year.
     # Validated against cycle 9, where the true cmbirth is on the file:
     # -6 gives bias -0.002 yr and RMSE 0.290 yr, against +0.998 / 1.039
     # for the +6 this replaced. See Task 14 on the project board.
@@ -1420,9 +1425,14 @@ def read_male_resp_2019():
     )
 
     # since cmbirth and cmmarrhx are no longer included, we reconstruct them.
-    # ager is the integer age at interview, so the birth date falls somewhere
-    # in the year before cmintvw - ager*12; -6 takes the midpoint of that
-    # window. mardat01 is a year only, so +6 likewise takes mid-year.
+    # `ager` is the integer age at interview, so the true age lies in
+    # [ager, ager + 1) and the best single guess is ager + 0.5 -- half a year
+    # OLDER than reported. Turning that into a birth date means going back
+    # ager years and six further months, which is why the term is -6: it moves
+    # the birth date earlier, making the person older, not younger.
+    #
+    # mardat01 is a year with no month, so mid-year is the best guess there;
+    # that one is +6 because it moves the marriage date later within its year.
     # Validated against cycle 9, where the true cmbirth is on the file:
     # -6 gives bias -0.002 yr and RMSE 0.290 yr, against +0.998 / 1.039
     # for the +6 this replaced. See Task 14 on the project board.
@@ -1514,9 +1524,14 @@ def read_male_resp_2023():
     df["addexp"] /= 10
 
     # since cmbirth and cmmarrhx are no longer included, we reconstruct them.
-    # ager is the integer age at interview, so the birth date falls somewhere
-    # in the year before cmintvw - ager*12; -6 takes the midpoint of that
-    # window. mardat01 is a year only, so +6 likewise takes mid-year.
+    # `ager` is the integer age at interview, so the true age lies in
+    # [ager, ager + 1) and the best single guess is ager + 0.5 -- half a year
+    # OLDER than reported. Turning that into a birth date means going back
+    # ager years and six further months, which is why the term is -6: it moves
+    # the birth date earlier, making the person older, not younger.
+    #
+    # mardat01 is a year with no month, so mid-year is the best guess there;
+    # that one is +6 because it moves the marriage date later within its year.
     # Validated against cycle 9, where the true cmbirth is on the file:
     # -6 gives bias -0.002 yr and RMSE 0.290 yr, against +0.998 / 1.039
     # for the +6 this replaced. See Task 14 on the project board.

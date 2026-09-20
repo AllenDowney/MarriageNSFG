@@ -85,10 +85,11 @@ def check_reconstructed_age(df, year, cycle):
 
     sub = df.dropna(subset=["cmbirth", "cmintvw", "ager"])
     implied = (sub.cmintvw - sub.cmbirth) / 12.0
-    # The male readers overwrite `ager` with the implied fractional age, so it
-    # arrives as int+0.5 there and as a raw integer on the female side. floor()
-    # recovers the reported integer age under either convention; round() does
-    # not, because banker's rounding sends 30.5 down and 31.5 up.
+    # floor() rather than round(). Both readers now leave `ager` as the
+    # integer the file reports, so either would work today -- but the male
+    # readers used to overwrite it with the implied fractional age, arriving
+    # as int+0.5. floor() recovers the reported age under either convention;
+    # round() does not, because banker's rounding sends 30.5 down and 31.5 up.
     offset = implied - np.floor(sub.ager)
 
     if offset.min() < 0 or offset.max() >= 1:
@@ -102,8 +103,8 @@ def check_reconstructed_age(df, year, cycle):
     mean = float(offset.mean())
     # Feasible but biased: an offset of 0 puts every birth at the earliest
     # date the reported age allows, rather than the middle of the window.
-    # That was the male readers' formula before Task 14, and it is half a year
-    # low on average without ever being impossible.
+    # That was the male readers' formula before Task 14: half a year low on
+    # average, without ever being impossible.
     if abs(mean - 0.5) > 0.25:
         warnings.warn(
             f"{year}: reconstructed cmbirth is feasible but biased -- mean "
