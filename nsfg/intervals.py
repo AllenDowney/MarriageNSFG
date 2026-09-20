@@ -57,7 +57,9 @@ def add_bounds(df, cycle_col="cycle"):
     # --- age at interview ------------------------------------------------
     # coarse cycles report an integer age, so the true age is somewhere in
     # [ager, ager + 1). Finer cycles carry century months, so it is known to
-    # the month.
+    # the month. floor() is belt and braces: the readers leave `ager` integer
+    # in the coarse cycles, but they did not always, and a half-year offset
+    # sneaking back in would otherwise pass unnoticed.
     age_lo = np.where(coarse, np.floor(out.ager), out.ager - MONTH / 2)
     age_hi = np.where(coarse, np.floor(out.ager) + 1.0, out.ager + MONTH / 2)
 

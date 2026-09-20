@@ -53,3 +53,6 @@ htmlcov/
 .coverage
 coverage.xml
 nsfg.egg-info
+
+# Jupyter Book build output
+jb/_build/

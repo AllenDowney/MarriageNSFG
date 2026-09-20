@@ -16,6 +16,7 @@ help:
 	@echo "make codebooks   fetch the NSFG codebooks"
 	@echo "make estimates   bootstrap the cohort marriage curves"
 	@echo "make figures     plot them"
+	@echo "make site        build the blog posts in jb/"
 	@echo "make validate    check the readers against data/raw"
 	@echo "make lint / format / tests / clean"
 
@@ -70,6 +71,13 @@ figures: estimates
 codebooks:
 	python scripts/fetch_codebooks.py
 
+## Blog posts -> GitHub Pages. See jb/Makefile for the rest.
+site:
+	$(MAKE) -C jb build-local
+
+site-deploy:
+	$(MAKE) -C jb deploy
+
 lint:
 	ruff check nsfg/ scripts/ tests/
 
@@ -90,4 +98,4 @@ clean:
 	rm -f $(NB_DIR)/*.ipynb $(NB_DIR)/archive/*.ipynb
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: help env env-update env-remove install validate estimates figures notebooks markdown execute data codebooks lint format tests clean
+.PHONY: help env env-update env-remove install validate estimates figures site site-deploy notebooks markdown execute data codebooks lint format tests clean

@@ -1369,7 +1369,12 @@ def read_male_resp_2017():
     # clean_resp(df)
 
     df["agemarry"] = (df.cmmarrhx - df.cmbirth) / 12.0
-    df["ager"] = (df.cmintvw - df.cmbirth) / 12.0
+    # `ager` is left as the file reports it: an integer in these cycles. It used
+    # to be overwritten with (cmintvw - cmbirth)/12, which is just ager + 0.5 --
+    # the midpoint of the year the reported age allows. That looks like a more
+    # precise age but carries no more information, and it made the male
+    # respondents inconsistent with the female ones, where `ager` stays integer.
+    # The uncertainty is handled explicitly downstream; see nsfg.intervals.
 
     # if married, we need agemarry; if not married, we need age
     df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())
@@ -1449,7 +1454,12 @@ def read_male_resp_2019():
     # clean_resp(df)
 
     df["agemarry"] = (df.cmmarrhx - df.cmbirth) / 12.0
-    df["ager"] = (df.cmintvw - df.cmbirth) / 12.0
+    # `ager` is left as the file reports it: an integer in these cycles. It used
+    # to be overwritten with (cmintvw - cmbirth)/12, which is just ager + 0.5 --
+    # the midpoint of the year the reported age allows. That looks like a more
+    # precise age but carries no more information, and it made the male
+    # respondents inconsistent with the female ones, where `ager` stays integer.
+    # The uncertainty is handled explicitly downstream; see nsfg.intervals.
 
     # if married, we need agemarry; if not married, we need age
     df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())
@@ -1528,7 +1538,12 @@ def read_male_resp_2023():
     # clean_resp(df)
 
     df["agemarry"] = (df.cmmarrhx - df.cmbirth) / 12.0
-    df["ager"] = (df.cmintvw - df.cmbirth) / 12.0
+    # `ager` is left as the file reports it: an integer in these cycles. It used
+    # to be overwritten with (cmintvw - cmbirth)/12, which is just ager + 0.5 --
+    # the midpoint of the year the reported age allows. That looks like a more
+    # precise age but carries no more information, and it made the male
+    # respondents inconsistent with the female ones, where `ager` stays integer.
+    # The uncertainty is handled explicitly downstream; see nsfg.intervals.
 
     # if married, we need agemarry; if not married, we need age
     df["missing"] = np.where(df.evrmarry, df.agemarry.isnull(), df.ager.isnull())

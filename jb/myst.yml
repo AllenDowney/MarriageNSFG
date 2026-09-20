@@ -1,0 +1,17 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+
+project:
+  id: marriage-nsfg-blog
+  title: Marriage NSFG — Notes
+  github: https://github.com/AllenDowney/MarriageNSFG
+  toc:
+    - file: index.md
+    - file: agentic_data_science.md
+      title: Agentic Data Science
+
+site:
+  template: book-theme
+  title: Marriage NSFG — Notes
+  options:
+    logo_text: Marriage NSFG
