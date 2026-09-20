@@ -215,11 +215,19 @@ df["birth_group"] = round_into_bins(df["year"], 3, low=0) + 1
 ```
 
 ```{code-cell} ipython3
-# Derived indicator columns. These are defined in intent.ipynb but were
-# missing here, which broke every cell below that uses them.
+# Derived indicator columns for the female frame. These were defined for df2
+# further down but never for df, which broke every cell below that used them.
+# Definitions follow intent.ipynb and this notebook's own prose.
 df["intent_yes"] = np.where(df["intent"].isna(), np.nan, df["intent"] == 1)
 df["want_yes"] = np.where(df["rwant"].isna(), np.nan, df["rwant"] == 1)
+
+# strl_yes is tubal ligation, hysterectomy or "other operation";
+# strl_tubs is tubal ligation alone
 df["strl_yes"] = (df["tubs"] == 1) | (df["hyst"] == 1) | (df["strloper"] == 4)
+df["strl_tubs"] = df["tubs"] == 1
+
+# child_yes is based on parity, which is a recode
+df["child_yes"] = np.where(df["parity"].isna(), np.nan, df["parity"] > 0)
 ```
 
 ```{code-cell} ipython3

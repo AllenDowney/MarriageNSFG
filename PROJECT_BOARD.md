@@ -20,7 +20,8 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 12:** Write `CLAUDE.md` — not started.
 - **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
 - **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed**; HDFs regenerated, figures refreshed.
-- **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **confirmed**, not started.
+- **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **fixed**; rerun in progress.
+- **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -649,3 +650,57 @@ today: it was work in progress, and the notebook and the pipeline drifted apart.
 - [ ] Restore or remove the cells that defined `birth_group` and `strl_yes`
 - [ ] Re-run `fertility.ipynb` to completion and refresh `nsfg_fertility*.png`
 - [ ] Once it runs, add both notebooks to a smoke test so this cannot drift silently again
+
+---
+
+## Task 16: Replace bootstrap resampling with weighted analysis where the CIs allow it
+
+**Status:** Not started.
+
+**Context:** The analysis notebooks are slow, and the cost is concentrated in one
+pattern — 101 bootstrap resamples per figure:
+
+```python
+tables = [make_table(resample_by_cycle(df), "intent_yes") * 100 for i in range(101)]
+```
+
+`fertility.ipynb` and `intent.ipynb` each do this a dozen times, which is why they
+take minutes rather than seconds. The resampling is doing two jobs at once:
+applying the sampling weights, and producing confidence intervals.
+
+**The first job has a direct replacement.** `lifelines` supports sample weights —
+`KaplanMeierFitter.fit(..., weights=...)` and `CoxPHFitter.fit(..., weights_col=...)`.
+`utils.make_kmf_map` currently calls `kmf.fit(group['duration'], group['observed'])`
+with no weights at all, so the weighting exists *only* in the resampling. Passing
+`finalwgt` directly would give weighted point estimates without any resampling.
+
+**The second job needs care, and is the reason to be careful here.** lifelines
+treats `weights` as *frequency* weights — as if a respondent with weight 5000
+were 5000 observations. Point estimates come out right; confidence intervals come
+out far too narrow, because the effective sample size is much smaller than the sum
+of the weights.
+
+This repo already has the right pattern for that. `utils.estimate_proportion`
+computes a weighted proportion with a Wilson interval **adjusted by effective
+sample size**, and commit `41a605e` ("Validation showing both ways of computing
+CIs") records an earlier comparison. The same correction applied to the survival
+curves is what would make the swap safe.
+
+### Scope
+
+- [ ] Pass `finalwgt` into `KaplanMeierFitter.fit` in `utils.make_kmf_map`
+- [ ] Verify weighted point estimates match the resampled means, curve by curve
+- [ ] Work out the CI story: effective sample size as in `estimate_proportion`, or
+      lifelines' robust variance — and check it against the bootstrap intervals
+      before replacing them
+- [ ] Re-read what `41a605e` established so that work is not redone
+- [ ] Keep the bootstrap wherever the design effect cannot be reduced to a simple
+      correction; the point is to stop paying for it where a closed form exists
+- [ ] Measure the speedup, so the tradeoff is on the record
+
+### Not a refactor for its own sake
+
+The resampling is not wrong — it is the conservative choice and it handles the
+complex design honestly. The argument for changing it is that a dozen 101-fold
+resamples per notebook makes the analysis slow enough to discourage re-running it,
+and re-running it is exactly what caught Task 14.

@@ -1098,6 +1098,12 @@ for name, group in iter(grouped):
 ## Generate extracts
 
 ```{code-cell} ipython3
+# HDF5 does not reclaim space when a file is rewritten, so repeated
+# runs of this notebook accumulate dead blocks. Delete first so each
+# run starts from an empty file.
+from pathlib import Path
+
+Path("FemMarriageData.hdf").unlink(missing_ok=True)
 df.to_hdf("FemMarriageData.hdf", key="FemMarriageData")
 ```
 
@@ -1329,6 +1335,12 @@ print(sum(df2.complete_missing), sum(df2.ongoing_missing))
 ```
 
 ```{code-cell} ipython3
+# HDF5 does not reclaim space when a file is rewritten, so repeated
+# runs of this notebook accumulate dead blocks. Delete first so each
+# run starts from an empty file.
+from pathlib import Path
+
+Path("MaleMarriageData.hdf").unlink(missing_ok=True)
 df2.to_hdf("MaleMarriageData.hdf", key="MaleMarriageData")
 ```
 
