@@ -23,6 +23,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
 - **Task 17:** Clean up `stop` cells and dead code so every notebook executes end to end — not started.
+- **Task 18:** Censoring times pile up on integer ages in cycles 10–12, spiking the survival tails — **diagnosed**, not fixed.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -920,3 +921,68 @@ the whole tail reads as failure.
 `make execute` tolerates failures and prints a per-notebook summary, so one
 parked notebook no longer prevents the others from running. That is a
 workaround, not the goal.
+
+---
+
+## Task 18: Censoring times pile up on integer ages, spiking the survival tails
+
+**Status:** Diagnosed 2026-09-20, not fixed. Affects published figures.
+
+**Symptom:** the tails of the cohort survival curves spike in the most recent
+generations, even after `make_kmf_map` gained a `min_at_risk` floor (Task 14).
+
+**Cause.** In the Kaplan-Meier setup, `duration` is `agemarry` for the married
+and `ager` for the censored. Those two have very different resolution:
+
+| | distinct values | whole numbers |
+|---|---|---|
+| `agemarry`, any cycle | ~300 | 3–9% |
+| `ager`, cycles ≤9 | 362 | 8% |
+| **`ager`, cycles 11–12** | **36** | **100%** |
+
+`agemarry` comes from century-month arithmetic, so it is fine-grained. But from
+cycle 10 the readers keep the **raw integer** `ager` (they bypass `clean_resp`,
+which is what used to overwrite it with an exact fractional age). So every
+censored observation in the three most recent cycles lands on one of a dozen
+integer ages.
+
+For the 1990s birth cohort, the censored rows split like this:
+
+| cycle | censored | distinct `ager` |
+|---|---|---|
+| 7–9 | 1,553 / 1,476 / 1,751 | 63 / 102 / 126 |
+| **10–12** | **1,438 / 1,475 / 1,066** | **12 each** |
+
+The effect on the curve is stark. At age **32.000000** exactly, **97 people are
+censored at once** and the risk set falls from 131 to 34. Every subsequent
+marriage then moves the curve ~1.3 points instead of ~0.1.
+
+**Proposed fix, and why it is not cosmetic.** The reported integer age is the
+*floor* of the true age, which is uniform within the year — the same fact that
+justifies the `-6` midpoint in `cmbirth` (Task 14). So the principled
+reconstruction is `ager + U(0, 1)` for the cycles where it is an integer.
+
+Doing it **after resampling**, so each bootstrap draw gets its own jitter, is
+better than a single fixed draw: the uncertainty from the coarse age then shows
+up in the confidence intervals instead of being frozen into an arbitrary choice.
+
+A first test on the 1990s cohort reduced the censoring lumps and moved the final
+estimate from **62.15% to 55.39%** married. That is a large change, and in the
+expected direction: censoring people half a year too early makes them leave the
+risk set before marriages they may have had, which inflates the estimated
+fraction married. Like Task 14, this is a correction rather than a regression —
+but it changes published numbers and needs deciding deliberately.
+
+### Scope
+
+- [ ] Decide where the jitter belongs — `resample_by_cycle`, or an explicit step
+      in the notebooks so it is visible
+- [ ] Apply `ager + U(0,1)` only where `ager` is genuinely integer (cycles ≥10);
+      earlier cycles already carry month-level resolution
+- [ ] Confirm the male readers separately — they overwrite `ager` with
+      `int + 0.5`, which is constant rather than integer, and so lumps just as
+      badly at a different offset
+- [ ] Re-run the cohort curves and quantify the shift for every cohort, not just
+      the 1990s
+- [ ] Decide whether `min_at_risk` can be relaxed once the lumping is gone
+- [ ] State the change wherever a recent-cohort survival estimate is published
