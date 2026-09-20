@@ -120,7 +120,39 @@ def turnbull(df, timeline=None):
     return (1 - surv) * 100
 
 
-def survival_curve(df, n_imputations=40, max_sd=2.0, grid=None, rng=None):
+def _stable_slice(covered, sd, sd_ratio, sd_floor):
+    """Where to stop a curve, given how precise it is elsewhere.
+
+    Neither criterion works on its own:
+
+    * An absolute threshold cannot tell "the tail has degenerated" from "this
+      cohort is small". A 322-person cohort has a spread near two points at
+      every age, and truncating it at the first age that exceeds two points
+      throws away the whole curve.
+    * A purely relative threshold punishes precision. A cohort with a median
+      spread of 0.4 points trips a 3x rule at 1.2 points, which is still an
+      entirely reportable estimate.
+
+    So a point is dropped only when it is anomalous for this cohort *and*
+    imprecise in absolute terms: `sd > max(sd_floor, sd_ratio * median(sd))`.
+    A degenerate tail fails both and is cut; a small cohort and a mildly
+    widening tail each fail one, and are kept with honestly wide intervals.
+
+    returns: slice of the grid to keep
+    """
+    if not covered.any():
+        return slice(0, 0)
+    typical = np.nanmedian(sd[covered])
+    if not np.isfinite(typical) or typical <= 0:
+        return slice(None)
+    limit = max(sd_floor, sd_ratio * typical)
+    stable = np.flatnonzero(covered & (sd <= limit))
+    return slice(None, stable[-1] + 1) if len(stable) else slice(0, 0)
+
+
+def survival_curve(
+    df, n_imputations=40, sd_ratio=3.0, sd_floor=2.0, grid=None, rng=None
+):
     """Fraction married by age, with the tail cut where it stops being estimable.
 
     Fits a Kaplan-Meier curve to each of `n_imputations` draws from the
@@ -130,14 +162,15 @@ def survival_curve(df, n_imputations=40, max_sd=2.0, grid=None, rng=None):
     the spread says so. Where there is real data the spread is a fraction of a
     percentage point, so the mean is just the ordinary estimate.
 
-    The curve is truncated at the last age where the across-draw standard
-    deviation is below `max_sd`. That replaces an arbitrary risk-set floor with
-    a rule that states its own criterion: report the curve where repeated
-    imputations agree, and stop where they do not.
+    The curve is truncated where the across-draw spread becomes anomalous for
+    this cohort. That replaces an arbitrary risk-set floor with a rule that
+    states its own criterion: report the curve where repeated imputations agree,
+    and stop where they do not.
 
     df: respondents, after add_bounds
     n_imputations: number of draws
-    max_sd: largest across-draw standard deviation to report, in percentage points
+    sd_ratio: stop where the spread exceeds this multiple of the cohort median
+    sd_floor: ...and also exceeds this many percentage points
     grid: ages to report on
     rng: numpy Generator
 
@@ -164,13 +197,86 @@ def survival_curve(df, n_imputations=40, max_sd=2.0, grid=None, rng=None):
     mean[covered] = draws[:, covered].mean(axis=0)
     sd[covered] = draws[:, covered].std(axis=0)
 
-    stable = np.flatnonzero(covered & (sd < max_sd))
-    if len(stable):
-        keep = slice(None, stable[-1] + 1)
-    else:
-        keep = slice(0, 0)
+    keep = _stable_slice(covered, sd, sd_ratio, sd_floor)
 
     return pd.DataFrame(
         {"fraction": mean[keep], "sd": sd[keep]},
+        index=pd.Index(np.asarray(grid)[keep], name="age"),
+    )
+
+
+def bootstrap_curve(
+    df,
+    n_iter=101,
+    sd_ratio=3.0,
+    sd_floor=2.0,
+    grid=None,
+    rng=None,
+    weight_col="finalwgt",
+    cycle_col="cycle",
+    percentiles=(5, 95),
+):
+    """Fraction married by age, with a confidence interval.
+
+    Each iteration resamples respondents within cycle, with probability
+    proportional to the sampling weight, and *then* draws a time from each
+    respondent's interval. Bootstrapping the whole procedure means the spread
+    across iterations carries both sources of uncertainty at once: sampling
+    variability, and not knowing the dates to better than a year.
+
+    Drawing one imputation per bootstrap iteration rather than nesting them is
+    deliberate. Nesting would let the two sources be reported separately, at
+    B x M times the cost; for a published interval the combined spread is what
+    matters, and `survival_curve` already reports the imputation-only spread
+    when the decomposition is wanted.
+
+    The curve stops where the across-iteration spread becomes anomalous for
+    this cohort -- see `_stable_slice`.
+
+    returns: DataFrame indexed by age, with `fraction`, `sd`, `low` and `high`
+    """
+    from lifelines import KaplanMeierFitter
+
+    if rng is None:
+        rng = np.random.default_rng()
+    if grid is None:
+        grid = np.arange(14, 46, 0.25)
+
+    draws = np.empty((n_iter, len(grid)))
+    for i in range(n_iter):
+        parts = []
+        for _, group in df.groupby(cycle_col):
+            weights = group[weight_col].to_numpy(dtype=float)
+            total = weights.sum()
+            if not np.isfinite(total) or total <= 0:
+                continue
+            idx = rng.choice(
+                len(group), size=len(group), replace=True, p=weights / total
+            )
+            parts.append(group.iloc[idx])
+        if not parts:
+            draws[i] = np.nan
+            continue
+        sample = pd.concat(parts, ignore_index=True)
+
+        times = impute_times(sample, rng)
+        kmf = KaplanMeierFitter()
+        kmf.fit(times, sample.observed)
+        curve = (1 - kmf.survival_function_.iloc[:, 0]) * 100
+        draws[i] = np.interp(grid, curve.index, curve.values, right=np.nan)
+
+    covered = ~np.all(np.isnan(draws), axis=0)
+    out = {k: np.full(len(grid), np.nan) for k in ("fraction", "sd", "low", "high")}
+    if covered.any():
+        block = draws[:, covered]
+        out["fraction"][covered] = np.nanmean(block, axis=0)
+        out["sd"][covered] = np.nanstd(block, axis=0)
+        out["low"][covered] = np.nanpercentile(block, percentiles[0], axis=0)
+        out["high"][covered] = np.nanpercentile(block, percentiles[1], axis=0)
+
+    keep = _stable_slice(covered, out["sd"], sd_ratio, sd_floor)
+
+    return pd.DataFrame(
+        {k: v[keep] for k, v in out.items()},
         index=pd.Index(np.asarray(grid)[keep], name="age"),
     )

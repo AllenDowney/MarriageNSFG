@@ -14,6 +14,8 @@ help:
 	@echo "make markdown    .ipynb -> .md (after editing in Jupyter)"
 	@echo "make execute     run every notebook in place"
 	@echo "make codebooks   fetch the NSFG codebooks"
+	@echo "make estimates   bootstrap the cohort marriage curves"
+	@echo "make figures     plot them"
 	@echo "make validate    check the readers against data/raw"
 	@echo "make lint / format / tests / clean"
 
@@ -58,6 +60,13 @@ data:
 	jupytext --to ipynb --update -o $(NB_DIR)/clean_nsfg.ipynb $(NB_DIR)/clean_nsfg.md
 	jupyter nbconvert --execute --inplace $(NB_DIR)/clean_nsfg.ipynb
 
+## Bootstrap + imputation estimates of marriage by cohort. Needs data/interim.
+estimates:
+	python scripts/estimate_marriage.py
+
+figures: estimates
+	python scripts/plot_marriage.py
+
 codebooks:
 	python scripts/fetch_codebooks.py
 
@@ -81,4 +90,4 @@ clean:
 	rm -f $(NB_DIR)/*.ipynb $(NB_DIR)/archive/*.ipynb
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-.PHONY: help env env-update env-remove install validate notebooks markdown execute data codebooks lint format tests clean
+.PHONY: help env env-update env-remove install validate estimates figures notebooks markdown execute data codebooks lint format tests clean

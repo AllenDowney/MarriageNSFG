@@ -3,7 +3,12 @@
 import numpy as np
 import pandas as pd
 
-from nsfg.intervals import add_bounds, impute_times, survival_curve
+from nsfg.intervals import (
+    _stable_slice,
+    add_bounds,
+    impute_times,
+    survival_curve,
+)
 
 
 def frame(cycle, ager, mardat01=None, married=False, cmintvw=1400.0, n=1):
@@ -97,18 +102,29 @@ class TestSurvivalCurve:
     def test_truncates_where_the_spread_is_large(self):
         cohort = self._cohort(200, 300)
         wide = survival_curve(
-            cohort, n_imputations=10, max_sd=100, rng=np.random.default_rng(0)
+            cohort, n_imputations=10, sd_ratio=1e9, rng=np.random.default_rng(0)
         )
         tight = survival_curve(
-            cohort, n_imputations=10, max_sd=0.01, rng=np.random.default_rng(0)
+            cohort, n_imputations=10, sd_ratio=0.01, rng=np.random.default_rng(0)
         )
         assert len(tight) <= len(wide)
 
-    def test_reported_spread_respects_the_threshold(self):
-        out = survival_curve(
-            self._cohort(200, 300),
-            n_imputations=10,
-            max_sd=2.0,
-            rng=np.random.default_rng(0),
-        )
-        assert out.sd.iloc[-1] < 2.0
+
+class TestStableSlice:
+    """The stopping rule separates a degenerate tail from a small cohort."""
+
+    def test_uniformly_imprecise_curve_is_not_truncated(self):
+        # a small cohort: wide everywhere, but the tail is no worse
+        sd = np.full(20, 2.0)
+        covered = np.ones(20, dtype=bool)
+        assert _stable_slice(covered, sd, 3.0, 2.0) == slice(None, 20)
+
+    def test_degenerate_tail_is_truncated(self):
+        # precise, then the risk set empties
+        sd = np.concatenate([np.full(15, 0.4), np.full(5, 9.6)])
+        covered = np.ones(20, dtype=bool)
+        assert _stable_slice(covered, sd, 3.0, 2.0) == slice(None, 15)
+
+    def test_nothing_covered_gives_an_empty_slice(self):
+        covered = np.zeros(5, dtype=bool)
+        assert _stable_slice(covered, np.full(5, np.nan), 3.0, 2.0) == slice(0, 0)
