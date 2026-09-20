@@ -80,6 +80,24 @@ def resample_by_cycle(unweighted):
     return pd.concat(dfs).reset_index(drop=True)
 
 
+def normalize_weights_by_cycle(unweighted, weight_col='finalwgt'):
+    """Normalize finalwgt within each cycle group so the average is 1.
+    
+    unweighted: DataFrame
+
+    returns: DataFrame with normalized weights
+    """
+    dfs = []
+
+    for name, group in unweighted.groupby('cycle'):
+        group = group.copy()
+        mean_weight = group[weight_col].mean()
+        group[weight_col] = group[weight_col] / mean_weight
+        dfs.append(group)
+
+    return pd.concat(dfs).reset_index(drop=True)
+
+
 def round_into_bins(series, bin_width, low=0, high=None):
     """Rounds values down to the bin they belong in.
 
@@ -188,41 +206,38 @@ def set_palette(*args, **kwds):
 
 def estimate_proportion(success_series, weights_series, confidence_level=0.95):
     """
-    Calculate the weighted proportion and Wilson score interval for weighted data.
+    Estimate weighted proportion with Wilson score interval adjusted using effective sample size.
 
     Parameters:
-    success_series (pd.Series): A boolean series where True represents a success.
-    weights_series (pd.Series): A series of weights corresponding to the success_series.
-    confidence_level (float): The confidence level for the Wilson score interval
+    success_series (pd.Series): Boolean series (True = success).
+    weights_series (pd.Series): Corresponding weights.
+    confidence_level (float): Confidence level (e.g., 0.95)
 
     Returns:
-    tuple of (weighted_proportion, lower, upper)
+    tuple: (weighted_proportion, lower_bound, upper_bound)
     """
-    # Ensure the series are aligned and of correct type
     success_series = success_series.astype(float)
     weights_series = weights_series.astype(float)
 
-    # Calculate weighted proportion
-    total_weight = weights_series.sum()
     weighted_successes = (success_series * weights_series).sum()
-    p = weighted_successes / total_weight
+    total_weight = weights_series.sum()
+    weighted_proportion = p = weighted_successes / total_weight
 
-    # Calculate the z-score for the given confidence level
+    # Estimate effective sample size
+    n_eff = total_weight**2 / (weights_series**2).sum()
+
+    # Z-score for confidence interval
     z = norm.ppf(1 - (1 - confidence_level) / 2)
 
-    # Wilson score interval adjusted for weighted data
-    denominator = 1 + z**2 / total_weight
-    center = (p + z**2 / (2 * total_weight)) / denominator
-    sd = (
-        np.sqrt((p * (1 - p) + z**2 / (4 * total_weight)) / total_weight)
-        / denominator
-    )
+    denominator = 1 + z**2 / n_eff
+    center = (p + z**2 / (2 * n_eff)) / denominator
+    margin = (z * np.sqrt((p * (1 - p) + z**2 / (4 * n_eff)) / n_eff)) / denominator
 
-    # Lower and upper bounds of the Wilson interval
-    lower = center - z * sd
-    upper = center + z * sd
+    lower = center - margin
+    upper = center + margin
 
     return p, lower, upper
+
 
 
 def percentile_rows(row_seq, percentiles):
@@ -287,7 +302,7 @@ def remove_spines():
     ax.yaxis.set_ticks_position('left')
 
 
-def add_logo(filename="logo-hq-small.png", location=(1.0, -0.3), size=(0.6, 0.3)):
+def add_logo(filename="probably_logo.png", location=(1.0, -0.3), size=(0.45, 0.45)):
     """Add a logo inside an inset axis positioned relative to the main plot."""
 
     logo = mpimg.imread(filename)
@@ -311,19 +326,42 @@ def add_logo(filename="logo-hq-small.png", location=(1.0, -0.3), size=(0.6, 0.3)
     return ax_inset
 
 
-def add_subtext(text):
+def add_aibm_logo(filename="logo-hq-small.png", location=(1.0, -0.3), size=(0.6, 0.3)):
+    """Add a logo inside an inset axis positioned relative to the main plot."""
+
+    logo = mpimg.imread(filename)
+
+    # Create an inset axis in the given location (transAxes places it relative to the axes)
+    ax = plt.gca()
+    ax_inset = inset_axes(
+        ax,
+        width=size[0],
+        height=size[1],
+        loc="lower right",
+        bbox_to_anchor=location,
+        bbox_transform=ax.transAxes,
+        borderpad=0,
+    )
+
+    # Display the logo
+    ax_inset.imshow(logo)
+    ax_inset.axis("off")
+
+    return ax_inset
+
+def add_subtext(text, x=0, y=-0.3):
     """Add a text label below the current plot.
 
     Args:
         text: string
     """
     ax = plt.gca()
-    plt.figtext(
-        0, -0.3, text, ha="left", va="bottom", fontsize=8, transform=ax.transAxes
+    return plt.figtext(
+        x, y, text, ha="left", va="bottom", fontsize=8, transform=ax.transAxes
     )
 
 
-def add_title(title, subtitle, pad=20):
+def add_title(title, subtitle, pad=25):
     """Add a title and subtitle to the current plot.
 
     Args:
@@ -332,9 +370,9 @@ def add_title(title, subtitle, pad=20):
         pad (int): Padding between the title and subtitle
     """
     plt.title(title, loc="left", pad=pad)
-    add_text(0, 1.02, subtitle) 
+    add_text(0, 1.05, subtitle) 
 
-def savefig(prefix, fig_number, extra_artist):
+def savefig(prefix, fig_number, extra_artists=[]):
     """Save the current figure with the given filename.
 
     Args:
@@ -343,5 +381,5 @@ def savefig(prefix, fig_number, extra_artist):
     """
     filename = f"{prefix}{fig_number:02d}"
     plt.savefig(
-        filename, dpi=150, bbox_inches="tight", bbox_extra_artists=[extra_artist]
+        filename, dpi=150, bbox_inches="tight", bbox_extra_artists=extra_artists
     )

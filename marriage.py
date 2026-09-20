@@ -586,12 +586,18 @@ def ReadFemResp1982():
     # we'll treat them the same
     df["fmarno"] = df["fmarno"].replace(np.nan, 0)
 
+    # make codes consistent with most recent cycles
+    df["fmarital"] = df["fmarital"].replace([3, 4, 5, 6], [2, 3, 4, 5])
+
     # replace no, yes with yes, no
     df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
 
     # Recode years of educaction
-    df['anycoll'] = df['educat'] >= 13
+    df['anycoll'] = (df['educat'] >= 13).where(df['educat'].notna())
 
+    # Since we don't have hidegree in this cycle, we have to guess
+    df['bdegree'] = (df['educat'] >= 16).where(df['educat'].notna())
+    
     # CM values above 9000 indicate month unknown
     df.loc[df.cmintvw > 9000, "cmintvw"] -= 9000
     df.loc[df.cmbirth > 9000, "cmbirth"] -= 9000
@@ -642,6 +648,7 @@ def ReadFemResp1988():
         "strloper", # Type of sterilization operation
         "wantkid2", # Want another kid
         "educat",  # Years of education
+        "fmarital", # Formal marital status
     ]
 
     colspecs = [
@@ -663,6 +670,7 @@ def ReadFemResp1988():
         (2316 - 1, 2316),  # strloper
         (2310 - 1, 2310),  # wantkid2
         (2169 - 1, 2170),  # educat
+        (2488 - 1, 2488),  # fmarital
     ]
 
     df = pd.read_fwf(
@@ -690,11 +698,17 @@ def ReadFemResp1988():
         [1, 2, 3, 7, 8, 9], [3, 1, 2, np.nan, np.nan, np.nan]
     )
 
+    # make codes consistent with most recent cycles
+    df["fmarital"] = df["fmarital"].replace([3, 4, 5, 6], [2, 3, 4, 5])
+
     # replace no, yes with yes, no
     df["rwant"] = df["wantkid2"].replace([1, 2], [5, 1])
 
     # Recode years of educaction
     df['anycoll'] = df['educat'] >= 13
+
+    # Since we don't have hidegree in this cycle, we have to guess
+    df['bdegree'] = (df['educat'] >= 16).where(df['educat'].notna())
 
     # combine current and first marriage
     df["cmmarrhx"] = df["firstcm"].fillna(df["currentcm"])
@@ -739,6 +753,8 @@ def ReadFemResp1995():
         "strlopev",  # Ever had a sterilization operation
         # "rwant",  # It looks like no version of rwant was asked in this cycle
         "hieduc",  # Highest level of education
+        "fmarital",
+        "hidegree",  # Highest degree obtained
     ]
 
     # get colspecs from 1995FemRespSetup.sas
@@ -760,7 +776,9 @@ def ReadFemResp1995():
         (11296 - 1, 11299),  # agebaby1
         (8947 - 1, 8947),  # strlopev
         (10892 - 1, 10893),  # hieduc
-    ]
+        (10886 - 1, 10886),  # fmarital
+        (10891 - 1, 10891),  # hidegree
+        ]
 
     df = pd.read_fwf(dat_file, compression="gzip", colspecs=colspecs, names=names)
 
@@ -773,9 +791,16 @@ def ReadFemResp1995():
     df["cmstphsbx"] = df["cmstphsbx"].replace(invalid, np.nan)
     df["timesmar"] = df["timesmar"].replace([98, 99], np.nan)
     df["marend01"] = df["marend01"].replace([7, 8, 9], [np.nan, np.nan, np.nan])
+
+    # fill in educational variables
+    df["bdegree"] = (df["hidegree"] >= 3).where(df["hidegree"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(1, 16),
                                         [1,1,1,1,1,1,1,2,4,5,7,8,9,10,11])
+    
+    # make codes consistent with most recent cycles
+    df["fmarital"] = df["fmarital"].replace([3, 4, 5, 6], [2, 3, 4, 5])
+
     df["addexp"] /= 10
 
     df["evrmarry"] = df.timesmar > 0
@@ -809,6 +834,7 @@ def ReadFemResp2002():
         "marend01",
         "mardis01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         # "nchildhh",  # Number of respondent's children (18 or younger) living in household
@@ -820,6 +846,8 @@ def ReadFemResp2002():
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
+        "havedeg",  # Highest degree obtained
+        "degrees",  # Highest degree obtained
     ]
 
     df = ReadResp("2002FemResp.dct", "2002FemResp.dat.gz", usecols=usecols)
@@ -833,15 +861,19 @@ def ReadFemResp2002():
     df["tubs"] = df["tubs"].replace([1, 2], [1, 5])
     df["hyst"] = df["hyst"].replace([1, 2], [1, 5])
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df["cycle"] = 6
     clean_resp(df)
@@ -866,6 +898,7 @@ def ReadFemResp2010():
         "marend01",
         "mardis01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
@@ -877,6 +910,7 @@ def ReadFemResp2010():
         "hyst",  # R is surgically sterile at interview due to hysterectomy
         "rwant",  # Want more children
         "hieduc",  # Highest level of education
+        "degrees",  # Highest degree obtained
     ]
 
     df = ReadResp(
@@ -892,8 +926,12 @@ def ReadFemResp2010():
     df["tubs"] = df["tubs"].replace([1, 2], [1, 5])
     df["hyst"] = df["hyst"].replace([1, 2], [1, 5])
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["addexp"] /= 10
 
     invalid = df["cmdivorcx"] < df["cmmarrhx"]
@@ -903,7 +941,7 @@ def ReadFemResp2010():
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgtq1q16": "finalwgt"})
     df["cycle"] = 7
@@ -929,6 +967,7 @@ def ReadFemResp2013():
         "marend01",
         "mardis01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
@@ -953,15 +992,19 @@ def ReadFemResp2013():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgt2011_2013": "finalwgt"})
     df["cycle"] = 8
@@ -987,6 +1030,7 @@ def ReadFemResp2015():
         "marend01",
         "mardis01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
@@ -1011,15 +1055,19 @@ def ReadFemResp2015():
     df["cmmarrhx"] = df["cmmarrhx"].replace(invalid, np.nan)
     df["cmdivorcx"] = df["cmdivorcx"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgt2013_2015": "finalwgt"})
     df["cycle"] = 9
@@ -1044,6 +1092,7 @@ def ReadFemResp2017():
         "marend01",
         "mardis01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
@@ -1063,15 +1112,19 @@ def ReadFemResp2017():
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     # since cmbirth and cmmarrhx are no longer included,
     # we have to compute them based on other variables;
@@ -1114,7 +1167,8 @@ def ReadFemResp2019():
         "mardat01",
         "marend01",  # how first marriage ended
         "mardis01",  # year of first marriage dissolution
-        "rmarital",  # marital status
+        "rmarital",  # informal marital status
+        "fmarital",  # formal marital status
         "fmarno",  # number of formal marriages
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
@@ -1134,14 +1188,17 @@ def ReadFemResp2019():
     invalid = [9997, 9998, 9999]
     df["cmintvw"] = df["cmintvw"].replace(invalid, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
-    df["anycoll"] = df["hieduc"] >= 10
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
+    df["anycoll"] = (df["hieduc"] >= 10).where(df["hieduc"].notna())
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     # since cmbirth and cmmarrhx are no longer included,
     # we have to compute them based on other variables;
@@ -1184,7 +1241,8 @@ def ReadFemResp2023():
         "mardat01",
         "marend01",  # how first marriage ended
         "mardis01",  # year of first marriage dissolution
-        "rmarital",  # marital status
+        "rmarital",  # informal marital status
+        "fmarital",  # formal marital status
         "fmarno",  # number of formal marriages
         "nchildhh",  # Number of respondent's children (18 or younger) living in household
         "intent",  # Intentions for additional births
@@ -1205,14 +1263,18 @@ def ReadFemResp2023():
     df["agebaby1"] = df["agebaby1"].replace(97, np.nan)
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables (note change of codes)
+    df["bdegree"] = (df["hieduc"] >= 8).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 5
+    
     df["addexp"] /= 10
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     # since cmbirth and cmmarrhx are no longer included,
     # we have to compute them based on other variables;
@@ -1271,7 +1333,7 @@ def ReadMaleResp2002():
         "cmintvw",
         "evrmarry",
         "finalwgt",
-        "fmarit",
+        "fmarital",
         "timesmar",
         "marrend4",
         "rmarital",
@@ -1289,8 +1351,12 @@ def ReadMaleResp2002():
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["addexp"] /= 10
     df["cmintvw"] = df["cmintvw"].replace([9797, 9898, 9999], np.nan)
     df["marrend4"] = df["marrend4"].replace([8, 9], np.nan)
@@ -1305,7 +1371,7 @@ def ReadMaleResp2002():
     df["divorced"] = (df.marend01 == 2) | (df.marend01 == 3)
     df["separated"] = df.marend01 == 4
     df["widowed"] = df.marend01 == 1
-    df["stillma"] = (df.timesmar == 1) & (df.fmarit == 1)
+    df["stillma"] = (df.timesmar == 1) & (df.fmarital == 1)
 
     df["cycle"] = 6
     clean_resp(df)
@@ -1328,6 +1394,7 @@ def ReadMaleResp2010():
         "wgtq1q16",
         "marend01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "addexp",
@@ -1344,8 +1411,12 @@ def ReadMaleResp2010():
     df["numbiokid"] = df["evrchiln"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
 
@@ -1353,7 +1424,7 @@ def ReadMaleResp2010():
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgtq1q16": "finalwgt"})
     df["cycle"] = 7
@@ -1377,6 +1448,7 @@ def ReadMaleResp2013():
         "wgt2011_2013",
         "marend01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "addexp",
@@ -1395,15 +1467,19 @@ def ReadMaleResp2013():
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgt2011_2013": "finalwgt"})
     df = df.rename(columns={"biokids": "numbiokid"})
@@ -1428,6 +1504,7 @@ def ReadMaleResp2015():
         "wgt2013_2015",
         "marend01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "addexp",
@@ -1446,15 +1523,19 @@ def ReadMaleResp2015():
     df["addexp"] /= 10
     df["cmmarrhx"] = df.mardat01
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["evrmarry"] = df.evrmarry == 1
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgt2013_2015": "finalwgt"})
     df = df.rename(columns={"biokids": "numbiokid"})
@@ -1477,6 +1558,7 @@ def ReadMaleResp2017():
         "wgt2015_2017",
         "marend01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "addexp",
@@ -1498,8 +1580,12 @@ def ReadMaleResp2017():
     df["cmbirth"] = df.cmintvw - df.ager * 12
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df["addexp"] /= 10
@@ -1507,7 +1593,7 @@ def ReadMaleResp2017():
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df = df.rename(columns={"wgt2015_2017": "finalwgt"})
     df = df.rename(columns={"biokids": "numbiokid"})
@@ -1544,6 +1630,7 @@ def ReadMaleResp2019():
         "wgt2017_2019",
         "marend01",
         "rmarital",
+        "fmarital",
         "fmarno",
         "mar1diss",
         "addexp",
@@ -1564,8 +1651,12 @@ def ReadMaleResp2019():
     # the result can be off by up to 12 months
     df["cmbirth"] = df.cmintvw - df.ager * 12
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables
+    df["bdegree"] = (df["hieduc"] >= 12).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 10
     df["hieduc"] = df["hieduc"].replace(range(5, 16), [1,1,1,2,4,5,7,8,9,11,10])
+    
     df["cmmarrhx"] = (df.mardat01 - 1900) * 12
 
     df["addexp"] /= 10
@@ -1573,7 +1664,7 @@ def ReadMaleResp2019():
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
 
     df = df.rename(columns={"wgt2017_2019": "finalwgt"})
@@ -1610,7 +1701,8 @@ def ReadMaleResp2023():
         "evrmarry",  # Ever married
         "wgt2022_2023",  # Final weight
         "marend01",  # How first marriage ended
-        "rmarital",  # Marital status
+        "rmarital",  # Informal marital status
+        "fmarital",  # Formal marital status
         "fmarno",  # Number of formal marriages
         "mar1diss",  # Year of first marriage dissolution
         "addexp",  # Central number of additional births expected
@@ -1629,7 +1721,11 @@ def ReadMaleResp2023():
 
     df["mardat01"] = df["mardat01"].replace(9997, np.nan)
     df["rwant"] = df["rwant"].replace([8, 9], np.nan)
+    
+    # Fill in educational variables (note change of codes)
+    df["bdegree"] = (df["hieduc"] >= 8).where(df["hieduc"].notna())
     df["anycoll"] = df["hieduc"] >= 5
+    
     df["addexp"] /= 10
 
     # since cmbirth and cmmarrhx are no longer included,
@@ -1642,7 +1738,7 @@ def ReadMaleResp2023():
     df["divorced"] = df.marend01 == 1
     df["separated"] = df.marend01 == 2
     df["widowed"] = df.marend01 == 3
-    df["stillma"] = (df.fmarno == 1) & (df.rmarital == 1)
+    df["stillma"] = (df.fmarno == 1) & (df.fmarital == 1)
 
     df["numbiokid"] = df["numbiokid"].replace([np.nan, 98, 99], [0, np.nan, np.nan])
     df["everoper"] = df["everoper"].replace([8, 9], np.nan)
