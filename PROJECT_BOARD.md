@@ -11,7 +11,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
 - **Task 4:** Remove NSFG/IPUMS data from the repo and its history — not started.
 - **Task 5:** Write the data download script — not started.
-- **Task 6:** Update the analysis for cycle 12 — not started; blocked on Task 14.
+- **Task 6:** Update the analysis for cycle 12 — not started; **starts by regenerating the HDFs** after the Task 14 fix.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
 - **Task 8:** PEP-8 rename — not started.
 - **Task 9:** Fix the pandas landmines — not started.
@@ -19,7 +19,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 11:** Validation coverage — not started.
 - **Task 12:** Write `CLAUDE.md` — not started.
 - **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
-- **Task 14:** Reconstructed `cmbirth` is off by a year for women in cycles 10–12 — **confirmed**, not started. **Blocks Task 6.**
+- **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed** (`marriage.py`); HDFs need regenerating.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -489,67 +489,88 @@ The payoff beyond deleting 116 KB of vendored 2015 code: the modern notebooks al
 
 ---
 
-## Task 14: Reconstructed `cmbirth` is off by a year for women in cycles 10–12
+## Task 14: Reconstructed `cmbirth` was off by a year in cycles 10–12
 
-**Status:** Confirmed 2026-09-20, not started. **Blocks Task 6.**
+**Status:** Fixed 2026-09-20 in `marriage.py`. **The HDFs are now stale and must
+be regenerated** before any analysis — that is the first step of Task 6.
 
 **Context:** Found by sweeping every derived variable across the cycle-11/12
-boundary after Task 7 came back clean. This one is older and larger.
+boundary after Task 7 came back clean. This one was older and much larger.
 
-From cycle 10 (2015–2017) onward the PUF stopped including `cmbirth` and
-`cmmarrhx`, so both are reconstructed from the interview date and age. The female
-and male readers do it differently:
+From cycle 10 (2015–2017) the PUF stopped including `cmbirth` and `cmmarrhx`, so
+both are reconstructed from interview date and age. The two pipelines did it
+differently, and both were wrong:
 
 ```python
-# ReadFemResp2017 / 2019 / 2023
+# before -- female 2017 / 2019 / 2023
 df["cmbirth"]  = df.cmintvw - df.ager * 12 + 6
 df["cmmarrhx"] = (df.mardat01 - 1900) * 12 + 6
-
-# ReadMaleResp2017 / 2019 / 2023
+# before -- male 2017 / 2019 / 2023
 df["cmbirth"]  = df.cmintvw - df.ager * 12
 df["cmmarrhx"] = (df.mardat01 - 1900) * 12
 ```
 
-**The female `cmbirth` is not merely biased, it is infeasible.** Someone reporting
-age `ager` at interview was born between `ager` and `ager + 1` years earlier, so
-the midpoint estimate is `cmintvw - ager*12 - 6`. The `+ 6` instead places the
-birth six months *after* the latest possible date. Measured on the data, implied
-age comes out exactly half a year *below* reported age:
+In the reconstructed cycles `ager` is the **raw integer** age, because those
+readers bypass `clean_resp` (which, for cycles ≤ 9, overwrites `ager` with the
+exact fractional age from the true `cmbirth`). Raw `ager` is the floor of exact
+age — measured on cycle 9, `exact − ager` runs 0.000 to 1.000 with mean 0.498. So
+birth falls somewhere in the year *before* `cmintvw - ager*12`, and the midpoint
+is **−6**, not +6.
 
-| implied age − reported `ager` | c9 | c10 | c11 | c12 |
-|---|---|---|---|---|
-| female | +0.000 | **−0.500** | **−0.500** | **−0.500** |
-| male | +0.000 | +0.000 | +0.000 | +0.000 |
+**Validated against cycle 9**, the last cycle carrying a true `cmbirth`, by
+reconstructing from its raw integer `ager` and comparing:
 
-Cycle 9 and earlier use the real `cmbirth` from the file, so the error starts
-exactly where reconstruction starts. The male figure is 0.000 partly by
-construction — `ReadMaleResp*` overwrites `ager` with the implied value — but the
-male estimator still sits at the low edge of the feasible range rather than its
-midpoint, so it is biased half a year too.
+| formula | bias | RMSE |
+|---|---|---|
+| `+6` (female, before) | **+0.998 yr** | 1.039 |
+| `0` (male, before) | +0.498 yr | 0.576 |
+| `−6` (now) | **−0.002 yr** | 0.290 |
 
-**What it does and does not affect.**
+### Correction to an earlier claim on this board
 
-- **`agemarry` is safe.** The `+ 6` appears in both `cmbirth` and `cmmarrhx` and
-  cancels in the difference, so the female and male `agemarry` formulas reduce to
-  the same expression. This is why the error survived: the headline variable looks
-  right.
-- **Birth cohort is not safe.** `birth_index` is derived from `cmbirth`
-  (`digitize_resp`, `marriage.py:254`). Correcting the offset moves **10.5%** of
-  women in cycles 10–12 into a different decade cohort — 12.2% in cycle 10, 10.5%
-  in cycle 11, 8.8% in cycle 12. Cohort is the axis the entire project is built on
-  (`EstimateSurvivalByCohort`), so this shifts published survival curves.
+An earlier revision said "`agemarry` is safe — the `+6` cancels in the
+difference." That was wrong. It cancels only when comparing the *female and male*
+formulas to each other, which is why both pipelines agreed and the error hid.
+Against the truth, both understated `agemarry` by exactly one year:
+
+| cycle 12, mean | before | after |
+|---|---|---|
+| `agemarry`, female | 25.205 | **26.205** (+1.000) |
+| `agemarry`, male | 26.624 | **27.624** (+1.000) |
+| birth year, female | 90.856 | 89.856 (−1.000) |
+
+`agemarry` is this project's headline variable. It was one year too low in the
+three most recent cycles and correct in all earlier ones, so the cross-cycle
+trend was distorted in the direction that **understates the shift toward later
+marriage**.
+
+Cohort assignment moves too: for cycle 12 the 1970s birth cohort goes from 796 to
+947 respondents and the 2000s from 1249 to 1110.
+
+**Independent check.** The cycle 9 → 10 discontinuity narrows as it should. For
+the 1970s cohort, which is well covered in both cycles, mean `agemarry` goes from
+23.43 (cycle 9, real `cmbirth`) versus 22.48 before the fix — a gap of −0.95 — to
+23.20 after, a gap of −0.23. The 1960s cohort still shows −1.06, but NSFG samples
+ages 15–49, so by 2015–2017 that cohort is only partly in scope and the two
+cycles are not observing the same people.
 
 ### Scope
 
-- [ ] Change the female `cmbirth` to `cmintvw - ager*12 - 6` in `ReadFemResp2017`, `2019`, `2023`
-- [ ] Decide the male convention and make it match — `- 6` for the same reason
-- [ ] Leave `cmmarrhx` at `+ 6`: `mardat01` is a year, so mid-year is the right midpoint. Note the male readers use `+ 0` and should also become `+ 6`
-- [ ] Confirm `agemarry` is unchanged by the fix, as the algebra predicts
-- [ ] Re-run `clean_nsfg` and quantify how far the cohort survival curves move
-- [ ] Add a feasibility assertion to the validation suite (Task 11): implied age from `cmbirth` must fall in `[ager, ager+1)`
+- [x] Female `cmbirth` `+6` → `−6` in `ReadFemResp2017`, `2019`, `2023`
+- [x] Male `cmbirth` `0` → `−6` in `ReadMaleResp2017`, `2019`, `2023`
+- [x] Male `cmmarrhx` `0` → `+6`; `mardat01` is a year, so mid-year is the midpoint
+- [x] Validate the offset against cycle 9's true `cmbirth`
+- [x] Quantify the effect on `agemarry` and cohort assignment
+- [x] Replace the stale "off by up to 12 months" comment with the derivation
+- [ ] **Regenerate `FemMarriageData.hdf` and `MaleMarriageData.hdf`** — they still
+      hold the old values
+- [ ] Re-run the analysis notebooks and compare survival curves (Task 6)
+- [ ] Add the feasibility assertion to the validation suite (Task 11): implied age
+      from `cmbirth` must lie in `[ager, ager+1)`
+- [ ] Check whether any published figure needs a correction note
 
 ### Why this was missed
 
-Nothing checks reconstructed variables against the constraint they have to
-satisfy. A one-line assertion would have caught it the day the cycle-10 reader
-was written.
+Nothing checked a reconstructed variable against the constraint it has to
+satisfy, and the female and male pipelines were wrong in ways that left them
+agreeing with each other. A one-line assertion would have caught it in 2018.
