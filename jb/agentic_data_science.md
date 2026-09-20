@@ -9,21 +9,21 @@ Then I asked it to generate a blog post about the process, which is what follows
 
 ## The project
 
-Since 2015 I have kept a repository that does one thing: take the [National Survey of Family Growth](https://www.cdc.gov/nchs/nsfg/index.htm) — a large, repeated, nationally representative survey run by the National Center for Health Statistics — and harmonize it across survey cycles so that marriage patterns can be compared over time.
+Since 2015 I have kept a repository that does one thing: take the [National Survey of Family Growth](https://www.cdc.gov/nchs/nsfg/index.htm) — a large, repeated, nationally representative survey run by the National Center for Health Statistics — and harmonize it across survey iterations so that marriage patterns can be compared over time.
 
 That is more work than it sounds, and it is worth being specific about why, because the difficulty is not where you would expect.
 
-The obvious problem is that the variables move around. A variable that exists in one cycle may be absent from the next, renamed in the one after, or recoded onto a different scale without changing its name. That is tedious but tractable.
+The obvious problem is that the variables move around. A variable that exists in one iteration may be absent from the next, renamed in the one after, or recoded onto a different scale without changing its name. That is tedious but tractable.
 
-The less obvious problem is that the file format and the metadata format both change across cycles, and not in step with each other. Across ten cycles there are two data formats and three ways of describing them:
+The less obvious problem is that the file format and the metadata format both change across iterations, and not in step with each other. Across ten iterations there are two data formats and three ways of describing them:
 
-| cycles | data | metadata | how the code reads it |
+| iterations | data | metadata | how the code reads it |
 |---|---|---|---|
 | 1982, 1988, 1995 | fixed-width text | SAS setup file (`.sas`) | column positions hardcoded by hand |
 | 2002–2019 | fixed-width text | Stata dictionary (`.dct`) | dictionary parsed at run time |
 | 2022–2023 | SAS binary (`.sas7bdat`) | embedded in the file | `pyreadstat` |
 
-The early cycles are the awkward ones. NCHS distributes a SAS setup file — a program, not a data structure, full of `PROC FORMAT` blocks — and the repository does not read it. Someone, years ago, opened that file and transcribed the column positions into a Python list by hand:
+The early iterations are the awkward ones. NCHS distributes a SAS setup file — a program, not a data structure, full of `PROC FORMAT` blocks — and the repository does not read it. Someone, years ago, opened that file and transcribed the column positions into a Python list by hand:
 
 ```python
 colspecs = [
@@ -38,7 +38,7 @@ The `- 1` on each start position converts from the one-based columns the SAS fil
 
 Then there are the one-off quirks. The 1988 respondent file, as published, contains no line breaks at all — it is a single unbroken run of 30,022,850 bytes, which is 8,450 records of 3,553 characters each. Reading it requires splitting it into records first. And in the 2022–2023 file every variable name is uppercase except one, `agebaby1`, which is lowercase for no reason anyone has recorded.
 
-The repository grew one cycle at a time. Each new release meant a new loading function — `ReadFemResp2002`, `ReadFemResp2010`, and so on — that knew the quirks of that cycle and mapped them onto a common set of columns. Ten cycles for women, seven for men: seventeen loading functions, each a small archive of things learned the hard way.
+The repository grew one survey at a time. Each new release meant a new loading function — `ReadFemResp2002`, `ReadFemResp2010`, and so on — that knew the quirks of that iteration and mapped them onto a common set of columns. Ten iterations for women, seven for men: seventeen loading functions, each a small archive of things learned the hard way.
 
 The output is a survival analysis. For each decade-of-birth cohort, it estimates the fraction who have ever married, as a function of age. Those curves are the reason the project exists, and they show something clear:
 
@@ -48,7 +48,7 @@ Each successive cohort marries later than the one before, and the more recent co
 
 ## How it accumulated
 
-Eighty-five commits over eleven years, in bursts: seventeen in 2015, then a handful a year, then a flurry whenever a new cycle landed. Between bursts the repository sat untouched for months at a time.
+Eighty-five commits over eleven years, in bursts: seventeen in 2015, then a handful a year, then a flurry whenever a new iteration landed. Between bursts the repository sat untouched for months at a time.
 
 This is how a lot of real analysis code lives, and it is worth being honest about what it looked like after a decade:
 
@@ -58,7 +58,7 @@ This is how a lot of real analysis code lives, and it is worth being honest abou
 - Two parallel codebases. A modern one using `lifelines` and `empiricaldist`, and a legacy one using the pasted-in library — joined at exactly one function call, which kept 116 KB of 2015 code loaded on every run.
 - Data committed to version control. Several hundred megabytes of survey microdata in git-LFS — which NSFG's data user agreement does not permit redistributing.
 
-None of this was the result of carelessness [Thanks, Claude, but that is far too generous]. Each piece was a reasonable local decision: commit the data so the analysis is reproducible; keep a private copy of the library so it does not break; add a loader for the new cycle in the same style as the last one. The problems are emergent. No single commit introduced them.
+None of this was the result of carelessness [Thanks, Claude, but that is far too generous]. Each piece was a reasonable local decision: commit the data so the analysis is reproducible; keep a private copy of the library so it does not break; add a loader for the new iteration in the same style as the last one. The problems are emergent. No single commit introduced them.
 
 ## The audit
 
@@ -66,7 +66,7 @@ I recently worked through the repository with Claude, with a simple standing rul
 
 ### A one-year error in the headline variable
 
-From cycle 10 (2015–2017) onward, the NSFG public-use files stopped publishing century-month dates of birth and marriage. What they publish instead is the *year* of first marriage and the *integer* age at interview. The loading code reconstructed the missing century months by taking midpoints:
+From iteration 10 (2015–2017) onward, the NSFG public-use files stopped publishing century-month dates of birth and marriage. What they publish instead is the *year* of first marriage and the *integer* age at interview. The loading code reconstructed the missing century months by taking midpoints:
 
 ```python
 cmbirth  = cmintvw - ager * 12 + 6      # female respondent file
@@ -81,7 +81,7 @@ Someone who reports age 30 at interview is somewhere between 30 and 31 — so th
 
 The published code had `+ 6`, which goes six months the other way. Concretely: for someone interviewed in January 2020 who reports age 30, `- 6` gives a birth date of July 1989 and an implied age of 30.5 — the midpoint, as it should be. The `+ 6` gives July 1990 and an implied age of 29.5, which is younger than the age the respondent reported. Not merely biased: impossible.
 
-Measured against cycle 9, the last cycle that still publishes a real date of birth:
+Measured against iteration 9, the last iteration that still publishes a real date of birth:
 
 | formula | bias | RMSE |
 |---|---|---|
@@ -89,11 +89,11 @@ Measured against cycle 9, the last cycle that still publishes a real date of bir
 | `0` (male respondent file) | +0.498 yr | 0.576 |
 | `−6` (correct) | −0.002 yr | 0.290 |
 
-The consequence: age at first marriage was a year too low in the three most recent cycles, and correct in all the earlier ones. That distorted the trend in precisely the direction that matters. In the old data, age at first marriage *fell* between cycle 9 and cycle 10 — from 24.27 to 23.55 for women — a visible dip suggesting people had started marrying younger again. That dip was entirely an artifact. Corrected, the series rises monotonically across all ten cycles.
+The consequence: age at first marriage was a year too low in the three most recent iterations, and correct in all the earlier ones. That distorted the trend in precisely the direction that matters. In the old data, age at first marriage *fell* between iteration 9 and iteration 10 — from 24.27 to 23.55 for women — a visible dip suggesting people had started marrying younger again. That dip was entirely an artifact. Corrected, the series rises monotonically across all ten iterations.
 
 The error survived for years because it hid well. The code for the female and male respondent files was wrong in *different* ways that produced the same `agemarry`, so the two pipelines agreed with each other. And the `+ 6` cancels between `cmbirth` and `cmmarrhx` when you take the difference — so the headline variable looked plausible even though the birth dates underneath it were infeasible.
 
-What found it was not reading the code. It was a sweep comparing every derived variable across every cycle boundary, looking for discontinuities.
+What found it was not reading the code. It was a sweep comparing every derived variable across every iteration boundary, looking for discontinuities.
 
 ## Why the tail is hard
 
@@ -112,15 +112,15 @@ Look closely at the right-hand end of the 2000s curve in the published figure ab
 
 Here is where the missing century months come back.
 
-In the cycles that publish real dates, age at marriage takes about 300 distinct values and age at interview about 360 — month-level resolution. In cycles 10–12, age at interview takes 36 distinct values, every one a whole number, because the file reports an integer age.
+In the iterations that publish real dates, age at marriage takes about 300 distinct values and age at interview about 360 — month-level resolution. In iterations 10–12, age at interview takes 36 distinct values, every one a whole number, because the file reports an integer age.
 
-That means every censored respondent in those cycles lands on one of a dozen integer ages. The risk set does not decline smoothly; it falls off a cliff twelve times. For the 1990s cohort, 97 people are censored at age 32.000000 exactly, dropping the risk set from 131 to 34 in a single instant. Every marriage after that point moves the curve by 1.3 percentage points instead of 0.1.
+That means every censored respondent in those iterations lands on one of a dozen integer ages. The risk set does not decline smoothly; it falls off a cliff twelve times. For the 1990s cohort, 97 people are censored at age 32.000000 exactly, dropping the risk set from 131 to 34 in a single instant. Every marriage after that point moves the curve by 1.3 percentage points instead of 0.1.
 
 So the visible spikes have two causes stacked on each other: a genuinely exhausted risk set, and an artificial one created by rounding.
 
 ### What the pipeline was asserting
 
-Step back and the deeper problem is clearer. The midpoint convention produces a number — say, age at marriage of 24.83 — and every downstream step treats that as an exactly observed time. But for cycles 10–12 both endpoints are known only to the year, so age at first marriage is genuinely uncertain by about two years.
+Step back and the deeper problem is clearer. The midpoint convention produces a number — say, age at marriage of 24.83 — and every downstream step treats that as an exactly observed time. But for iterations 10–12 both endpoints are known only to the year, so age at first marriage is genuinely uncertain by about two years.
 
 The pipeline was reporting to the month a quantity known to within two years. The spiking tails were a symptom of that, not the disease.
 
@@ -170,7 +170,7 @@ The diagnostic below shows it working. Each line is one cohort's bootstrap sprea
 
 ## The result
 
-Estimation is now a bootstrap that resamples respondents within cycle by sampling weight and *then* draws from each respondent's interval, so the spread across iterations carries sampling variability and date coarseness together.
+Estimation is now a bootstrap that resamples respondents within each survey iteration by sampling weight and *then* draws a date from each respondent's interval, so the spread across bootstrap replicates carries sampling variability and date coarseness together.
 
 In the figures below, the shaded band around each curve is a 90% bootstrap interval, and the dot marks the age past which the data no longer supports an estimate — the point where the stopping rule cuts the curve off.
 
@@ -186,7 +186,7 @@ But some of the numbers changed. For women in the 1990s cohort the old pipeline 
 
 The valuable output was not the cleanup. Reorganizing 150 files into directories, purging the data from git history, converting notebooks to markdown, retiring the pasted-in library — all worth doing, none of it interesting. The valuable output was three bugs and a method, and every one of them came from the same discipline: *check that the thing you believe is true*.
 
-Verification is what made the agentic part work. The rule that every supposedly behavior-preserving change had to produce a byte-identical result is what made it safe to delete 253 lines of unreachable code, retire a library that had been pasted in a decade ago, rename 39 functions, and move every file in the repository. It is also what caught the errors. Only one of them had reached the published figures — the reconstructed date of birth, wrong since 2019 — and it was found by a sweep comparing derived variables across cycle boundaries, not by anybody reading the code. The rest were Claude's, made and caught within the session, before they could change a number.
+Verification is what made the agentic part work. The rule that every supposedly behavior-preserving change had to produce a byte-identical result is what made it safe to delete 253 lines of unreachable code, retire a library that had been pasted in a decade ago, rename 39 functions, and move every file in the repository. It is also what caught the errors. Only one of them had reached the published figures — the reconstructed date of birth, wrong since 2019 — and it was found by a sweep comparing derived variables across iteration boundaries, not by anybody reading the code. The rest were Claude's, made and caught within the session, before they could change a number.
 
 Coarsened data deserves explicit handling. When NSFG stopped publishing century-month dates, the pipeline papered over it with a midpoint and carried on. That was the single decision that caused both the year-long bias and the spiking tails. The honest move — say what you know, which is an interval — was available the whole time.
 
