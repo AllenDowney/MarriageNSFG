@@ -117,6 +117,29 @@ Verified: regenerated both files as parquet and compared against the HDF version
 
 Note the jump this represents from the current environment: pandas 2.2.3 → 3.0.x and numpy 1.26.4 → 2.5.x. Both are major-version changes, which is what the "Expected breakage" section below is about.
 
+## Outcome, 2026-09-20
+
+The upgrade is clean. Regenerating the full pipeline under Python 3.13.15 /
+pandas 3.0.6 / numpy 2.5.3 produced output **identical** to Python 3.10.14 /
+pandas 2.2.3 / numpy 1.26.4 — same shapes, same columns, same frame hashes for
+both extracts. `clean_nsfg` ran all 281 cells with no errors, and lifelines
+returns identical Kaplan-Meier curves with no warnings.
+
+The "expected breakage" below was overstated on one point: `marriage.py:425` is
+**dead code**, called only from two commented-out lines, so Copy-on-Write never
+had anything to change. See the correction under Task 9.
+
+### Getting pandas 3 requires overriding lifelines
+
+conda-forge installs pandas 3.0.6, and then the `pip:` section silently
+downgrades it: `lifelines` 0.30.3 — the latest release — pins `pandas<3.0,>=2.1`.
+`conda list` still reports 3.0.6 while `site-packages` holds 2.3.3.
+
+Tested with `pip install --no-deps pandas==3.0.6`: lifelines works, and produces
+identical survival curves. The pin appears precautionary rather than a known
+incompatibility. Adopting pandas 3 means overriding it deliberately and saying so
+in `environment.yml`, so it does not later look like an accident.
+
 ## Expected breakage
 
 Two known issues will surface on the upgrade. Both are already identified, and one is a fix rather than a regression.

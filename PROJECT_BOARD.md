@@ -14,7 +14,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 6:** Update the analysis for cycle 12 — **done**: data regenerated, 7 of 8 notebooks run clean, figures refreshed. `fertility` has 3 known errors, tracked under Task 17.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
 - **Task 8:** PEP-8 rename — not started.
-- **Task 9:** Fix the pandas landmines — not started.
+- **Task 9:** Fix the pandas landmines — **downgraded**: the one "live" site is dead code. Verified identical output under pandas 3.0.6 / numpy 2.5.
 - **Task 10:** Consolidated codebook metadata — not started.
 - **Task 11:** Validation coverage — not started.
 - **Task 12:** Write `CLAUDE.md` — not started.
@@ -407,9 +407,28 @@ def read_fem_resp(year):
 
 ## Task 9: Fix the pandas landmines
 
-**Status:** Not started.
+**Status:** Not started, and less urgent than first recorded. See the correction
+below.
 
-**Context:** The live code carries patterns that modern pandas has removed or made into silent no-ops. The dangerous ones do not raise:
+### Correction to an earlier claim on this board
+
+An earlier revision described `marriage.py:424` (now 425) as "on the live path"
+and "the one that matters", on the grounds that `marriage.py` is imported by the
+current notebooks. That was wrong. Being imported is not being called:
+`FillMissingColumn` is referenced only from two **commented-out** lines
+(`marriage.py:385-386`) and from its own definition. Nothing invokes it.
+
+This was caught by testing rather than reading. Running the full ETL under
+Python 3.13 / pandas 3.0.6 / numpy 2.5.3 produced **byte-identical output** —
+same shapes, columns and frame hashes as Python 3.10 / pandas 2.2.3 / numpy
+1.26.4. If the chained `fillna` had been on the live path, Copy-on-Write would
+have changed the result.
+
+So it is a latent bug in dead code: worth fixing or deleting, not worth blocking
+on. The honest conclusion is that this repo has **no demonstrated pandas-3
+breakage at all**.
+
+**Context:** The code carries patterns that modern pandas has removed or made into silent no-ops. These do not raise:
 
 | Location | Pattern | Consequence |
 |---|---|---|
