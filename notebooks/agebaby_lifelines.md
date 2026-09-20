@@ -20,7 +20,7 @@ kernelspec:
 ```{code-cell} ipython3
 import pandas as pd
 
-from nsfg.paths import raw, interim
+from nsfg.paths import raw, interim, FIGURES
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -244,7 +244,7 @@ for line in legend.get_lines():
 
 remove_spines()
 plt.tight_layout()
-plt.savefig("borne23.jpg", dpi=300)
+plt.savefig(FIGURES / "borne23.jpg", dpi=300)
 ```
 
 ```{code-cell} ipython3

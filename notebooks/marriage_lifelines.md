@@ -25,7 +25,7 @@ kernelspec:
 ```{code-cell} ipython3
 import pandas as pd
 
-from nsfg.paths import raw, interim
+from nsfg.paths import raw, interim, FIGURES
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -246,7 +246,7 @@ kmf_series = make_kmf_series(resp)
 plot_kmf_series(
     kmf_series, cohorts, subtitle="Females by decade of birth, NSFG 1982-2023"
 )
-plt.savefig("marriage_female23.png", dpi=300)
+plt.savefig(FIGURES / "marriage_female23.png", dpi=300)
 ```
 
 ## Age at first marriage, male respondents
@@ -331,7 +331,7 @@ kmf_series = make_kmf_series(resp2)
 plot_kmf_series(
     kmf_series, cohorts, subtitle="Males by decade of birth, NSFG 1982-2023"
 )
-plt.savefig("marriage_male23.png", dpi=300)
+plt.savefig(FIGURES / "marriage_male23.png", dpi=300)
 ```
 
 ```{code-cell} ipython3

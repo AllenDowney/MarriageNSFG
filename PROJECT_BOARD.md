@@ -6,10 +6,10 @@ Numbered tasks for tracking work. Each task has a permanent number; add new task
 
 The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already runs on it — both HDF files in the working tree contain cycle 12. What remains is to refresh the downstream analysis, and to get the repo into a state where the next cycle is straightforward.
 
-- **Task 1:** Reorganize the repo — not started. Design in `planning/repo_reorganization.md`.
+- **Task 1:** Reorganize the repo — **done** (`b6ab4cf`); data verified identical before and after.
 - **Task 2:** Rebuild the conda environment — not started. Design in `planning/environment.md`.
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
-- **Task 4:** Remove NSFG/IPUMS data from the repo and its history — not started.
+- **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **done locally** (`a055387`), `.git` 496 MB → 22 MB. **Not yet pushed.**
 - **Task 5:** Write the data download script — not started.
 - **Task 6:** Update the analysis for cycle 12 — **partly done**: HDFs regenerated, four of six notebooks re-run and figures refreshed. `fertility` and `intent` blocked on Task 15.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
@@ -20,7 +20,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 12:** Write `CLAUDE.md` — not started.
 - **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
 - **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed**; HDFs regenerated, figures refreshed.
-- **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **fixed**; rerun in progress.
+- **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
@@ -71,7 +71,11 @@ Edit the `.md`, never the `.ipynb`. Format code cells with `jupytext --pipe blac
 
 ## Task 1: Reorganize the repo
 
-**Status:** Not started. Full design in `planning/repo_reorganization.md`.
+**Status:** Done 2026-09-20 (`b6ab4cf`). Design in `planning/repo_reorganization.md`.
+
+**Verified:** `clean_nsfg` runs from the new layout with zero errors, and both
+HDFs come back with identical shapes, identical columns and identical frame
+hashes to the pre-reorg versions. The restructure did not change a number.
 
 **Context:** ~150 files in a flat root. `git status` reports 13 modified and 78 untracked paths, which makes it useless as a signal — a real change is invisible in the noise. Raw survey data, derived products, 49 loose figures, 2015-era vendored library code and active analysis all sit side by side.
 
@@ -81,15 +85,33 @@ The target layout separates them: `nsfg/` (an installable package), `notebooks/`
 
 ### Scope
 
-- [ ] Back up: `git clone --mirror`, and copy the data outside the repo
-- [ ] Snapshot the verification baseline (HDF shapes, frame hashes, current figures)
-- [ ] Create `nsfg/` with `paths.py` anchored to the package, not the CWD
-- [ ] Split `marriage.py` into `readers.py`, `clean.py`, `survival.py`; `utils.py` becomes `plotting.py`
-- [ ] Resolve the six duplicate definitions between `marriage.py` and `utils.py`
-- [ ] Port `EstimateHazardFunction` verbatim; archive the four legacy modules
-- [ ] Convert notebooks to markdown with jupytext, with a per-notebook round-trip gate
-- [ ] Delete the dead weight (see the disposition table in the planning doc)
-- [ ] Verify against the baseline, still on the old environment
+- [x] Back up (a byte copy of `.git`, not a mirror clone — see below) and copy the data out
+- [x] Snapshot the verification baseline
+- [x] Create `nsfg/` with `paths.py` anchored to the package, not the CWD
+- [x] Port `EstimateHazardFunction` verbatim; archive the four legacy modules
+- [x] Convert notebooks to markdown with jupytext
+- [x] Delete the dead weight
+- [x] Verify against the baseline on the unchanged environment
+- [ ] **Still to do:** split `marriage.py` (1850 lines) into `readers.py`, `clean.py`,
+      `survival.py`; rename `utils.py` to `plotting.py`
+- [ ] **Still to do:** resolve the six duplicate definitions between `marriage.py`
+      and `utils.py` (`underride`, `decorate`, `legend` identical; `value_counts`,
+      `resample_rows_weighted`, `percentile_rows` divergent)
+
+The two deferred items are internal refactors of a working module; they were held
+back so the move itself stayed verifiable against an unchanged baseline.
+
+### Two things learned the hard way
+
+**`git clone --mirror` is not a backup of an LFS repo.** It copies no LFS
+objects. The mirror came out at 86 MB against a 496 MB `.git`, and a clone from
+it checked out zero files. A byte copy of `.git`, including `.git/lfs`, is what
+is needed.
+
+**`filter-repo` discards uncommitted changes to tracked files.** It checks out
+the rewritten history. An uncommitted edit to `marriage.py` (adding `ftfmode`)
+was lost and had to be re-applied; it was caught only because the reader was
+tested afterwards. Commit everything before rewriting history.
 
 ---
 
