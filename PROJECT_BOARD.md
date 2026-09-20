@@ -11,7 +11,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
 - **Task 4:** Remove NSFG/IPUMS data from the repo and its history — not started.
 - **Task 5:** Write the data download script — not started.
-- **Task 6:** Update the analysis for cycle 12 — not started; **starts by regenerating the HDFs** after the Task 14 fix.
+- **Task 6:** Update the analysis for cycle 12 — **partly done**: HDFs regenerated, four of six notebooks re-run and figures refreshed. `fertility` and `intent` blocked on Task 15.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
 - **Task 8:** PEP-8 rename — not started.
 - **Task 9:** Fix the pandas landmines — not started.
@@ -19,7 +19,8 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 11:** Validation coverage — not started.
 - **Task 12:** Write `CLAUDE.md` — not started.
 - **Task 13:** Excise `thinkstats2` in favor of `empiricaldist` — not started.
-- **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed** (`marriage.py`); HDFs need regenerating.
+- **Task 14:** Reconstructed `cmbirth` was off by a year in cycles 10–12 — **fixed**; HDFs regenerated, figures refreshed.
+- **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **confirmed**, not started.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -562,15 +563,89 @@ cycles are not observing the same people.
 - [x] Validate the offset against cycle 9's true `cmbirth`
 - [x] Quantify the effect on `agemarry` and cohort assignment
 - [x] Replace the stale "off by up to 12 months" comment with the derivation
-- [ ] **Regenerate `FemMarriageData.hdf` and `MaleMarriageData.hdf`** — they still
-      hold the old values
+- [x] **Regenerate `FemMarriageData.hdf` and `MaleMarriageData.hdf`** — done
+      2026-09-20 by re-running `clean_nsfg.ipynb`; all 310 cells executed with
+      no errors, row counts and shapes identical
 - [ ] Re-run the analysis notebooks and compare survival curves (Task 6)
 - [ ] Add the feasibility assertion to the validation suite (Task 11): implied age
       from `cmbirth` must lie in `[ager, ager+1)`
 - [ ] Check whether any published figure needs a correction note
+
+### Result of regenerating the HDFs
+
+The change is exactly as narrow as predicted. Cycles 3–9, which carry a real
+`cmbirth`, are untouched at +0.000. Cycles 10–12 move by exactly +1.000, both
+sexes. Shapes and per-cycle row counts are identical.
+
+| mean `agemarry`, ever-married | c9 | c10 | c11 | c12 |
+|---|---|---|---|---|
+| female, before | 24.271 | **23.549** | 24.100 | 25.205 |
+| female, after | 24.271 | **24.549** | 25.100 | 26.205 |
+| male, before | 26.060 | **25.684** | 25.952 | 26.624 |
+| male, after | 26.060 | **26.684** | 26.952 | 27.624 |
+
+**The artifact was creating a spurious reversal in the headline trend.** In the
+old data, age at first marriage *fell* between cycle 9 and cycle 10 — from 24.27
+to 23.55 for women, and from 26.06 to 25.68 for men — a visible dip suggesting
+people had started marrying younger in 2015–2017. That dip was entirely the
+reconstruction error. Corrected, both series rise monotonically across all ten
+cycles.
+
+Anyone who read the pre-fix figures would have seen a reversal that did not
+happen. This is the strongest argument for the correction-note item below.
+
+Cohort assignment also moves: the female 2000s birth cohort loses 513
+respondents and the 1960s gains 244.
 
 ### Why this was missed
 
 Nothing checked a reconstructed variable against the constraint it has to
 satisfy, and the female and male pipelines were wrong in ways that left them
 agreeing with each other. A one-line assertion would have caught it in 2018.
+
+---
+
+## Task 15: `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce
+
+**Status:** Confirmed 2026-09-20, not started. Blocks the fertility and intent
+half of Task 6.
+
+**Context:** Found by re-running all six analysis notebooks after the Task 14
+fix. Four ran clean; two did not, and the cause is pre-existing rather than
+anything the fix introduced — the column sets in `FemMarriageData.hdf` are
+byte-for-byte identical before and after, and none of the missing columns is
+present in either.
+
+| Notebook | Errors | Missing columns |
+|---|---|---|
+| `fertility.ipynb` | 36 | `birth_group`, `ftfmode`, `intent_yes`, `strl_yes` |
+| `intent.ipynb` | 15 | `ftfmode` |
+
+`clean_nsfg` produces `rwant`, `intent`, `wantkid2` and `want_yes` — so
+`intent_yes` looks like a rename that never propagated, and `strl_yes` and
+`birth_group` are derived columns whose defining cells no longer exist. `ftfmode`
+(interview mode) is a 2022–2023 variable that no reader extracts.
+
+This is consistent with `fertility.ipynb` never having been committed until
+today: it was work in progress, and the notebook and the pipeline drifted apart.
+
+**Severity differs sharply between the two.**
+
+- `intent.ipynb` is **effectively fine.** All 15 errors are in diagnostic
+  `df["ftfmode"].value_counts()` cells that feed nothing. All 11 figures
+  regenerated correctly, changing 8.6%–31.1% of pixels — real movement from the
+  Task 14 fix. Its figures have been kept.
+- `fertility.ipynb` is **broken.** The failures cascade: `tables` and `diffs` are
+  never defined, so `plot_table_with_errors` raises. Figures 01, 04, 05 and 06
+  came out 203 pixels tall instead of 565 — essentially empty — and 02, 03 and
+  07–10 were never reached. Its figures have been **restored from the pre-run
+  backup**, so the repo holds a consistent stale set rather than a mix of broken
+  and old.
+
+### Scope
+
+- [ ] Add `ftfmode` to the cycle-12 readers, or drop the diagnostic cells that use it
+- [ ] Work out whether `intent_yes` is a rename of `want_yes` or a distinct derivation
+- [ ] Restore or remove the cells that defined `birth_group` and `strl_yes`
+- [ ] Re-run `fertility.ipynb` to completion and refresh `nsfg_fertility*.png`
+- [ ] Once it runs, add both notebooks to a smoke test so this cannot drift silently again
