@@ -1,6 +1,9 @@
 # Agentic Data Science
 
-*What happened when a decade-old analysis repository was reorganized, audited, and re-estimated — and what the audit found.*
+For a recent collaboration with AIBM, I found myself working with data from the National Survey of Family Growth (NSFG), which I used in several examples in [*Think Stats*](https://allendowney.github.io/ThinkStats). I was reminded of the technical debt I have accumulated while working with this data, and the dread I feel getting back to it. So I decided to make it a case study in agentic data science.
+
+I asked Claude Code to take inventory of the repository, reorganize it, and rebuild the analysis pipeline.
+Then I asked it to generate a blog post about the process, which is what follows, with my revisions.
 
 ---
 
@@ -49,19 +52,17 @@ Eighty-five commits over eleven years, in bursts: seventeen in 2015, then a hand
 
 This is how a lot of real analysis code lives, and it is worth being honest about what it looked like after a decade:
 
-- About 150 files in a single directory. Raw survey data, derived data, 49 loose figures, notebooks, and a vendored copy of a 2015-era statistics library, all side by side.
+- About 150 files in a single directory. Raw survey data, derived data, 49 loose figures, notebooks, and the source of a 2015-era statistics library pasted into the repo rather than installed, all side by side.
 - `git status` reported 78 untracked files and 13 modified ones. At that point the tool stops being useful: a real change is invisible in the noise.
 - Seventeen months of uncommitted work, including a 1.8 MB notebook that produced eleven published figures and had *never been committed at all*.
-- Two parallel codebases. A modern one using `lifelines` and `empiricaldist`, and a legacy one using the vendored library — joined at exactly one function call, which kept 116 KB of 2015 code loaded on every run.
-- Data committed to version control. Several hundred megabytes of survey microdata in git-LFS — which, incidentally, NSFG's data user agreement does not permit redistributing.
+- Two parallel codebases. A modern one using `lifelines` and `empiricaldist`, and a legacy one using the pasted-in library — joined at exactly one function call, which kept 116 KB of 2015 code loaded on every run.
+- Data committed to version control. Several hundred megabytes of survey microdata in git-LFS — which NSFG's data user agreement does not permit redistributing.
 
-None of this was the result of carelessness. Each piece was a reasonable local decision: commit the data so the analysis is reproducible; vendor the library so it does not break; add a loader for the new cycle in the same style as the last one. The problems are emergent. No single commit introduced them.
+None of this was the result of carelessness [Thanks, Claude, but that is far too generous]. Each piece was a reasonable local decision: commit the data so the analysis is reproducible; keep a private copy of the library so it does not break; add a loader for the new cycle in the same style as the last one. The problems are emergent. No single commit introduced them.
 
 ## The audit
 
-I recently worked through the repository with Claude, with a simple standing rule: any change that was supposed to be behavior-preserving had to *prove* it. Before and after every structural change, the pipeline was re-run and the output compared — same row counts, same columns, same hash of the whole data frame.
-
-That rule turned out to matter more than any of the cleanup.
+I recently worked through the repository with Claude, with a simple standing rule: any change that was supposed to be behavior-preserving had to *prove* it. Before and after every structural change, the pipeline was re-run and the output compared. That rule turned out to matter more than any of the cleanup.
 
 ### A one-year error in the headline variable
 
@@ -179,15 +180,13 @@ In the figures below, the shaded band around each curve is a 90% bootstrap inter
 
 The substantive story is unchanged: each cohort still marries later than the last, and the recent cohorts still look likely to end with a larger share never married. An audit that overturned the finding would be a bigger story; this one did not.
 
-What changed is what the figures claim. The curves stop where the data stops rather than trailing off into a spike. The bands widen where the estimate is weak. And each curve carries a dot marking the age past which the data cannot support an estimate — which is information the old figures did not convey.
-
-The numbers moved too. For women in the 1990s cohort the old pipeline reported about 62% ever married by age 33; the new one reports 56.5% by 32. Most of that gap is the censoring correction: retiring people from the risk set half a year too early removes them before marriages they may have had, which inflates the estimate.
+But some of the numbers changed. For women in the 1990s cohort the old pipeline reported about 62% ever married by age 33; the new one reports 56.5% by 32. Most of that gap is the censoring correction: retiring people from the risk set half a year too early removes them before marriages they may have had, which inflates the estimate.
 
 ## What I take from this
 
-The valuable output was not the cleanup. Reorganizing 150 files into directories, purging the data from git history, converting notebooks to markdown, retiring the vendored library — all worth doing, none of it interesting. The valuable output was three bugs and a method, and every one of them came from the same discipline: *check that the thing you believe is true*.
+The valuable output was not the cleanup. Reorganizing 150 files into directories, purging the data from git history, converting notebooks to markdown, retiring the pasted-in library — all worth doing, none of it interesting. The valuable output was three bugs and a method, and every one of them came from the same discipline: *check that the thing you believe is true*.
 
-Verification is what made the agentic part work. The rule that every supposedly behavior-preserving change had to produce a byte-identical result is what made it safe to delete 253 lines of unreachable code, retire a vendored library, rename 39 functions, and move every file in the repository. It is also what caught the errors — including two of my collaborator's own, and one of mine from earlier in the same session.
+Verification is what made the agentic part work. The rule that every supposedly behavior-preserving change had to produce a byte-identical result is what made it safe to delete 253 lines of unreachable code, retire a library that had been pasted in a decade ago, rename 39 functions, and move every file in the repository. It is also what caught the errors — including two of my collaborator's own, and one of mine from earlier in the same session.
 
 Coarsened data deserves explicit handling. When NSFG stopped publishing century-month dates, the pipeline papered over it with a midpoint and carried on. That was the single decision that caused both the year-long bias and the spiking tails. The honest move — say what you know, which is an interval — was available the whole time.
 
