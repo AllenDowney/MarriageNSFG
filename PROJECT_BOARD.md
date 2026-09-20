@@ -23,6 +23,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
 - **Task 17:** Clean up `stop` cells and dead code so every notebook executes end to end — not started.
+- **Task 19:** Delete the pre-purge backup once the rewrite has had time to settle — not started.
 - **Task 18:** Age at marriage is interval-censored from cycle 10, not exactly observed — **reframed**; `nsfg/intervals.py` written, estimator choice open.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
@@ -1122,3 +1123,25 @@ but it changes published numbers and needs deciding deliberately.
       the 1990s
 - [ ] Decide whether `min_at_risk` can be relaxed once the lumping is gone
 - [ ] State the change wherever a recent-cohort survival estimate is published
+
+---
+
+## Task 19: Delete the pre-purge backup
+
+**Status:** Not started. No hurry; the point is that it should not be kept forever.
+
+`~/MarriageNSFG-backup-20260920/git-full` is a byte copy of `.git` as it stood before the history rewrite, including the 410 MB of LFS objects. It is 496 MB and it is the only copy of the pre-purge history.
+
+It was taken because `git filter-repo` plus a force-push cannot be undone. That risk has passed: the rewrite is pushed, a fresh clone was verified to come down at 32 MB with no data files and a working package, and everything since has been committed on top of it.
+
+**What deleting it actually costs.** Less than it sounds. The rewritten history keeps 70 of the 73 original commits — only the data blobs were stripped, not the record of the work. The three commits that vanished did nothing but add data files. The data itself is still in `data/`, and `scripts/download_nsfg.py` can fetch it again from NCHS.
+
+**What it costs to keep.** It contains NSFG and IPUMS microdata in a form that was removed from the repository precisely because it should not be distributed. A local backup is not distribution, but it is one more place the data exists, and the reason for keeping it expires.
+
+The `data/` half of the backup was already deleted on 2026-09-20: 73 of its 75 files were still byte-present in the working tree, and the other two were HDF extracts superseded by parquet files verified identical.
+
+### Scope
+
+- [ ] Confirm nothing since the rewrite has needed the old history
+- [ ] Delete `~/MarriageNSFG-backup-20260920`
+- [ ] Separately, chase the GitHub side: the rewrite orphaned the LFS objects on the remote but does not delete them, and that needs a support request
