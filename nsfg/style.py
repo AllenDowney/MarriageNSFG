@@ -27,6 +27,9 @@ RCPARAMS = {
     "grid.linewidth": 0.4,
     "grid.alpha": GRID_ALPHA,
     "figure.dpi": 150,
+    # saved at twice the display dpi, so the type stays the same size
+    # relative to the plot but renders crisply
+    "savefig.dpi": 300,
     "savefig.bbox": "tight",
 }
 

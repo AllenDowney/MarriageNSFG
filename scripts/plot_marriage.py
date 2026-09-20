@@ -42,7 +42,7 @@ def load(sex):
 
 def plot_curves(df, colors, title, subtitle, outfile):
     """One line per birth cohort, with a shaded bootstrap interval."""
-    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+    fig, ax = plt.subplots(figsize=(6.0, 3.2))
     for cohort in sorted(df.cohort.unique()):
         g = df[df.cohort == cohort]
         color = colors[cohort]
@@ -71,7 +71,7 @@ def plot_curves(df, colors, title, subtitle, outfile):
 
 def plot_stopping(data, colors, outfile):
     """Where each curve stops, and why."""
-    fig, ax = plt.subplots(figsize=(6.0, 4.0))
+    fig, ax = plt.subplots(figsize=(6.0, 3.2))
     for sex, style in (("female", "-"), ("male", "--")):
         df = data[sex]
         for cohort in sorted(df.cohort.unique()):
