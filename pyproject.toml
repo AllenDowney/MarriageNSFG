@@ -25,6 +25,7 @@ dev = [
     "jupytext",
     "nbconvert",
     "jupyterlab",
+    "nbclassic",
     "pytest",
     "ruff",
     "black",
