@@ -14,6 +14,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
 
 from nsfg.paths import FIGURES, interim  # noqa: E402
 from nsfg.style import apply_style, cohort_colors, decorate_axes  # noqa: E402
@@ -56,7 +57,7 @@ def plot_curves(df, colors, title, subtitle, outfile):
         color="0.35",
         va="bottom",
     )
-    ax.legend(loc="upper left", bbox_to_anchor=(0.01, 0.97), ncol=2)
+    ax.legend(loc="lower right", ncol=1)
     fig.savefig(FIGURES / outfile)
     plt.close(fig)
     print(f"  wrote {outfile}")
@@ -85,18 +86,24 @@ def plot_stopping(data, colors, outfile):
         xlim=(14, 47),
         ylim=(0, 6),
     )
-    ax.set_title("Where each estimate stops being reportable", pad=34)
+    ax.set_title("Where each estimate stops being reportable", pad=26)
     ax.text(
         0,
         1.015,
-        "Solid: women.  Dashed: men.  A curve is cut past the dotted line, "
-        "but only if it is also\nwider than two percentage points -- so a "
-        "small cohort keeps its curve and its wide interval.",
+        "National Survey of Family Growth, 1982-2023",
         transform=ax.transAxes,
-        fontsize=9,
+        fontsize=8.5,
         color="0.35",
+        va="bottom",
     )
-    ax.legend(loc="upper left", ncol=2)
+    # solid/dashed is needed to read the figure, so it belongs in the legend
+    handles, labels = ax.get_legend_handles_labels()
+    handles += [
+        Line2D([], [], color="0.35", ls="-"),
+        Line2D([], [], color="0.35", ls="--"),
+    ]
+    labels += ["women", "men"]
+    ax.legend(handles, labels, loc="upper right", ncol=1)
     fig.savefig(FIGURES / outfile)
     plt.close(fig)
     print(f"  wrote {outfile}")
@@ -112,8 +119,7 @@ def main():
             data[sex],
             colors,
             title=f"{SEX_LABELS[sex]}: percent ever married, by decade of birth",
-            subtitle="NSFG 1982-2023.  Shaded: 90% bootstrap interval.\n"
-            "Dot: where the estimate stops being reportable.",
+            subtitle="National Survey of Family Growth, 1982-2023",
             outfile=f"marriage_by_cohort_{sex}.png",
         )
     plot_stopping(data, colors, "marriage_by_cohort_stopping.png")

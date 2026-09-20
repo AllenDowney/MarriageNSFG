@@ -19,7 +19,6 @@ RCPARAMS = {
     "axes.titlesize": 12,
     "axes.labelsize": 10,
     "axes.titlelocation": "left",
-    "axes.titleweight": "bold",
     "xtick.labelsize": 9,
     "ytick.labelsize": 9,
     "legend.fontsize": 9,
@@ -31,9 +30,15 @@ RCPARAMS = {
     "savefig.bbox": "tight",
 }
 
-# a sequential map for birth cohorts, reversed so the oldest cohort is light
-# and the most recent is dark -- the recent ones carry the argument
-COHORT_CMAP = "viridis_r"
+# A sequential map for birth cohorts, reversed so the oldest cohort is light and
+# the most recent is dark -- the recent ones carry the argument.
+#
+# plasma rather than viridis: viridis spends most of its range in green and
+# blue-green, so adjacent cohorts are hard to tell apart in a legend of eight.
+# plasma runs yellow -> orange -> red -> magenta -> purple, which separates them
+# while keeping the light-to-dark ordering. turbo separates better still but is
+# dark at both ends, which loses that ordering.
+COHORT_CMAP = "plasma_r"
 
 
 def apply_style():

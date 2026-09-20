@@ -246,7 +246,8 @@ own cohort **and** imprecise in absolute terms:
 $$\text{drop where } \; sd > \max(\text{floor},\; k \times \text{median}(sd))$$
 
 The diagnostic below shows it working. Each line is one cohort's bootstrap spread
-divided by its own median. The 1930s women's curve peaks at 2.2× around age 20
+divided by its own median — solid for women, dashed for men — and the dotted line
+is the relative threshold. The 1930s women's curve peaks at 2.2× around age 20
 and is *kept*, because in absolute terms it is still precise. The 1990s and 2000s
 curves climb past the threshold and are cut.
 
@@ -257,6 +258,10 @@ curves climb past the threshold and are cut.
 Estimation is now a bootstrap that resamples respondents within cycle by sampling
 weight and *then* draws from each respondent's interval, so the spread across
 iterations carries sampling variability and date coarseness together.
+
+In the figures below, the shaded band around each curve is a 90% bootstrap
+interval, and the dot marks the age past which the data no longer supports an
+estimate — the point where the stopping rule cuts the curve off.
 
 ![Percent ever married, women, by decade of birth](figs/marriage_by_cohort_female.png)
 
