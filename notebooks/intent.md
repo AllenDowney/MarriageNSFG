@@ -14,7 +14,6 @@ kernelspec:
 ```{code-cell} ipython3
 %load_ext autoreload
 %autoreload 2
-%load_ext nb_black
 ```
 
 ```{code-cell} ipython3

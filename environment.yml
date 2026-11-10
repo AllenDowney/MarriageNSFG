@@ -26,6 +26,7 @@ dependencies:
   - matplotlib
   - statsmodels
   - seaborn
+  - openpyxl     # pandas.read_excel, in fertility
 
   - jupyterlab
   - pip

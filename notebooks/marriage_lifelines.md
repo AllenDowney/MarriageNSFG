@@ -19,10 +19,6 @@ kernelspec:
 ```
 
 ```{code-cell} ipython3
-%load_ext nb_black
-```
-
-```{code-cell} ipython3
 import pandas as pd
 
 from nsfg.paths import raw, interim, FIGURES
