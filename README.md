@@ -26,6 +26,14 @@ python scripts/download_nsfg.py --check                 # what is present, offli
 
 NCHS distributes these files under a data user agreement. Read and accept it before downloading. CPS and IPUMS extracts are user-specific and must be requested from those providers directly.
 
+To run the analysis notebooks without the raw files, download the harmonized extracts instead: about 6 MB, published as the [`data-2026-11-10` release](https://github.com/AllenDowney/MarriageNSFG/releases/tag/data-2026-11-10) and checked against SHA-256 sums.
+
+```bash
+python scripts/download_nsfg.py --i-accept-nchs-terms --extracts   # into data/interim
+```
+
+Only `clean_nsfg` needs `data/raw`. The extracts fall under the same NCHS agreement. Source: National Center for Health Statistics, National Survey of Family Growth. NCHS is not responsible for the harmonization or the analyses here.
+
 ## Getting started
 
 ```bash

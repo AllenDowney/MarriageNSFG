@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """Download the NSFG public-use files this project reads.
 
-The survey data is not in this repository and may not be redistributed, so it
-has to be fetched from NCHS. This script does that, and does the small amount of
-reshaping the readers expect.
+The survey data is not in this repository -- the raw files come to 584 MB and
+NCHS serves them -- so it has to be fetched. This script does that, and does the
+small amount of reshaping the readers expect.
 
     python scripts/download_nsfg.py --i-accept-nchs-terms
     python scripts/download_nsfg.py --i-accept-nchs-terms --cycle 2022-2023
     python scripts/download_nsfg.py --check          # what is present, no network
 
-NCHS distributes these files under a data user agreement. Read and accept it
-before running this:
+To run the analysis notebooks without the raw files, fetch the harmonized
+extracts that clean_nsfg produces instead. They are published as a GitHub
+release, about 6 MB, and go to data/interim:
 
-    https://www.cdc.gov/nchs/nsfg/index.htm
+    python scripts/download_nsfg.py --i-accept-nchs-terms --extracts
+
+NCHS distributes these files under a data user agreement: statistical
+analysis only, and no attempt to identify anyone. It applies to the extracts
+too. Read it before running this:
+
+    https://www.cdc.gov/nchs/policy/data-user-agreement.html
 
 The agreement is a click-through on the NSFG download pages; the FTP paths used
 here serve without one. That is a technical detail, not permission -- the
@@ -35,6 +42,7 @@ use them.
 
 import argparse
 import gzip
+import hashlib
 import shutil
 import sys
 import tempfile
@@ -43,6 +51,20 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_RAW = REPO_ROOT / "data" / "raw"
+DATA_INTERIM = REPO_ROOT / "data" / "interim"
+
+# Harmonized extracts written by notebooks/clean_nsfg, published as a release.
+# A new release means a new tag and new checksums here; see the README.
+EXTRACTS_TAG = "data-2026-11-10"
+EXTRACTS_URL = (
+    "https://github.com/AllenDowney/MarriageNSFG/releases/download/" + EXTRACTS_TAG
+)
+EXTRACTS = {
+    "FemMarriageData.parquet": "fa140b273ffe64158cd08302bf5b80b1bf92295910b0c3372f36e19ea9f6cca4",
+    "MaleMarriageData.parquet": "760fc767da1bb3922839f2a0237347570f1be8a30a9500736065eefc8344d977",
+    "marriage_nsfg_female.csv.gz": "af34083fb39c1c3a44747bc2a17fad12274da14a4d73764653b5fabe35f7debd",
+    "marriage_nsfg_male.csv.gz": "35e07991e1a918925fbb3bc3d598c695d450cfb085f3d2d8aa54e65fab1b02a6",
+}
 
 FTP = "https://ftp.cdc.gov/pub/Health_Statistics/NCHS"
 DATASETS = f"{FTP}/Datasets/NSFG"
@@ -107,12 +129,13 @@ RECORD_LEN_1988 = 3553
 
 TERMS = """
 The National Survey of Family Growth public-use files are distributed by NCHS
-under a data user agreement. Among other things, it does not permit
-redistribution -- which is why this repository contains no survey data.
+under a data user agreement: use them for statistical reporting and analysis
+only, make no attempt to identify anyone, and do not link them to individually
+identifiable data. It covers the harmonized extracts as well as the raw files.
 
 Read the agreement before downloading:
 
-    https://www.cdc.gov/nchs/nsfg/index.htm
+    https://www.cdc.gov/nchs/policy/data-user-agreement.html
 
 If you have read and accepted it, re-run with:
 
@@ -158,6 +181,38 @@ def derive_1988_lines():
     print(f"  1988FemRespDataLines.dat.gz  derived ({n} records)")
 
 
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def do_extracts(force):
+    """Download the harmonized extracts into data/interim and verify them."""
+    print(f"Extracts from release {EXTRACTS_TAG} -> {DATA_INTERIM}\n")
+    bad = 0
+    for name, expected in EXTRACTS.items():
+        dest = DATA_INTERIM / name
+        if dest.exists() and not force:
+            status = "present" if sha256(dest) == expected else "present, differs"
+            print(f"  {name}  {status}")
+            continue
+        print(f"  {name}  downloading...", flush=True)
+        fetch(f"{EXTRACTS_URL}/{name}", dest)
+        if sha256(dest) != expected:
+            print(f"  {name}  CHECKSUM MISMATCH; removed")
+            dest.unlink()
+            bad += 1
+    if bad:
+        print(f"\n{bad} file(s) failed verification")
+        return 1
+    print("\nDone. A local file marked 'differs' was built from data/raw by")
+    print("`make data`; use --force to replace it with the published one.")
+    return 0
+
+
 def wanted(cycle_filter):
     for cycle, spec in CYCLES.items():
         if cycle_filter and cycle != cycle_filter:
@@ -195,6 +250,11 @@ def main():
         help="report which files are present; no network access",
     )
     p.add_argument(
+        "--extracts",
+        action="store_true",
+        help="fetch the harmonized extracts into data/interim instead of the raw files",
+    )
+    p.add_argument(
         "--force", action="store_true", help="re-download files already present"
     )
     args = p.parse_args()
@@ -206,6 +266,9 @@ def main():
     if not args.i_accept_nchs_terms:
         print(TERMS)
         return 2
+
+    if args.extracts:
+        return do_extracts(args.force)
 
     DATA_RAW.mkdir(parents=True, exist_ok=True)
     for cycle, (asis, dats, dcts) in wanted(args.cycle):

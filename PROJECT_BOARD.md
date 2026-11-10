@@ -1176,7 +1176,7 @@ IPUMS is different: its terms do forbid redistribution, so removing `usa_00002.c
 
 ## Task 21: Publish the harmonized extracts outside git
 
-**Status:** Not started.
+**Status:** Done 2026-11-10, published as the [`data-2026-11-10` release](https://github.com/AllenDowney/MarriageNSFG/releases/tag/data-2026-11-10).
 
 Task 20 found that the NCHS agreement does not restrict redistributing NSFG public-use data, which reopens the question Task 4 put out of scope. Today a reader who wants to run the notebooks has to download 584 MB from NCHS and run `make data`. `data/interim` is 29 MB and is derived from NSFG files only (no IPUMS), so the parquet extracts could be published as a download and the notebooks could run from those.
 
@@ -1184,8 +1184,10 @@ Keep them out of git itself: a GitHub release asset or a Zenodo deposit (which a
 
 ### Scope
 
-- [ ] Confirm every file to be published derives from NSFG only, with nothing from IPUMS or CPS
-- [ ] Choose the host: GitHub release asset or Zenodo
-- [ ] Add the citation NCHS asks for ("National Center for Health Statistics, National Survey of Family Growth") and its disclaimer of responsibility for the analysis, in the README and alongside the files
-- [ ] Add a fetch path, in `download_nsfg.py` or a new script, that gets the extracts into `data/interim` without the raw files
-- [ ] Record the version of the pipeline that produced them (commit hash and frame hash), so a published extract can be traced to its code
+- [x] Confirm every file to be published derives from NSFG only, with nothing from IPUMS or CPS. `clean_nsfg` reads only NSFG readers
+- [x] Choose the host: a GitHub release. The two parquet files the notebooks read, the same tables as csv.gz, a README and `SHA256SUMS`. Zenodo (for a DOI) is still open if it is ever needed
+- [x] Add the citation NCHS asks for ("National Center for Health Statistics, National Survey of Family Growth") and its disclaimer of responsibility for the analysis, in the README and alongside the files
+- [x] Add a fetch path: `download_nsfg.py --extracts` downloads into `data/interim` and verifies the SHA-256 sums hard-coded in the script. A new release means a new tag and new sums there
+- [x] Record the version of the pipeline that produced them: the tag is the code, and the release README gives the frame hashes
+
+Found while building it: the `MaleMarriageData.parquet` on disk was stale. It was written at 13:52 on 2026-09-20, before `ca25eb7` stopped the male readers from overwriting the integer `ager` with `ager + 0.5`. Rebuilding changed `ager` in 14,117 rows, all in iterations 10–12, and nothing else; the female frame hash was unchanged (16647450329505251416). The release has the rebuilt file (male frame hash 17792672795944109241). Notebook outputs committed before the rebuild may reflect the old male `ager`; `make execute` would refresh them.
