@@ -2,9 +2,9 @@
 
 NSFG survey data harmonized across cycles 3 (1982) through 12 (2022–2023), and analyses of US marriage patterns. `PROJECT_BOARD.md` holds the numbered tasks and is the place to record findings; `planning/` holds the longer designs.
 
-## The data is not here, and must not be
+## The data is not here, and stays out
 
-NSFG and IPUMS public-use files may not be redistributed. They were purged from this repo's history on 2026-09-20 (`git filter-repo`, force-pushed), and `data/` is gitignored.
+IPUMS extracts may not be redistributed (IPUMS terms). NSFG public-use files may be — the NCHS agreement restricts use and re-identification, not sharing (Task 20) — but they are 584 MB and re-downloadable, and putting them back would bring back LFS and a bloated `.git`. Both were purged from this repo's history on 2026-09-20 (`git filter-repo`, force-pushed), and `data/` is gitignored.
 
 **Before committing anything, check it is not survey microdata.** The derived extracts count as data too — `data/interim/*.parquet` is respondent-level and stays out.
 

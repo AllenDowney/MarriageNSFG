@@ -17,7 +17,7 @@ Harmonized National Survey of Family Growth data across survey cycles 3 (1982) t
 
 ## The data is not in this repository
 
-NSFG and IPUMS public-use files may not be redistributed, so `data/` is gitignored and was purged from this repo's history in September 2026.
+The NSFG raw files come to 584 MB and can be fetched again from NCHS at any time, so they are kept out of git; the IPUMS extracts are kept out because IPUMS terms forbid redistribution. `data/` is gitignored and was purged from this repo's history in September 2026. Anyone using the NSFG data agrees to the [NCHS Data User Agreement](https://www.cdc.gov/nchs/policy/data-user-agreement.html): statistical analysis only, and no attempt to identify respondents.
 
 ```bash
 python scripts/download_nsfg.py --i-accept-nchs-terms   # all ten cycles

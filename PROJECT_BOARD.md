@@ -191,7 +191,7 @@ was the urgent one.
 
 **Context:** Two separate problems, both rooted in the same file.
 
-**The data should not be published.** NSFG public-use files may not be redistributed. 28 files are currently tracked in git-LFS and have already been pushed to `github.com/AllenDowney/MarriageNSFG` — every cycle from 1982 through 2017–2019, plus `usa_00002.csv.gz`, which is IPUMS and carries its own restriction. Removing them going forward is not enough; they are in every historical commit.
+**The data should not be published.** NSFG public-use files may not be redistributed. 28 files are currently tracked in git-LFS and have already been pushed to `github.com/AllenDowney/MarriageNSFG` — every cycle from 1982 through 2017–2019, plus `usa_00002.csv.gz`, which is IPUMS and carries its own restriction. Removing them going forward is not enough; they are in every historical commit. (Correction, 2026-11-10: the NSFG half of this was wrong — the NCHS agreement does not restrict redistribution of public-use files. The IPUMS file did need to go. See Task 20.)
 
 **The repo is unusable from a fresh clone.** `.gitattributes` declares `*.hdf`, `*.csv`, `*.gz` as LFS, but it has never been committed — `git log --all -- .gitattributes` is empty. The pointers on GitHub are correct; a cloner just has no filter configuration to resolve them with. `git show HEAD:FemMarriageData.hdf` returns:
 
@@ -218,7 +218,8 @@ Once no data is tracked, **LFS has no remaining purpose** and `.gitattributes` c
 - [ ] **Request that GitHub purge the orphaned LFS objects.** The rewrite does
       not remove them from the remote — they are unreferenced but still stored,
       and may remain retrievable until GitHub Support clears them. This is the
-      last piece of the redistribution exposure. Open a support request naming
+      last piece of the redistribution exposure, which is about the IPUMS
+      file `usa_00002.csv.gz` (Task 20). Open a support request naming
       the repository and asking for orphaned LFS objects to be purged
 
 ### Out of scope
@@ -628,7 +629,7 @@ Write this **after** Task 1, so it documents the layout that exists rather than 
 
 - [ ] Layout and where things belong
 - [ ] The jupytext round-trip, and the rule that `.ipynb` is never edited
-- [ ] The data situation: not in the repo, not redistributable, fetched by script
+- [ ] The data situation: not in the repo, fetched by script (IPUMS not redistributable; NSFG kept out for size, see Task 20)
 - [ ] Cycle numbering (3 = 1982 … 12 = 2022–2023)
 - [ ] The verification ritual: baseline, change, compare
 
@@ -1136,7 +1137,7 @@ It was taken because `git filter-repo` plus a force-push cannot be undone. That 
 
 **What deleting it actually costs.** Less than it sounds. The rewritten history keeps 70 of the 73 original commits — only the data blobs were stripped, not the record of the work. The three commits that vanished did nothing but add data files. The data itself is still in `data/`, and `scripts/download_nsfg.py` can fetch it again from NCHS.
 
-**What it costs to keep.** It contains NSFG and IPUMS microdata in a form that was removed from the repository precisely because it should not be distributed. A local backup is not distribution, but it is one more place the data exists, and the reason for keeping it expires.
+**What it costs to keep.** It contains the IPUMS extract, which was removed from the repository because IPUMS terms forbid distributing it (the NSFG files turned out not to be restricted; see Task 20). A local backup is not distribution, but it is one more place the data exists, and the reason for keeping it expires.
 
 The `data/` half of the backup was already deleted on 2026-09-20: 73 of its 75 files were still byte-present in the working tree, and the other two were HDF extracts superseded by parquet files verified identical.
 
@@ -1145,3 +1146,46 @@ The `data/` half of the backup was already deleted on 2026-09-20: 73 of its 75 f
 - [ ] Confirm nothing since the rewrite has needed the old history
 - [ ] Delete `~/MarriageNSFG-backup-20260920`
 - [ ] Separately, chase the GitHub side: the rewrite orphaned the LFS objects on the remote but does not delete them, and that needs a support request
+
+---
+
+## Task 20: The "NSFG may not be redistributed" claim is unsupported
+
+**Status:** Done (found and corrected 2026-11-10, while working on ThinkStats Task 5). Publishing the harmonized extracts is split out as Task 21.
+
+The [NCHS Data User Agreement](https://www.cdc.gov/nchs/policy/data-user-agreement.html), repeated verbatim in the [2022–2023 NSFG User's Guide](https://cdc.gov/nchs/data/nsfg/guidefaqs/NSFG-2022-2023-UsersGuide-revJuly2025.pdf) (pp. 4–5), has four terms for public-use files: use for statistical reporting and analysis only; no attempt to identify anyone; no linking to individually identifiable data; no research on disclosure or re-identification methods. None of them concerns redistribution. The agreements that do bar copying (2013–2015 REGION, 2002 ACASI) cover restricted files released under special agreements, not public-use files. NCHS also asks, as a courtesy, that published work cite "National Center for Health Statistics, National Survey of Family Growth" and disclaim NCHS responsibility for the analysis.
+
+IPUMS is different: its terms do forbid redistribution, so removing `usa_00002.csv.gz` from the repo and its history (Task 4) was right regardless.
+
+**Where the claim appears:**
+
+- `README.md` line 20: "NSFG and IPUMS public-use files may not be redistributed"
+- `CLAUDE.md` line 7, same sentence
+- `codebooks/README.md` line 31
+- `PROJECT_BOARD.md` Task 4 ("The data should not be published") and Task 19
+- `jb/agentic_data_science.md` line 59 — this looks like published writing, so a correction there is a judgment call
+
+### Scope
+
+- [x] Reword the README, CLAUDE.md and codebooks note. The NSFG raw files stay out of git for practical reasons (584 MB, re-downloadable, and re-adding them would bring back LFS); IPUMS stays out because its terms forbid redistribution. The README now links the NCHS agreement
+- [x] Correct `jb/agentic_data_science.md`, still a draft: the bullet now gives the real problems with the committed data (LFS never configured, so clones got pointer stubs; a 486 MB `.git`) instead of the licensing claim
+- [x] Annotate Tasks 4, 12 and 19 where they repeat the claim; the GitHub LFS purge request in Task 4 is still needed, for the IPUMS file
+- [x] Keep fetching NSFG raw files from NCHS by script. Publishing the 29 MB harmonized extracts outside git is Task 21
+
+---
+
+## Task 21: Publish the harmonized extracts outside git
+
+**Status:** Not started.
+
+Task 20 found that the NCHS agreement does not restrict redistributing NSFG public-use data, which reopens the question Task 4 put out of scope. Today a reader who wants to run the notebooks has to download 584 MB from NCHS and run `make data`. `data/interim` is 29 MB and is derived from NSFG files only (no IPUMS), so the parquet extracts could be published as a download and the notebooks could run from those.
+
+Keep them out of git itself: a GitHub release asset or a Zenodo deposit (which adds a DOI) avoids bringing back LFS.
+
+### Scope
+
+- [ ] Confirm every file to be published derives from NSFG only, with nothing from IPUMS or CPS
+- [ ] Choose the host: GitHub release asset or Zenodo
+- [ ] Add the citation NCHS asks for ("National Center for Health Statistics, National Survey of Family Growth") and its disclaimer of responsibility for the analysis, in the README and alongside the files
+- [ ] Add a fetch path, in `download_nsfg.py` or a new script, that gets the extracts into `data/interim` without the raw files
+- [ ] Record the version of the pipeline that produced them (commit hash and frame hash), so a published extract can be traced to its code

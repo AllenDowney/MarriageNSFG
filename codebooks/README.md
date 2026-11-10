@@ -28,7 +28,7 @@ grep -B2 -A30 'HIEDUC' codebooks/2022-2023-FemResp-RecodeSpecs.txt
 
 ## Why this is in the repo when the data is not
 
-NSFG public-use microdata may not be redistributed, and Task 4 removes it from this repo and its history. NCHS documentation is a different matter: it is a US government work in the public domain. Caching it costs 3.5 MB and removes the most common reason to go looking outside the repo.
+The NSFG microdata is kept out of this repo for size — 584 MB that `scripts/download_nsfg.py` can fetch again — and Task 4 removed it from the history. NCHS documentation is a different matter: it is a US government work in the public domain. Caching it costs 3.5 MB and removes the most common reason to go looking outside the repo.
 
 ## Coverage
 

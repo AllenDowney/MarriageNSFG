@@ -56,7 +56,7 @@ This is how a lot of real analysis code lives, and it is worth being honest abou
 - `git status` reported 78 untracked files and 13 modified ones. At that point the tool stops being useful: a real change is invisible in the noise.
 - Seventeen months of uncommitted work, including a 1.8 MB notebook that produced eleven published figures and had *never been committed at all*.
 - Two parallel codebases. A modern one using `lifelines` and `empiricaldist`, and a legacy one using the pasted-in library — joined at exactly one function call, which kept 116 KB of 2015 code loaded on every run.
-- Data committed to version control. Several hundred megabytes of survey microdata in git-LFS — which NSFG's data user agreement does not permit redistributing.
+- Data committed to version control. Several hundred megabytes of survey microdata in git-LFS, and `.gitattributes` had never been committed, so a fresh clone got LFS pointer stubs in place of the data and every notebook failed. The `.git` directory alone was 486 MB.
 
 None of this was the result of carelessness [Thanks, Claude, but that is far too generous]. Each piece was a reasonable local decision: commit the data so the analysis is reproducible; keep a private copy of the library so it does not break; add a loader for the new iteration in the same style as the last one. The problems are emergent. No single commit introduced them.
 
