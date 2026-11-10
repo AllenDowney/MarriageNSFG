@@ -9,7 +9,7 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 1:** Reorganize the repo — **done** (`b6ab4cf`); data verified identical before and after.
 - **Task 2:** Rebuild the conda environment — **done**; `MarriageNSFG` is now Python 3.13.15. Old env kept as `MarriageNSFG-py310`.
 - **Task 3:** Commit 17 months of pending work — **done** (`5d3a315`), code and notebooks only.
-- **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **pushed** (`8c77151`). One item left: ask GitHub to purge the orphaned LFS objects.
+- **Task 4:** Remove NSFG/IPUMS data from the repo and its history — **done** (`8c77151`). Purging the orphaned LFS objects on GitHub was judged unnecessary (2026-11-10).
 - **Task 5:** Write the data download script — **written** (`scripts/download_nsfg.py`), covers all 29 NSFG files.
 - **Task 6:** Update the analysis for cycle 12 — **done**: data regenerated, 7 of 8 notebooks run clean, figures refreshed. `fertility` has 3 known errors, tracked under Task 17.
 - **Task 7:** Is cycle 12's education recode wrong? — **resolved**; not a defect. Codebook cached.
@@ -215,12 +215,7 @@ Once no data is tracked, **LFS has no remaining purpose** and `.gitattributes` c
 - [ ] Write a real `.gitignore`: `data/`, `*.hdf`, generated `*.ipynb`, `.ipynb_checkpoints/`, `__pycache__/`, `.vscode/`, shelve files
 - [x] Force-push (`8c77151`, 2026-09-20). Verified by cloning fresh: 32 MB,
       93 files, zero data files, package imports and paths resolve
-- [ ] **Request that GitHub purge the orphaned LFS objects.** The rewrite does
-      not remove them from the remote — they are unreferenced but still stored,
-      and may remain retrievable until GitHub Support clears them. This is the
-      last piece of the redistribution exposure, which is about the IPUMS
-      file `usa_00002.csv.gz` (Task 20). Open a support request naming
-      the repository and asking for orphaned LFS objects to be purged
+- [x] ~~Request that GitHub purge the orphaned LFS objects.~~ Not needed (Allen, 2026-11-10). The objects are still stored on GitHub but nothing in the repository references them, and with the NSFG files cleared by Task 20 the only one that mattered was the IPUMS extract `usa_00002.csv.gz`.
 
 ### Out of scope
 
@@ -1145,7 +1140,7 @@ The `data/` half of the backup was already deleted on 2026-09-20: 73 of its 75 f
 
 - [ ] Confirm nothing since the rewrite has needed the old history
 - [ ] Delete `~/MarriageNSFG-backup-20260920`
-- [ ] Separately, chase the GitHub side: the rewrite orphaned the LFS objects on the remote but does not delete them, and that needs a support request
+- [x] ~~Separately, chase the GitHub side.~~ Decided against on 2026-11-10; see Task 4
 
 ---
 
