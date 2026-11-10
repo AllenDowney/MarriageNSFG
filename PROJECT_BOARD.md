@@ -23,8 +23,10 @@ The 2022–2023 NSFG cycle (cycle 12) has been downloaded and the ETL already ru
 - **Task 15:** `fertility.ipynb` and `intent.ipynb` reference columns the pipeline does not produce — **done**: `intent` clean, `fertility` 36 errors → 3, of which 2 are a deliberate `stop`.
 - **Task 16:** Replace bootstrap resampling with weighted analysis where the CIs allow it — not started.
 - **Task 17:** Clean up `stop` cells and dead code so every notebook executes end to end — not started.
-- **Task 19:** Delete the pre-purge backup once the rewrite has had time to settle — not started.
 - **Task 18:** Age at marriage is interval-censored from cycle 10, not exactly observed — **reframed**; `nsfg/intervals.py` written, estimator choice open.
+- **Task 19:** Delete the pre-purge backup — **done** (2026-11-10); verified to hold nothing unique, then deleted.
+- **Task 20:** The "NSFG may not be redistributed" claim is unsupported — **done**; corrected in the README, CLAUDE.md, codebooks note, download script and essay draft.
+- **Task 21:** Publish the harmonized extracts outside git — **done**; release `data-2026-11-10`, fetched with `download_nsfg.py --extracts`.
 
 **All three urgent items are closed.** `fertility.ipynb` and `.gitattributes` are committed (`5d3a315`), so the work is no longer single-copy and a fresh clone resolves its LFS pointers. Task 7 turned out not to be a defect — the cycle-12 education recode is correct, verified against the now-cached codebook. But the cycle-boundary sweep that followed found a different one: Task 14, a year-long error in reconstructed `cmbirth` affecting roughly 10% of women's cohort assignments in cycles 10–12. That now blocks Task 6.
 
@@ -1124,7 +1126,7 @@ but it changes published numbers and needs deciding deliberately.
 
 ## Task 19: Delete the pre-purge backup
 
-**Status:** Verified safe to delete (2026-11-10); the deletion itself is waiting on Allen.
+**Status:** Done (2026-11-10). Verified to hold nothing unique, then deleted.
 
 `~/MarriageNSFG-backup-20260920/git-full` is a byte copy of `.git` as it stood before the history rewrite, including the 410 MB of LFS objects. It is 496 MB and it is the only copy of the pre-purge history.
 
@@ -1143,7 +1145,7 @@ The `data/` half of the backup was already deleted on 2026-09-20: 73 of its 75 f
     - Commits: 70 of 73 mapped; the 3 dropped (`0b20627`, `6c36e42`, `b426fa8`, all 2025-02-18) only added or migrated data files.
     - LFS: 33 objects. 25 are byte-identical (by SHA-256, which is the LFS oid) to files in `data/`, covering every raw NSFG file and `usa_00002.csv.gz`. The other 8 are older versions of derived extracts: `FemMarriageData.hdf`, `MaleMarriageData.hdf`, `marriage_nsfg_{female,male}.csv.gz`, and four uncommitted HDF and csv.gz files left by earlier pipeline runs.
     - Plain (pre-LFS) data blobs: 44, all in `data/` except an older derived `FemMarriageData.csv` and two raw files whose decompressed content is identical to the current ones (2011–2013 FemResp, 2015–2017 FemPreg; only the gzip wrapper differs).
-- [ ] Delete `~/MarriageNSFG-backup-20260920`
+- [x] Delete `~/MarriageNSFG-backup-20260920` (Allen, 2026-11-10)
 - [x] ~~Separately, chase the GitHub side.~~ Decided against on 2026-11-10; see Task 4
 
 ---
